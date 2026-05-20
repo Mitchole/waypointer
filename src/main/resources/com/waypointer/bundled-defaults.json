@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "b34e5f4d-a7c7-4ce8-93c1-896788bdc2d4",
+      "name": "Cities & Hubs",
+      "sortOrder": 0,
+      "uncategorized": false,
+      "iconId": 1453,
+      "bundled": true
+    },
+    {
+      "id": "7ef5b308-8e4b-4e56-81cd-67d59abaf4af",
+      "name": "Standalone Banks",
+      "sortOrder": 1,
+      "uncategorized": false,
+      "iconId": 1531,
+      "bundled": true
+    },
+    {
+      "id": "f871fd55-c947-4fe7-ab13-09d95ea052b5",
+      "name": "Herb Patches",
+      "sortOrder": 2,
+      "uncategorized": false,
+      "iconId": 1468,
+      "bundled": true
+    },
+    {
+      "id": "485974a6-ac6d-4f92-8e01-056c9334072b",
+      "name": "Tree Patches",
+      "sortOrder": 3,
+      "uncategorized": false,
+      "iconId": 214,
+      "bundled": true
+    },
+    {
+      "id": "43b318a3-862f-4642-a8c0-c1c23bf93b03",
+      "name": "Fruit Tree Patches",
+      "sortOrder": 4,
+      "uncategorized": false,
+      "iconId": 1498,
+      "bundled": true
+    },
+    {
+      "id": "676b7f53-a911-4b0e-88e9-2a4d207bb40a",
+      "name": "Runecrafting Altars",
+      "sortOrder": 5,
+      "uncategorized": false,
+      "iconId": 215,
+      "bundled": true
+    },
+    {
+      "id": "452c6898-257b-4128-8266-dbcc8ab55097",
+      "name": "Slayer Masters",
+      "sortOrder": 6,
+      "uncategorized": false,
+      "iconId": 1499,
+      "bundled": true
+    },
+    {
+      "id": "2a09f820-1f38-418e-93d7-2c384a1c0d1c",
+      "name": "Slayer Dungeons",
+      "sortOrder": 7,
+      "uncategorized": false,
+      "iconId": 216,
+      "bundled": true
+    },
+    {
+      "id": "6433ae18-1d2c-4089-9d07-5faa9b97a29e",
+      "name": "Open World Bosses",
+      "sortOrder": 8,
+      "uncategorized": false,
+      "iconId": 1411,
+      "bundled": true
+    },
+    {
+      "id": "c745bce0-3105-4c65-a665-02ced306380f",
+      "name": "God Wars Dungeon Bosses",
+      "sortOrder": 9,
+      "uncategorized": false,
+      "iconId": 1544,
+      "bundled": true
+    },
+    {
+      "id": "c5a5f2ba-99e4-4a8f-a418-30b236a7292d",
+      "name": "Wildy Bosses",
+      "sortOrder": 10,
+      "uncategorized": false,
+      "iconId": 34,
+      "bundled": true
+    },
+    {
+      "id": "6e4c49e6-15cb-4f92-868a-daa2b21e6fa0",
+      "name": "Instance Bosses",
+      "sortOrder": 11,
+      "uncategorized": false,
+      "iconId": 556,
+      "bundled": true
+    },
+    {
+      "id": "6b9a16e7-cd42-4195-a40e-534567d146f5",
+      "name": "Raids",
+      "sortOrder": 12,
+      "uncategorized": false,
+      "iconId": 1131,
+      "bundled": true
+    },
+    {
+      "id": "cceb7a30-4b77-407e-9073-b2639add0a6c",
+      "name": "Skilling Hotspots",
+      "sortOrder": 13,
+      "uncategorized": false,
+      "iconId": 1534,
+      "bundled": true
+    },
+    {
+      "id": "bed0b44c-d9ee-41f5-bfdb-f422512eb4ba",
+      "name": "Notable POI's",
+      "sortOrder": 14,
+      "uncategorized": false,
+      "iconId": 1210,
+      "bundled": true
+    }
+  ],
+  "waypoints": []
+}
