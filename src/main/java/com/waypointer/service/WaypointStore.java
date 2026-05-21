@@ -325,8 +325,15 @@ public class WaypointStore
                     .mapToInt(Category::getSortOrder).max().orElse(-1) + 1;
                 library.getCategories().add(new Category(
                     c.getId(), c.getName(), nextOrder, false, c.getIconId(), c.isBundled()));
+                result.categoriesAdded++;
             }
         }
+
+        // Phase 1 mutated library.getCategories() directly, so the categoryIndex cache
+        // populated by the getCategoryById call above is now stale. Without this, Phase 2's
+        // category-exists check below returns null for every freshly-added category and the
+        // waypoint falls through to Uncategorized.
+        invalidateIndexes();
 
         // Phase 2: waypoints
         Set<UUID> existingWpIds = library.getWaypoints().stream()
@@ -359,7 +366,13 @@ public class WaypointStore
             result.waypointsAdded++;
         }
 
-        if (result.waypointsAdded > 0 || !categoryIdRemap.isEmpty()) notifyChanged();
+        // Also fire when only categories were added: a categories-only import (e.g. defaults
+        // with an empty waypoints list) would otherwise skip the rebuild + save and the new
+        // categories would vanish on the next plugin reload.
+        if (result.waypointsAdded > 0 || result.categoriesAdded > 0 || !categoryIdRemap.isEmpty())
+        {
+            notifyChanged();
+        }
         return result;
     }
 
@@ -461,6 +474,7 @@ public class WaypointStore
     {
         public int waypointsAdded;
         public int waypointsSkipped;
+        public int categoriesAdded;
     }
 
 }

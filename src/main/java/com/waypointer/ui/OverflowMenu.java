@@ -55,8 +55,8 @@ final class OverflowMenu
         importDefaults.addActionListener(e -> {
             WaypointStore.ImportResult r = defaults.importIntoStore();
             JOptionPane.showMessageDialog(anchor,
-                String.format("Imported %d waypoints, skipped %d.",
-                    r.waypointsAdded, r.waypointsSkipped),
+                String.format("Imported %d waypoints, %d categories. Skipped %d.",
+                    r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped),
                 "Waypointer", JOptionPane.INFORMATION_MESSAGE);
         });
         menu.add(importDefaults);

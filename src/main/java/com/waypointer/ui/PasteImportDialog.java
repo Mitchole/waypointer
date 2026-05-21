@@ -75,8 +75,8 @@ public class PasteImportDialog extends JDialog
                         if (confirm != JOptionPane.OK_OPTION) return;
                         WaypointStore.ImportResult r = store.importMerge(incoming);
                         JOptionPane.showMessageDialog(this,
-                            String.format("Imported %d waypoints (%d skipped).",
-                                r.waypointsAdded, r.waypointsSkipped),
+                            String.format("Imported %d waypoints, %d categories. Skipped %d.",
+                                r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped),
                             "Waypointer", JOptionPane.INFORMATION_MESSAGE);
                         dispose();
                         break;

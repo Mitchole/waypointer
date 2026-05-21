@@ -198,6 +198,28 @@ public class WaypointStoreTest
     }
 
     @Test
+    public void importMergePlacesWaypointsInFreshlyAddedCategories()
+    {
+        // Empty store. Incoming library has a brand-new category and a waypoint pointing to it.
+        // Regression: importMerge populated the categoryIndex cache before Phase 1, then mutated
+        // library.getCategories() directly. Phase 2's existence check on the newly-added category
+        // returned null and the waypoint was rebound to Uncategorized.
+        UUID newCatId = UUID.randomUUID();
+        UUID newWpId = UUID.randomUUID();
+
+        Library incoming = new Library();
+        incoming.getCategories().add(new Category(newCatId, "Bossing", 0, false, null, false));
+        incoming.getWaypoints().add(new Waypoint(
+            newWpId, "Vorkath", 42, newCatId, null, "",
+            Instant.parse("2026-05-02T00:00:00Z"), 0));
+
+        WaypointStore.ImportResult r = store.importMerge(incoming);
+        assertEquals(1, r.categoriesAdded);
+        assertEquals(1, r.waypointsAdded);
+        assertEquals(newCatId, store.getWaypointById(newWpId).getCategoryId());
+    }
+
+    @Test
     public void getCategoryByIdAfterCreateAndDelete()
     {
         WaypointStore store = new WaypointStore();

@@ -66,6 +66,10 @@ public class WaypointerPlugin extends Plugin
         eventBus.register(menuHandler);
         eventBus.register(pathfinderService);
 
+        // Pick up RuneLiteLAF's scrollbar colors now that the LAF is installed (the panel
+        // was constructed earlier, against Metal's UIDefaults).
+        panel.refreshScrollbarStyling();
+
         log.info("Waypointer started: {} waypoints loaded",
             store.getLibrary().getWaypoints().size());
     }

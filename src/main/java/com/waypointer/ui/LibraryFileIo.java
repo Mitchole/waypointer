@@ -42,8 +42,8 @@ final class LibraryFileIo
             Library incoming = codec.decode(json);
             WaypointStore.ImportResult r = store.importMerge(incoming);
             JOptionPane.showMessageDialog(parent,
-                String.format("Imported %d waypoints (%d skipped).",
-                    r.waypointsAdded, r.waypointsSkipped),
+                String.format("Imported %d waypoints, %d categories. Skipped %d.",
+                    r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped),
                 "Waypointer", JOptionPane.INFORMATION_MESSAGE);
         }
         catch (IOException | RuntimeException ex)

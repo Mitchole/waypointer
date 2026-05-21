@@ -96,6 +96,14 @@ public class InlineEditPanel extends JPanel
         JScrollPane notesScroll = new JScrollPane(notesArea);
         notesScroll.setBorder(null);
         notesScroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
+        // Pin the notes pane to ~3 visible rows. The JTextArea(rows=3) hint flows up through
+        // getPreferredScrollableViewportSize, but inside the outer body's JScrollPane it ends
+        // up collapsing to a single visible row; setting an explicit preferred + minimum
+        // height keeps the field at its intended size regardless of the surrounding chain.
+        int rowH = notesArea.getFontMetrics(notesArea.getFont()).getHeight();
+        Dimension notesPref = new Dimension(0, rowH * 3 + 6);
+        notesScroll.setPreferredSize(notesPref);
+        notesScroll.setMinimumSize(notesPref);
         g.gridx = 1; g.weightx = 1; add(notesScroll, g);
 
         g.gridx = 0; g.gridy++; g.weightx = 0; add(Styles.fieldLabel("Tile"), g);

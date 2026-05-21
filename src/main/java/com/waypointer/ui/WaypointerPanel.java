@@ -44,7 +44,9 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
@@ -71,6 +73,7 @@ public class WaypointerPanel extends PluginPanel
     private final IconCatalog iconCatalog;
     private final OverflowMenu overflowMenu;
     private final JPanel body = new JPanel();
+    private javax.swing.JScrollBar bodyScrollBar;
     private final JButton markBtn = new JButton("Mark current location");
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
@@ -137,11 +140,13 @@ public class WaypointerPanel extends PluginPanel
         header.add(toolRow);
 
         // Stack header + search bar in NORTH so the search field sits between
-        // the action buttons and the body category list.
+        // the action buttons and the body category list. The 8-px horizontal inset on
+        // topStack replaces the panel-level border (removed below so the body can reach
+        // the full PANEL_WIDTH after the scrollbar).
         JPanel topStack = new JPanel();
         topStack.setLayout(new BoxLayout(topStack, BoxLayout.Y_AXIS));
         topStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        topStack.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        topStack.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         header.setAlignmentX(LEFT_ALIGNMENT);
         topStack.add(header);
         JComponent searchBar = buildSearchBar();
@@ -154,12 +159,51 @@ public class WaypointerPanel extends PluginPanel
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        // Single waypoints layout: top stack (header buttons + search) above the body.
+        // Body lives inside a vertical scroll pane so an expanded category list cannot push
+        // the panel's preferred height up to ClientUI. (Without it, PluginPanel passes the
+        // layout-computed height through to frame.getPreferredSize, ClientUI calls
+        // frame.containedSetSize to match, and the JFrame is unmaximized on Windows the
+        // moment the body grows past the visible region.) bodyHolder pins body to NORTH so
+        // children stack tight at the top of the viewport, and reports PluginPanel.PANEL_WIDTH
+        // so the horizontal scrollbar never engages.
+        JPanel bodyHolder = new JPanel(new BorderLayout())
+        {
+            @Override public Dimension getPreferredSize()
+            {
+                return new Dimension(net.runelite.client.ui.PluginPanel.PANEL_WIDTH,
+                    super.getPreferredSize().height);
+            }
+        };
+        bodyHolder.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        bodyHolder.add(body, BorderLayout.NORTH);
+
+        // The panel is constructed during PluginManager.loadCorePlugins(), which runs before
+        // ClientUI.init() installs RuneLiteLAF. So at this point UIDefaults belong to Java's
+        // Metal L&F, and anything UI-delegate-derived (scrollbar colors, scroll-pane border)
+        // picks up Metal's defaults. Pin width + zero out the border explicitly here, then
+        // WaypointerPlugin.startUp() calls refreshScrollbarStyling() once the LAF is live.
+        JScrollPane bodyScroll = new JScrollPane(bodyHolder);
+        bodyScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        bodyScroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
+        bodyScroll.setBorder(BorderFactory.createEmptyBorder());
+        javax.swing.JScrollBar vBar = bodyScroll.getVerticalScrollBar();
+        vBar.putClientProperty("JScrollBar.width", 7);
+        vBar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
+        vBar.setPreferredSize(new Dimension(7, 0));
+        vBar.setUI((javax.swing.plaf.ScrollBarUI)
+            net.runelite.client.ui.laf.RuneLiteScrollBarUI.createUI(vBar));
+        this.bodyScrollBar = vBar;
+
+        // Single waypoints layout: top stack (header buttons + search) above the scrollable body.
+        // No panel-level border: topStack handles its own 8-px inset, and body is allowed to
+        // reach the full PANEL_WIDTH (after the 7-px FlatLaf scrollbar) so WaypointRows and
+        // the inline edit form get the same effective width they had pre-scroll-wrap. Body
+        // children already have their own internal padding (WaypointRow 10-px sides;
+        // CategorySection headers full-bleed with the chevron carrying visual indent).
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         add(topStack, BorderLayout.NORTH);
-        add(body, BorderLayout.CENTER);
+        add(bodyScroll, BorderLayout.CENTER);
 
         storeSub = store.subscribe(this::scheduleRebuild);
         pathSub = pathfinder.subscribe(this::scheduleRebuild);
@@ -176,6 +220,42 @@ public class WaypointerPanel extends PluginPanel
     {
         if (storeSub != null) { storeSub.close(); storeSub = null; }
         if (pathSub != null) { pathSub.close(); pathSub = null; }
+    }
+
+    // Re-derive the body scrollbar's UI delegate now that RuneLiteLAF is the active LAF.
+    // See the constructor comment on bodyScroll for why this is needed. Called from
+    // WaypointerPlugin.startUp(); updateUI() resets the preferred size and client properties,
+    // so the 7-px pin is re-applied afterwards.
+    public void refreshScrollbarStyling()
+    {
+        if (bodyScrollBar == null) return;
+        SwingUtilities.invokeLater(() ->
+        {
+            bodyScrollBar.updateUI();
+            bodyScrollBar.setPreferredSize(new Dimension(7, 0));
+            bodyScrollBar.putClientProperty("JScrollBar.width", 7);
+            bodyScrollBar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
+        });
+    }
+
+    // PluginPanel.getPreferredSize / getMinimumSize pass the JPanel's layout-computed
+    // height through to ClientUI. Without a cap, BoxLayout body's preferred height grows
+    // with every expanded WaypointRow, ClientUI uses it for frame.getPreferredSize, and the
+    // JFrame is resized to fit; on Windows that unmaximizes the window and resets the game
+    // canvas. The body's own JScrollPane handles overflow so the height we report outward
+    // can stay at 0, letting the frame size stay driven by the game canvas.
+    @Override
+    public Dimension getPreferredSize()
+    {
+        Dimension d = super.getPreferredSize();
+        return new Dimension(d.width, 0);
+    }
+
+    @Override
+    public Dimension getMinimumSize()
+    {
+        Dimension d = super.getMinimumSize();
+        return new Dimension(d.width, 0);
     }
 
     private void onMarkClicked()
@@ -417,7 +497,6 @@ public class WaypointerPanel extends PluginPanel
         };
     }
 
-
     private void handleRowAction(Waypoint w, CategorySection.RowAction action)
     {
         switch (action)
@@ -466,8 +545,8 @@ public class WaypointerPanel extends PluginPanel
             WaypointStore.ImportResult r = defaults.importIntoStore();
             config.setDefaultsImportPromptSeen(true);
             JOptionPane.showMessageDialog(this,
-                String.format("Imported %d waypoints, skipped %d.",
-                    r.waypointsAdded, r.waypointsSkipped),
+                String.format("Imported %d waypoints, %d categories. Skipped %d.",
+                    r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped),
                 "Waypointer", JOptionPane.INFORMATION_MESSAGE);
         });
         not.addActionListener(e -> rebuild());
