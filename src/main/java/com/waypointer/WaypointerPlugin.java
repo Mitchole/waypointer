@@ -18,6 +18,8 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.ui.MultiplexingPluginPanel;
+import com.waypointer.ui.WaypointerNavigator;
 
 @Slf4j
 @PluginDescriptor(
@@ -36,6 +38,7 @@ public class WaypointerPlugin extends Plugin
     @Inject private EventBus eventBus;
     @Inject private WaypointMenuHandler menuHandler;
     @Inject private WaypointPathfinder pathfinderService;
+    @Inject private WaypointerNavigator navigator;
 
     private NavigationButton navButton;
     private Thread shutdownHook;
@@ -55,12 +58,15 @@ public class WaypointerPlugin extends Plugin
         }, "waypointer-shutdown-flush");
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
+        MultiplexingPluginPanel muxer = new MultiplexingPluginPanel(panel);
+        navigator.attach(muxer);
+
         BufferedImage icon = PinIcon.getSize32();
         navButton = NavigationButton.builder()
             .tooltip("Waypointer")
             .icon(icon)
             .priority(7)
-            .panel(panel)
+            .panel(muxer)
             .build();
         clientToolbar.addNavigation(navButton);
         eventBus.register(menuHandler);
