@@ -22,6 +22,7 @@ public class PresetCatalog
     static final String RESOURCE_PATH = "/com/waypointer/preset-waypoints.json";
 
     private final Gson gson;
+    private List<Preset> cached;
 
     @Inject
     public PresetCatalog(Gson gson)
@@ -29,8 +30,21 @@ public class PresetCatalog
         this.gson = gson;
     }
 
-    /** Every bundled preset. Returns an empty list if the resource is missing or unreadable. */
+    /**
+     * Every bundled preset. The resource is loaded and parsed once on first call;
+     * subsequent calls return the cached result. Returns an empty list if the
+     * resource is missing or unreadable.
+     */
     public List<Preset> getPresets()
+    {
+        if (cached == null)
+        {
+            cached = load();
+        }
+        return cached;
+    }
+
+    private List<Preset> load()
     {
         try (InputStream in = PresetCatalog.class.getResourceAsStream(RESOURCE_PATH))
         {
