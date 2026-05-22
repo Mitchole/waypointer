@@ -172,7 +172,5 @@ Issues and PRs welcome.
 ---
 
 ## Attribution
-
-- Plugin icon: [Waypoint Map](https://icons8.com/icon/YWTGLb9p2sC7/waypoint-map) by [Icons8](https://icons8.com).
 - Bank, altar, anvil, and apothecary location data adapted from [Shortest Path](https://github.com/Skretzo/shortest-path) under BSD 2-Clause. Thanks to Skretzo for the maintained dataset.
 - Built on the [RuneLite](https://runelite.net/) plugin framework.
