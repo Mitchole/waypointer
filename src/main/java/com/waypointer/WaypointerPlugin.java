@@ -6,6 +6,7 @@ import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
 import com.waypointer.ui.PinIcon;
+import com.waypointer.ui.WaypointerNavigator;
 import com.waypointer.ui.WaypointerPanel;
 import java.awt.image.BufferedImage;
 import java.time.Duration;
@@ -19,7 +20,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.MultiplexingPluginPanel;
-import com.waypointer.ui.WaypointerNavigator;
 
 @Slf4j
 @PluginDescriptor(
@@ -95,6 +95,7 @@ public class WaypointerPlugin extends Plugin
         eventBus.unregister(pathfinderService);
 
         clientToolbar.removeNavigation(navButton);
+        navigator.detach();
         panel.dispose();
         store.flushPendingSave();
         log.info("Waypointer stopped");

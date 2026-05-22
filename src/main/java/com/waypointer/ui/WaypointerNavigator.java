@@ -38,6 +38,13 @@ public class WaypointerNavigator
         this.muxer = muxer;
     }
 
+    /** Clears the muxer and any open browser on plugin shutdown so no stale panel is retained. */
+    public void detach()
+    {
+        this.muxer = null;
+        this.presetBrowser = null;
+    }
+
     public void openPresetBrowser()
     {
         if (muxer == null)
