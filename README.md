@@ -71,7 +71,7 @@ a known bank, altar, anvil, or apothecary, the name is filled in for you.
 
 ## Travelling to a waypoint
 
-Click the `▶` Play button on a waypoint. Waypointer hands the destination to Shortest Path,
+Click the `Play` button on a waypoint. Waypointer hands the destination to Shortest Path,
 which draws the route on the world map and minimap. To cancel an active route, use
 **Stop pathing** in the overflow (`⋮`) menu.
 
