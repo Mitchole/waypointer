@@ -5,7 +5,6 @@ import com.waypointer.WaypointerConfig;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.WaypointCapture;
-import com.waypointer.service.WaypointDefaults;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
@@ -42,7 +41,6 @@ public class WaypointerPanelTest
 
         WaypointerConfig config = mock(WaypointerConfig.class);
         when(config.categoryCollapsedJson()).thenReturn("{}");
-        when(config.defaultsImportPromptSeen()).thenReturn(true);
         when(config.shortestPathBannerDismissed()).thenReturn(true);
 
         WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
@@ -58,7 +56,7 @@ public class WaypointerPanelTest
             pathfinder,
             config,
             new CollapseStateCodec(new Gson()),
-            mock(WaypointDefaults.class),
+            mock(WaypointerNavigator.class),
             mock(WaypointShareCodec.class),
             persistence,
             mock(SpriteManager.class),

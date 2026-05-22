@@ -8,7 +8,6 @@ import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.IconCatalog;
 import com.waypointer.service.WaypointCapture;
-import com.waypointer.service.WaypointDefaults;
 import com.waypointer.service.WaypointFilter;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
@@ -66,7 +65,7 @@ public class WaypointerPanel extends PluginPanel
     private final WaypointPathfinder pathfinder;
     private final WaypointerConfig config;
     private final CollapseStateCodec collapseCodec;
-    private final WaypointDefaults defaults;
+    private final WaypointerNavigator navigator;
     private final WaypointShareCodec shareCodec;
     private final WaypointStorePersistence persistence;
     private final SpriteManager spriteManager;
@@ -95,7 +94,7 @@ public class WaypointerPanel extends PluginPanel
     @Inject
     public WaypointerPanel(WaypointStore store, WaypointCapture capture,
         WaypointPathfinder pathfinder, WaypointerConfig config, CollapseStateCodec collapseCodec,
-        WaypointDefaults defaults, WaypointShareCodec shareCodec,
+        WaypointerNavigator navigator, WaypointShareCodec shareCodec,
         WaypointStorePersistence persistence, SpriteManager spriteManager,
         IconCatalog iconCatalog, OverflowMenu overflowMenu)
     {
@@ -105,7 +104,7 @@ public class WaypointerPanel extends PluginPanel
         this.pathfinder = pathfinder;
         this.config = config;
         this.collapseCodec = collapseCodec;
-        this.defaults = defaults;
+        this.navigator = navigator;
         this.shareCodec = shareCodec;
         this.persistence = persistence;
         this.spriteManager = spriteManager;
@@ -363,10 +362,6 @@ public class WaypointerPanel extends PluginPanel
         String loweredFilter = currentFilter.toLowerCase(Locale.ROOT);
         boolean isFiltering = !loweredFilter.isEmpty();
 
-        if (snap.getWaypoints().isEmpty() && !config.defaultsImportPromptSeen())
-        {
-            body.add(buildDefaultsBanner());
-        }
         if (!pathfinder.isAvailable() && !config.shortestPathBannerDismissed())
         {
             body.add(buildShortestPathMissingBanner());
@@ -475,12 +470,25 @@ public class WaypointerPanel extends PluginPanel
 
     private void renderEmpty()
     {
-        JLabel empty = new JLabel("<html><div style='text-align:center;padding:24px;color:#9b9b9b;'>"
-            + "No waypoints yet.<br>Click 'Mark current location' to add one,<br>"
-            + "or import defaults from the menu.</div></html>", SwingConstants.CENTER);
-        empty.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JPanel wrap = newCappedHeightPanel(new BorderLayout());
+        wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        wrap.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel empty = new JLabel("<html><div style='text-align:center;padding:20px 12px 8px;"
+            + "color:#9b9b9b;'>No waypoints yet.<br>Mark a location to begin, or start "
+            + "from a curated set.</div></html>", SwingConstants.CENTER);
         empty.setForeground(Color.LIGHT_GRAY);
-        body.add(empty);
+        wrap.add(empty, BorderLayout.NORTH);
+
+        JButton browse = new JButton("Browse preset waypoints");
+        Styles.secondaryButton(browse);
+        browse.addActionListener(e -> navigator.openPresetBrowser());
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 4));
+        btnRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        btnRow.add(browse);
+        wrap.add(btnRow, BorderLayout.CENTER);
+
+        body.add(wrap);
     }
 
     // JPanel whose maximum height collapses to its preferred height, so banners don't get
@@ -519,43 +527,6 @@ public class WaypointerPanel extends PluginPanel
                 rebuild();
                 break;
         }
-    }
-
-    private JComponent buildDefaultsBanner()
-    {
-        JPanel p = newCappedHeightPanel(new BorderLayout(4, 4));
-        p.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR),
-            BorderFactory.createEmptyBorder(6, 8, 6, 8)));
-        JLabel intro = new JLabel("<html>Library is empty. Import bundled defaults?</html>");
-        intro.setForeground(Color.WHITE);
-        p.add(intro, BorderLayout.NORTH);
-
-        JPanel btns = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        btns.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        JButton imp = new JButton("Import");
-        JButton not = new JButton("Not now");
-        JButton never = new JButton("Don't ask again");
-        Styles.secondaryButton(imp);
-        Styles.secondaryButton(not);
-        Styles.secondaryButton(never);
-        imp.addActionListener(e -> {
-            WaypointStore.ImportResult r = defaults.importIntoStore();
-            config.setDefaultsImportPromptSeen(true);
-            JOptionPane.showMessageDialog(this,
-                String.format("Imported %d waypoints, %d categories. Skipped %d.",
-                    r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped),
-                "Waypointer", JOptionPane.INFORMATION_MESSAGE);
-        });
-        not.addActionListener(e -> rebuild());
-        never.addActionListener(e -> { config.setDefaultsImportPromptSeen(true); rebuild(); });
-        btns.add(imp);
-        btns.add(not);
-        btns.add(never);
-        p.add(btns, BorderLayout.CENTER);
-        return p;
     }
 
     private JComponent buildShortestPathMissingBanner()

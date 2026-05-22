@@ -3,7 +3,6 @@ package com.waypointer.ui;
 import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
-import com.waypointer.service.WaypointDefaults;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
@@ -25,19 +24,19 @@ import javax.swing.SwingUtilities;
 final class OverflowMenu
 {
     private final WaypointStore store;
-    private final WaypointDefaults defaults;
+    private final WaypointerNavigator navigator;
     private final WaypointShareCodec shareCodec;
     private final LibraryJsonCodec libraryCodec;
     private final WaypointStorePersistence persistence;
     private final WaypointPathfinder pathfinder;
 
     @javax.inject.Inject
-    OverflowMenu(WaypointStore store, WaypointDefaults defaults, WaypointShareCodec shareCodec,
+    OverflowMenu(WaypointStore store, WaypointerNavigator navigator, WaypointShareCodec shareCodec,
         LibraryJsonCodec libraryCodec, WaypointStorePersistence persistence,
         WaypointPathfinder pathfinder)
     {
         this.store = store;
-        this.defaults = defaults;
+        this.navigator = navigator;
         this.shareCodec = shareCodec;
         this.libraryCodec = libraryCodec;
         this.persistence = persistence;
@@ -51,15 +50,9 @@ final class OverflowMenu
         LibraryFileIo fileIo = new LibraryFileIo(store, libraryCodec, anchor);
         JPopupMenu menu = new JPopupMenu();
 
-        JMenuItem importDefaults = new JMenuItem("Import defaults");
-        importDefaults.addActionListener(e -> {
-            WaypointStore.ImportResult r = defaults.importIntoStore();
-            JOptionPane.showMessageDialog(anchor,
-                String.format("Imported %d waypoints, %d categories. Skipped %d.",
-                    r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped),
-                "Waypointer", JOptionPane.INFORMATION_MESSAGE);
-        });
-        menu.add(importDefaults);
+        JMenuItem browsePresets = new JMenuItem("Browse preset waypoints");
+        browsePresets.addActionListener(e -> navigator.openPresetBrowser());
+        menu.add(browsePresets);
 
         JMenuItem importLib = new JMenuItem("Import library...");
         importLib.addActionListener(e ->

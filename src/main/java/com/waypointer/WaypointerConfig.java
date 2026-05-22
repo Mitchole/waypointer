@@ -16,18 +16,6 @@ public interface WaypointerConfig extends Config
     )
     default boolean tileRightClickEnabled() { return false; }
 
-    // Hidden:set programmatically when the user clicks 'Don't ask again' on the defaults banner.
-    @ConfigItem(
-        keyName = "defaultsImportPromptSeen",
-        name = "",
-        description = "",
-        hidden = true
-    )
-    default boolean defaultsImportPromptSeen() { return false; }
-
-    @ConfigItem(keyName = "defaultsImportPromptSeen", name = "", description = "")
-    void setDefaultsImportPromptSeen(boolean v);
-
     // Hidden:JSON-encoded map of categoryId -> collapsed boolean. Empty = all expanded.
     @ConfigItem(
         keyName = "categoryCollapsedJson",
