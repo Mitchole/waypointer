@@ -120,45 +120,6 @@ no rename / delete options).
 
 ---
 
-## Premade waypoint library
-
-**What:** an in-panel browser of curated waypoint sets users can pick from on top of
-their own library. Each preset has a suggested category name (e.g. "Slayer Masters",
-"GE & Banks", "F2P Bosses"), and on import the user chooses whether to keep that
-category or merge the waypoints into one of their own existing categories.
-
-**Why interesting:** new users start with an empty panel and no obvious next step. The
-first minute of the plugin is "type a name, click Mark, repeat". Useful eventually, but
-the cold-start gap before the panel feels worth keeping open is real. A curated "here
-are the 12 places anyone doing Slayer cares about" closes that gap without
-pre-populating the panel for users who'd rather build their own from scratch. Existing
-users benefit too when they pick up new content (start Raids, switch to ironman) and
-want a ready-made set instead of hunting wiki coords.
-
-**Scope:** medium-large. Two halves:
-1. The presets themselves. A JSON file bundled in `src/main/resources` containing named
-   groups of waypoints. Reuses the existing `WPL1:` share-code shape so the schema is
-   already settled and round-trips through `LibraryJsonCodec`. Curation (deciding what
-   goes in each set, vetting coords) is more work than the code.
-2. The browser UI. A modal or dedicated panel section listing each preset with name,
-   description, waypoint count, and an `Add` button. Add opens a small dialog with
-   a category dropdown (existing categories + a `Create new "<suggested name>"` entry)
-   and a checkbox per waypoint so users can cherry-pick. Confirm routes through
-   `WaypointStore`'s import path so duplicate handling stays consistent with paste-import.
-
-**Thoughts:**
-- We'll make this bundled. Ideally an easy to read JSON so Github users can contribute waymarks.
-
-**Edge cases:**
-- User already has a waypoint at the same packed-int with the same name. Skip silently;
-  the existing import dedupe covers it.
-- `Create new category` and the suggested name collides with an existing category. Append
-  a numeric suffix or prompt for a new name in the same dialog.
-- Empty selection in the cherry-pick dialog. Disable the confirm button rather than
-  importing zero rows.
-
----
-
 ## Plugin Hub submission
 
 Once we're ready to make it real:

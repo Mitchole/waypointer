@@ -1,176 +1,125 @@
 # Waypointer
 
-A RuneLite plugin for saving in-game locations and one-click pathing.
+Save your favourite Old School RuneScape locations and travel to them in one click.
 
 [![License: BSD-2-Clause](https://img.shields.io/badge/License-BSD_2--Clause-orange.svg)](LICENSE)
 [![Java 11](https://img.shields.io/badge/Java-11-blue.svg)](https://adoptium.net/)
 [![RuneLite Plugin](https://img.shields.io/badge/RuneLite-Plugin-red.svg)](https://runelite.net/)
 
-**Waypoints** - your personal atlas. Mark a tile, give it a name and category, then click Play
-to have [Shortest Path](https://github.com/Skretzo/shortest-path) draw the route on the world
-map and minimap.
+> **[ Screenshot ]** The Waypointer panel docked in the RuneLite sidebar, showing a couple of categories of saved waypoints.
+
+Waypointer adds a sidebar panel for the places you keep going back to: banks, bosses, farm
+patches, teleport spots. Mark a tile, name it, drop it in a category. Click Play on any
+waypoint and the [Shortest Path](https://github.com/Skretzo/shortest-path) plugin draws the
+route on your world map and minimap.
 
 ---
 
-## Table of contents
+## Contents
 
-- [Waypoints](#waypoints)
-- [Shared features](#shared-features)
-- [Configuration](#configuration)
-- [Installation](#installation)
-- [Building from source](#building-from-source)
-- [Architecture](#architecture)
-- [Plugin Hub compliance](#plugin-hub-compliance)
-- [Contributing](#contributing)
+- [Getting started](#getting-started)
+- [Saving a waypoint](#saving-a-waypoint)
+- [Organising your library](#organising-your-library)
+- [Travelling to a waypoint](#travelling-to-a-waypoint)
+- [Preset waypoints](#preset-waypoints)
+- [Searching](#searching)
+- [Sharing](#sharing)
+- [Settings](#settings)
+- [Requirements](#requirements)
 - [License](#license)
-- [Attribution](#attribution)
 
 ---
 
-## Waypoints
+## Getting started
 
-### Capture
-- **Mark current location** button captures your character's tile.
-- **Right-click `Save as Waypoint`** on the world map.
-- **Right-click tiles** with Shift held - off by default; toggle in plugin config.
-- All capture flows open a small modal where you set the name and category. Names default to
-  the matched landmark (e.g. `Grand Exchange (3162, 3486)`) when the tile is a known bank,
-  altar, anvil, or apothecary; plain coords otherwise. Pick an existing category or create a
-  new one inline.
+1. Install Waypointer from the RuneLite Plugin Hub. *(Coming soon. Until then you can build
+   it yourself; see [DEVELOPER.md](DEVELOPER.md).)*
+2. Install the [Shortest Path](https://github.com/Skretzo/shortest-path) plugin as well if
+   you want one-click travel. Waypointer runs fine without it, but the Play button needs it.
+3. Open the Waypointer panel from the RuneLite sidebar (the pin icon).
+4. Your library starts empty. Add your own waypoints, or click **Browse preset waypoints**
+   to start from a curated set.
 
-### Organize
-- User-managed categories with a fixed `Uncategorized` bucket.
-- Drag a row's `⠿` handle to reorder within or across categories.
-- Drag a category header to reorder categories themselves.
-- Each category and each waypoint can carry an icon, picked from a paginated grid of in-game sprites.
-- Hover a row to preview the first line of its notes - no need to expand the row first.
+> **[ Video ]** Short tour: opening the panel, saving a waypoint, pathing to it.
 
-### Edit
-- Click a row's body to reveal an inline edit panel with name, category, notes, and tile.
-- Edits to name and notes are saved on field focus loss (or panel collapse), so the cursor
-  stays put while you type.
-- `Recapture` rewrites the waypoint to your current tile; `Set icon` opens the icon picker;
-  `Copy share code` produces a `WP1:` code for that single waypoint.
+## Saving a waypoint
 
-### Path
-- `▶` Play icon on each row posts a `PluginMessage` to Shortest Path, which draws the route
-  on the world map and minimap automatically.
-- A small banner appears at the top of the panel while a path is active:
-  `→ Pathing to <waypoint>` with a `Stop` button. Auto-clears when you arrive within ~3 tiles
-  of the target on the same plane, swap to a different waypoint, or Shortest Path becomes
-  unavailable.
+There are three ways to capture a tile:
 
-### Bundled defaults
-Ships with 15 starter categories you can opt into via the first-run prompt or
-`Import defaults` in the overflow menu. They land empty - fillable over time:
+- **Mark current location** captures the tile your character is standing on.
+- **Right-click the world map** and choose `Save as Waypoint`.
+- **Right-click a tile in the 3D world** with Shift held. This one is off by default; turn
+  it on in [Settings](#settings).
 
-> Cities & Hubs · Standalone Banks · Herb Patches · Tree Patches · Fruit Tree Patches ·
-> Runecrafting Altars · Slayer Masters · Slayer Dungeons · Open World Bosses ·
-> God Wars Dungeon Bosses · Wildy Bosses · Instance Bosses · Raids · Skilling Hotspots ·
-> Notable POI's
+Each way opens a small dialog where you set the name and pick a category. When the tile is
+a known bank, altar, anvil, or apothecary, the name is filled in for you.
 
-Bundled categories always sort below your own custom categories so your stuff stays at the top.
+> **[ Screenshot ]** The capture dialog with a name typed and a category chosen.
 
----
+## Organising your library
 
-## Shared features
+- Sort waypoints into **categories** you name yourself. A fixed `Uncategorized` bucket
+  holds anything not filed elsewhere.
+- Drag the `⠿` handle on a row to reorder a waypoint, inside its category or into another.
+- Drag a category header to reorder the categories.
+- Give any category or waypoint an **icon** from the in-game sprite picker.
+- Hover a row to read the first line of its notes without expanding it.
+- Click a row to open an inline editor for its name, category, notes, and tile. The
+  `Recapture` action rewrites a waypoint to wherever you are standing now.
 
-### Find
-Live search bar at the top of the panel filters by name, notes, or category name
-(case-insensitive substring). Categories with at least one match auto-expand; zero-match
-categories disappear. Clearing the search snaps every category back to its previous collapse
-state.
+> **[ Screenshot ]** A category expanded, with one waypoint's inline editor open.
 
-### Share codes
-| Magic | What it carries |
-|---|---|
-| `WP1:` | A single waypoint |
-| `WPL1:` | The whole waypoint library |
+## Travelling to a waypoint
 
-Copy to clipboard or paste-import via the overflow menu's `Import library...` modal.
+Click the `▶` Play button on a waypoint. Waypointer hands the destination to Shortest Path,
+which draws the route on the world map and minimap. To cancel an active route, use
+**Stop pathing** in the overflow (`⋮`) menu.
 
-### Persistence
-Library is stored at `~/.runelite/waypointer/library.json` with a `library.json.bak` for
-atomic rename + backup recovery. Saves are debounced 500 ms after the last mutation and
-flushed on plugin shutdown.
+> **[ Video ]** Clicking Play on a waypoint and following the drawn route.
 
----
+## Preset waypoints
 
-## Configuration
+New to the plugin, or picking up content you have not mapped yet? Open
+**Browse preset waypoints** from the overflow (`⋮`) menu, or from the button shown when
+your library is empty.
 
-| Setting | Default | Effect |
+It opens an in-panel browser of curated sets covering Slayer masters, herb and tree
+patches, bosses, raids, runecrafting altars, and more. Expand a set and click `+` on a
+waypoint to add it to your library straight away. Waypoints you already have are marked, so
+you will not add a duplicate.
+
+> **[ Screenshot ]** The preset browser with one set expanded and a few waypoints already added.
+
+## Searching
+
+The search bar at the top of the panel filters by waypoint name, notes, or category name
+as you type. Categories with a match expand on their own. Clearing the search puts every
+category back to how you had it.
+
+## Sharing
+
+- Copy a share code for a single waypoint (`WP1:`) or your whole library (`WPL1:`).
+- Paste a code from someone else through **Import library...** in the overflow menu.
+
+## Settings
+
+| Setting | Default | What it does |
 |---|---|---|
-| Right-click tiles to save | Off | Adds `Save as Waypoint` to Shift right-click on 3D tiles. |
+| Right-click tiles to save | Off | Adds `Save as Waypoint` to the Shift right-click menu on tiles in the 3D world. |
 
----
+## Requirements
 
-## Installation
-
-### From the Plugin Hub
-*Coming soon*
-
-### From a sideloaded jar
-Build the shadow jar (see below) and drop `build/libs/waypointer-*-all.jar` into
-`~/.runelite/sideloaded-plugins/`. Restart RuneLite.
-
----
-
-## Building from source
-
-```bash
-./gradlew shadowJar       # build/libs/waypointer-1.0.0-SNAPSHOT-all.jar
-./gradlew run             # launches RuneLite in dev mode (-ea, --developer-mode --debug)
-./gradlew test            # runs the JUnit + Mockito test suite
-```
-
-Requires **Java 11** (Eclipse Temurin recommended). Lombok is wired in as a compile-only
-annotation processor; modern IDEs handle this automatically.
-
----
-
-## Architecture
-
-```
-src/main/java/com/waypointer/
-├── WaypointerPlugin.java   Plugin entry point - startUp/shutDown, event subscriptions, hotkeys, overlays
-├── WaypointerConfig.java   User-facing config (group "waypointer")
-├── codec/                  JSON <-> model serialization, share codes, schema migration
-├── model/                  Library, Category, Waypoint
-├── service/                WaypointStore, WaypointPathfinder, ...
-├── ui/                     WaypointerPanel + dialogs (capture, icon picker, paste import)
-└── util/                   ItemContainers helper, Listeners (lightweight pub/sub)
-```
-
----
-
-## Plugin Hub compliance
-
-- No banned APIs (`WidgetInfo`, `WidgetID`, `Client.getVar*`, `new OkHttpClient()`,
-  `new Gson()`, `net.runelite.client.account`, JNI).
-- Java 11 bytecode (`options.release.set(11)`).
-- All filesystem I/O scoped to `~/.runelite/waypointer/`.
-- No `System.out.println` or `e.printStackTrace`; logging via `@Slf4j`.
-
----
-
-## Contributing
-
-Issues and PRs welcome.
-
-1. Run `./gradlew test` and ensure all tests pass.
-2. Match the existing code style - Lombok-friendly, four-space indent, no wildcard imports,
-   logging via `@Slf4j`.
-3. For new features, sketch the design in an issue first. The bar for v1 is "demonstrably
-   useful and doesn't regress existing flows."
-
----
+- RuneLite.
+- The [Shortest Path](https://github.com/Skretzo/shortest-path) plugin, for the Play
+  button. Capturing, organising, searching, and sharing all work without it.
 
 ## License
 
-[BSD 2-Clause](LICENSE).
+Released under the [BSD 2-Clause License](LICENSE).
 
----
+Bank, altar, anvil, and apothecary location data is adapted from
+[Shortest Path](https://github.com/Skretzo/shortest-path) under BSD 2-Clause. Built on the
+[RuneLite](https://runelite.net/) plugin framework.
 
-## Attribution
-- Bank, altar, anvil, and apothecary location data adapted from [Shortest Path](https://github.com/Skretzo/shortest-path) under BSD 2-Clause. Thanks to Skretzo for the maintained dataset.
-- Built on the [RuneLite](https://runelite.net/) plugin framework.
+Building from source, the code layout, and how to contribute are covered in
+[DEVELOPER.md](DEVELOPER.md).
