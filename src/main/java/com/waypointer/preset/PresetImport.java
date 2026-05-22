@@ -20,6 +20,7 @@ public final class PresetImport
 
     public static Library singleEntryLibrary(Preset preset, PresetWaypoint wp)
     {
+        // sortOrder 0 is a placeholder; importMerge assigns the real sort order on import.
         Category category = new Category(
             UUID.randomUUID(), preset.getCategory(), 0, false, preset.getIcon(), true);
 
