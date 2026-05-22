@@ -20,7 +20,7 @@ public final class Category
     private boolean uncategorized;
     /** Optional sprite id for the category icon. {@code null} = no icon. */
     private Integer iconId;
-    /** True if this category was shipped via {@code bundled-defaults.json}. Sorts after user-created. */
+    /** True if this category was shipped as a preset. Sorts after user-created categories. */
     private boolean bundled;
 
     @Override
