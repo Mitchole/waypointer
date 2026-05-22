@@ -3,12 +3,15 @@ package com.waypointer.ui;
 import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
+import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.io.IOException;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -20,7 +23,7 @@ import javax.swing.SwingUtilities;
  * as the anchor at {@link #show(Component, Component)} time so JOption dialogs land on the
  * right window.
  */
-@javax.inject.Singleton
+@Singleton
 final class OverflowMenu
 {
     private final WaypointStore store;
@@ -30,7 +33,7 @@ final class OverflowMenu
     private final WaypointStorePersistence persistence;
     private final WaypointPathfinder pathfinder;
 
-    @javax.inject.Inject
+    @Inject
     OverflowMenu(WaypointStore store, WaypointerNavigator navigator, WaypointShareCodec shareCodec,
         LibraryJsonCodec libraryCodec, WaypointStorePersistence persistence,
         WaypointPathfinder pathfinder)
@@ -83,7 +86,7 @@ final class OverflowMenu
 
         JMenuItem stop = new JMenuItem("Stop pathing");
         stop.setEnabled(pathfinder.isAvailable()
-            && pathfinder.getActiveTarget() != com.waypointer.model.WorldPointPacker.UNDEFINED);
+            && pathfinder.getActiveTarget() != WorldPointPacker.UNDEFINED);
         stop.addActionListener(e -> pathfinder.clearPath());
         menu.add(stop);
 

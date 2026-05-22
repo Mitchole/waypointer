@@ -115,7 +115,7 @@ public class WaypointPathfinderTest
     public void availabilityChangeFiresListenersOnce()
     {
         Runnable listener = mock(Runnable.class);
-        pathfinder.addListener(listener);
+        pathfinder.subscribe(listener);
         pathfinder.onPluginMessage(new PluginMessage("shortestpath", "transports", new HashMap<>()));
         // Second message should not re-fire: already available.
         pathfinder.onPluginMessage(new PluginMessage("shortestpath", "transports", new HashMap<>()));

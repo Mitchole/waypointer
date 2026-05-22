@@ -4,18 +4,21 @@ import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import net.runelite.client.game.SpriteManager;
@@ -35,12 +38,10 @@ public class CategorySection extends JPanel
 
     public CategorySection(Category category, List<Waypoint> waypoints, boolean collapsed,
         Consumer<Boolean> onCollapseChange,
-        java.util.function.BiConsumer<Waypoint, RowAction> onRowAction,
-        Function<Waypoint, java.awt.Component> inlineProvider,
+        BiConsumer<Waypoint, RowAction> onRowAction,
+        Function<Waypoint, Component> inlineProvider,
         DragAndDropHandler dnd,
-        Runnable onRename,
-        Runnable onDelete,
-        Runnable onSetIcon,
+        Actions actions,
         SpriteManager spriteManager)
     {
         this.category = category;
@@ -85,12 +86,12 @@ public class CategorySection extends JPanel
         if (!category.isUncategorized())
         {
             JPopupMenu menu = new JPopupMenu();
-            javax.swing.JMenuItem rename = new javax.swing.JMenuItem("Rename");
-            rename.addActionListener(e -> onRename.run());
-            javax.swing.JMenuItem setIcon = new javax.swing.JMenuItem("Set icon...");
-            setIcon.addActionListener(e -> { if (onSetIcon != null) onSetIcon.run(); });
-            javax.swing.JMenuItem delete = new javax.swing.JMenuItem("Delete category");
-            delete.addActionListener(e -> onDelete.run());
+            JMenuItem rename = new JMenuItem("Rename");
+            rename.addActionListener(e -> actions.onRename.run());
+            JMenuItem setIcon = new JMenuItem("Set icon...");
+            setIcon.addActionListener(e -> { if (actions.onSetIcon != null) actions.onSetIcon.run(); });
+            JMenuItem delete = new JMenuItem("Delete category");
+            delete.addActionListener(e -> actions.onDelete.run());
             menu.add(rename);
             menu.add(setIcon);
             menu.add(delete);
@@ -130,7 +131,7 @@ public class CategorySection extends JPanel
             if (dnd != null) dnd.attachWaypointRow(row, row.getDragHandle(), w.getId(), category.getId());
             if (inlineProvider != null)
             {
-                java.awt.Component inline = inlineProvider.apply(w);
+                Component inline = inlineProvider.apply(w);
                 if (inline != null)
                 {
                     if (inline instanceof JComponent)
@@ -182,4 +183,19 @@ public class CategorySection extends JPanel
     }
 
     public enum RowAction { PLAY, EXPAND, DELETE }
+
+    /** The three category-level menu actions, bundled so the constructor stays readable. */
+    public static final class Actions
+    {
+        final Runnable onRename;
+        final Runnable onDelete;
+        final Runnable onSetIcon;
+
+        public Actions(Runnable onRename, Runnable onDelete, Runnable onSetIcon)
+        {
+            this.onRename = onRename;
+            this.onDelete = onDelete;
+            this.onSetIcon = onSetIcon;
+        }
+    }
 }

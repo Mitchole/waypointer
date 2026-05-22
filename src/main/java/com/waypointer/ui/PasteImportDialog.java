@@ -26,8 +26,8 @@ public class PasteImportDialog extends JDialog
     {
         if (input == null) return CodeKind.UNKNOWN;
         String t = input.trim();
-        if (t.startsWith("WPL1:"))  return CodeKind.WAYPOINT_LIBRARY;
-        if (t.startsWith("WP1:"))   return CodeKind.WAYPOINT_SINGLE;
+        if (t.startsWith(WaypointShareCodec.LIBRARY_MAGIC)) return CodeKind.WAYPOINT_LIBRARY;
+        if (t.startsWith(WaypointShareCodec.SINGLE_MAGIC))  return CodeKind.WAYPOINT_SINGLE;
         return CodeKind.UNKNOWN;
     }
 
@@ -37,7 +37,7 @@ public class PasteImportDialog extends JDialog
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(8, 8));
         JPanel contentPane = (JPanel) getContentPane();
-        contentPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        contentPane.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         contentPane.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
         JTextArea area = new JTextArea(8, 40);

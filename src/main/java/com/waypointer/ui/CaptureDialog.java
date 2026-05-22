@@ -11,6 +11,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.UUID;
 import javax.swing.AbstractAction;
@@ -32,8 +33,8 @@ public class CaptureDialog extends JDialog
     private final WaypointStore store;
     private final int packedPoint;
 
-    private JComboBox<CategoryItem> categoryCombo;
-    private CategoryItem lastSelected;
+    private JComboBox<CategoryComboItem> categoryCombo;
+    private CategoryComboItem lastSelected;
 
     public CaptureDialog(Window owner, WaypointStore store, WaypointCapture capture, int packedPoint)
     {
@@ -110,8 +111,8 @@ public class CaptureDialog extends JDialog
     {
         String trimmed = typedName == null ? "" : typedName.trim();
         if (trimmed.isEmpty()) trimmed = defaultName;
-        CategoryItem sel = (CategoryItem) categoryCombo.getSelectedItem();
-        UUID categoryId = (sel == null || sel.isNewSentinel())
+        CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
+        UUID categoryId = (sel == null || sel.isSentinel())
             ? store.getUncategorized().getId() : sel.id();
         store.createWaypoint(packedPoint, trimmed, categoryId);
         dispose();
@@ -119,9 +120,9 @@ public class CaptureDialog extends JDialog
 
     private void handleCategorySelection()
     {
-        CategoryItem sel = (CategoryItem) categoryCombo.getSelectedItem();
+        CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
         if (sel == null) return;
-        if (!sel.isNewSentinel())
+        if (!sel.isSentinel())
         {
             lastSelected = sel;
             return;
@@ -156,53 +157,24 @@ public class CaptureDialog extends JDialog
     private void rebuildCategoryCombo(UUID selectId)
     {
         // suppress action events while rebuilding
-        java.awt.event.ActionListener[] listeners = categoryCombo.getActionListeners();
-        for (java.awt.event.ActionListener l : listeners) categoryCombo.removeActionListener(l);
+        ActionListener[] listeners = categoryCombo.getActionListeners();
+        for (ActionListener l : listeners) categoryCombo.removeActionListener(l);
 
         categoryCombo.removeAllItems();
-        CategoryItem toSelect = null;
+        CategoryComboItem toSelect = null;
         for (Category c : store.getCategoriesOrdered())
         {
-            CategoryItem item = new CategoryItem(c);
+            CategoryComboItem item = new CategoryComboItem(c);
             categoryCombo.addItem(item);
             if (c.getId().equals(selectId)) toSelect = item;
         }
-        categoryCombo.addItem(CategoryItem.newSentinel());
+        categoryCombo.addItem(CategoryComboItem.sentinel("+ New category..."));
         if (toSelect != null)
         {
             categoryCombo.setSelectedItem(toSelect);
             lastSelected = toSelect;
         }
 
-        for (java.awt.event.ActionListener l : listeners) categoryCombo.addActionListener(l);
-    }
-
-    static final class CategoryItem
-    {
-        private final Category category; // null when sentinel
-        private final boolean newSentinel;
-
-        CategoryItem(Category c)
-        {
-            this.category = c;
-            this.newSentinel = false;
-        }
-
-        private CategoryItem()
-        {
-            this.category = null;
-            this.newSentinel = true;
-        }
-
-        static CategoryItem newSentinel() { return new CategoryItem(); }
-
-        UUID id() { return category == null ? null : category.getId(); }
-        boolean isNewSentinel() { return newSentinel; }
-
-        @Override public String toString()
-        {
-            if (newSentinel) return "+ New category...";
-            return category.getName();
-        }
+        for (ActionListener l : listeners) categoryCombo.addActionListener(l);
     }
 }

@@ -35,16 +35,6 @@ public final class IconCatalog
 
     public List<Category> getCategories() { return categories; }
 
-    public int categoryIndexOf(Integer spriteId)
-    {
-        if (spriteId == null) return -1;
-        for (int i = 0; i < categories.size(); i++)
-        {
-            if (categories.get(i).spriteIds.contains(spriteId)) return i;
-        }
-        return -1;
-    }
-
     private static List<Category> load(Gson gson)
     {
         try (InputStream in = IconCatalog.class.getResourceAsStream(RESOURCE))

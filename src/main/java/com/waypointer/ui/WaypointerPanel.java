@@ -12,6 +12,7 @@ import com.waypointer.service.WaypointFilter;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
+import com.waypointer.util.Listeners;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -43,18 +44,22 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.ScrollBarUI;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.ui.laf.RuneLiteScrollBarUI;
 
 @Slf4j
 @Singleton
@@ -72,7 +77,7 @@ public class WaypointerPanel extends PluginPanel
     private final IconCatalog iconCatalog;
     private final OverflowMenu overflowMenu;
     private final JPanel body = new JPanel();
-    private javax.swing.JScrollBar bodyScrollBar;
+    private JScrollBar bodyScrollBar;
     private final JButton markBtn = new JButton("Mark current location");
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
@@ -83,13 +88,13 @@ public class WaypointerPanel extends PluginPanel
 
     // Subscription tokens so the panel can deregister cleanly. Held even though the panel is
     // a Singleton today, in case shutdown ordering changes or the panel ever gets re-created.
-    private com.waypointer.util.Listeners.Subscription storeSub;
-    private com.waypointer.util.Listeners.Subscription pathSub;
+    private Listeners.Subscription storeSub;
+    private Listeners.Subscription pathSub;
 
     // Coalesce back-to-back rebuild requests within one EDT cycle into a single call.
     private volatile boolean rebuildPending = false;
     // Debounce search-field keystrokes so the panel only rebuilds after 120 ms of inactivity.
-    private javax.swing.Timer searchDebounceTimer;
+    private Timer searchDebounceTimer;
 
     @Inject
     public WaypointerPanel(WaypointStore store, WaypointCapture capture,
@@ -169,8 +174,7 @@ public class WaypointerPanel extends PluginPanel
         {
             @Override public Dimension getPreferredSize()
             {
-                return new Dimension(net.runelite.client.ui.PluginPanel.PANEL_WIDTH,
-                    super.getPreferredSize().height);
+                return new Dimension(PluginPanel.PANEL_WIDTH, super.getPreferredSize().height);
             }
         };
         bodyHolder.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -185,12 +189,11 @@ public class WaypointerPanel extends PluginPanel
         bodyScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         bodyScroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
         bodyScroll.setBorder(BorderFactory.createEmptyBorder());
-        javax.swing.JScrollBar vBar = bodyScroll.getVerticalScrollBar();
+        JScrollBar vBar = bodyScroll.getVerticalScrollBar();
         vBar.putClientProperty("JScrollBar.width", 7);
         vBar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
         vBar.setPreferredSize(new Dimension(7, 0));
-        vBar.setUI((javax.swing.plaf.ScrollBarUI)
-            net.runelite.client.ui.laf.RuneLiteScrollBarUI.createUI(vBar));
+        vBar.setUI((ScrollBarUI) RuneLiteScrollBarUI.createUI(vBar));
         this.bodyScrollBar = vBar;
 
         // Single waypoints layout: top stack (header buttons + search) above the scrollable body.
@@ -283,6 +286,38 @@ public class WaypointerPanel extends PluginPanel
         }
     }
 
+    // Category-level menu actions, wired into each CategorySection via CategorySection.Actions.
+
+    private void promptRenameCategory(Category c)
+    {
+        String newName = JOptionPane.showInputDialog(this,
+            "Rename '" + c.getName() + "' to:", c.getName());
+        if (newName == null || newName.trim().isEmpty()) return;
+        try { store.renameCategory(c.getId(), newName.trim()); }
+        catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Waypointer",
+                JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void promptDeleteCategory(Category c)
+    {
+        String[] options = {"Move to Uncategorized", "Delete waypoints", "Cancel"};
+        int choice = JOptionPane.showOptionDialog(this,
+            "Delete category '" + c.getName() + "'?\n\nWhat to do with its waypoints?",
+            "Delete category", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+            null, options, options[0]);
+        if (choice == 0) store.deleteCategory(c.getId(), true);
+        else if (choice == 1) store.deleteCategory(c.getId(), false);
+    }
+
+    private void promptSetCategoryIcon(Category c)
+    {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        new IconPickerDialog(owner, spriteManager, iconCatalog, c.getIconId(),
+            iconId -> store.setCategoryIcon(c.getId(), iconId)).setVisible(true);
+    }
+
     private JComponent buildSearchBar()
     {
         JPanel container = new JPanel(new BorderLayout(4, 0));
@@ -345,7 +380,7 @@ public class WaypointerPanel extends PluginPanel
         String txt = searchField.getText();
         final String typed = txt == null ? "" : txt.trim();
         if (searchDebounceTimer != null && searchDebounceTimer.isRunning()) searchDebounceTimer.stop();
-        searchDebounceTimer = new javax.swing.Timer(120, e -> {
+        searchDebounceTimer = new Timer(120, e -> {
             currentFilter = typed;
             clearButton.setVisible(!currentFilter.isEmpty());
             rebuild();
@@ -395,33 +430,6 @@ public class WaypointerPanel extends PluginPanel
                 // While filtering, force expanded so matches are visible.
                 boolean collapsed = isFiltering ? false
                     : collapsedByCategory.getOrDefault(c.getId(), false);
-                Runnable onRename = () -> {
-                    String newName = JOptionPane.showInputDialog(this,
-                        "Rename '" + c.getName() + "' to:", c.getName());
-                    if (newName != null && !newName.trim().isEmpty())
-                    {
-                        try { store.renameCategory(c.getId(), newName.trim()); }
-                        catch (IllegalArgumentException ex) {
-                            JOptionPane.showMessageDialog(this, ex.getMessage(), "Waypointer",
-                                JOptionPane.WARNING_MESSAGE);
-                        }
-                    }
-                };
-                Runnable onDelete = () -> {
-                    String[] options = {"Move to Uncategorized", "Delete waypoints", "Cancel"};
-                    int choice = JOptionPane.showOptionDialog(this,
-                        "Delete category '" + c.getName() + "'?\n\nWhat to do with its waypoints?",
-                        "Delete category", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-                        null, options, options[0]);
-                    if (choice == 0) store.deleteCategory(c.getId(), true);
-                    else if (choice == 1) store.deleteCategory(c.getId(), false);
-                };
-                Runnable onSetIcon = () -> {
-                    Window owner = SwingUtilities.getWindowAncestor(this);
-                    new IconPickerDialog(owner, spriteManager, iconCatalog, c.getIconId(), iconId -> {
-                        store.setCategoryIcon(c.getId(), iconId);
-                    }).setVisible(true);
-                };
                 CategorySection section = new CategorySection(
                     c, ws, collapsed,
                     isCollapsed -> {
@@ -432,9 +440,10 @@ public class WaypointerPanel extends PluginPanel
                     w -> expandedWaypoints.contains(w.getId())
                         ? new InlineEditPanel(w, store, capture, shareCodec, spriteManager, iconCatalog) : null,
                     dnd,
-                    onRename,
-                    onDelete,
-                    onSetIcon,
+                    new CategorySection.Actions(
+                        () -> promptRenameCategory(c),
+                        () -> promptDeleteCategory(c),
+                        () -> promptSetCategoryIcon(c)),
                     spriteManager);
                 body.add(section);
                 rendered = true;
@@ -583,8 +592,7 @@ public class WaypointerPanel extends PluginPanel
      * by {@link WaypointRow}'s right-click popup. Centralised so both entry points use the
      * same wording and the same OK_CANCEL semantics.
      */
-    static void confirmAndDelete(java.awt.Component anchor, WaypointStore store,
-        com.waypointer.model.Waypoint w)
+    static void confirmAndDelete(Component anchor, WaypointStore store, Waypoint w)
     {
         if (w == null) return;
         int ok = JOptionPane.showConfirmDialog(anchor,

@@ -139,12 +139,6 @@ public class IconPickerDialog extends JDialog
         return 0;
     }
 
-    static int computeInitialPage(Integer currentIconId)
-    {
-        // Legacy entry point retained for compatibility; uses the legacy reflection list.
-        return computeInitialPage(currentIconId, LegacyAllIds.IDS, PAGE_SIZE);
-    }
-
     static int computeInitialPage(Integer currentIconId, List<Integer> sortedIds, int pageSize)
     {
         if (currentIconId == null) return 0;

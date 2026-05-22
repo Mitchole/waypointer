@@ -3,10 +3,8 @@ package com.waypointer.ui;
 import java.awt.Cursor;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import javax.swing.border.Border;
 import net.runelite.client.ui.ColorScheme;
 
 // Card-row pattern helpers. A "card" is a JPanel styled as a hover-aware row:
@@ -41,16 +39,5 @@ final class Cards
         };
         card.addMouseListener(ma);
         return ma;
-    }
-
-    // Wraps the card's existing border with a 3px BRAND_ORANGE matte border on the left
-    // edge. Marks the primary affordance among a stack of equal-weight cards.
-    static void accentStripe(JPanel card)
-    {
-        Border existing = card.getBorder();
-        Border accent = BorderFactory.createMatteBorder(0, 3, 0, 0, ColorScheme.BRAND_ORANGE);
-        card.setBorder(existing == null
-            ? accent
-            : BorderFactory.createCompoundBorder(accent, existing));
     }
 }

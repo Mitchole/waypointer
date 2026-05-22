@@ -39,6 +39,7 @@ public class WaypointMenuHandlerTest
         config = mock(WaypointerConfig.class);
         panel = mock(WaypointerPanel.class);
         when(client.getMenu()).thenReturn(menu);
+        when(menu.getMenuEntries()).thenReturn(new MenuEntry[0]);
         MenuEntry stubEntry = mock(MenuEntry.class);
         when(stubEntry.setOption(anyString())).thenReturn(stubEntry);
         when(stubEntry.setTarget(anyString())).thenReturn(stubEntry);
@@ -62,7 +63,25 @@ public class WaypointMenuHandlerTest
 
         handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
 
-        verify(menu, atLeastOnce()).createMenuEntry(0);
+        verify(menu).createMenuEntry(0);
+    }
+
+    @Test
+    public void doesNotDuplicateWorldMapEntryWhenAlreadyPresent()
+    {
+        Widget map = mock(Widget.class);
+        when(map.getBounds()).thenReturn(new Rectangle(0, 0, 800, 600));
+        when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(map);
+        when(client.getMouseCanvasPosition()).thenReturn(new Point(400, 300));
+
+        MenuEntry already = mock(MenuEntry.class);
+        when(already.getOption()).thenReturn("Save as Waypoint");
+        when(already.getTarget()).thenReturn("<col=ff9040>Waypointer</col>");
+        when(menu.getMenuEntries()).thenReturn(new MenuEntry[]{already});
+
+        handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
+
+        verify(menu, never()).createMenuEntry(anyInt());
     }
 
     @Test

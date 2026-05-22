@@ -65,9 +65,6 @@ public class WaypointPathfinder
     @Nullable
     public String getActiveName() { return activeName; }
 
-    public void addListener(Runnable r) { listeners.add(r); }
-    public void removeListener(Runnable r) { listeners.remove(r); }
-
     public Listeners.Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
 
     @Subscribe

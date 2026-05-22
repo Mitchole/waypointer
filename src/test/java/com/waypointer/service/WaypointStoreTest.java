@@ -128,7 +128,7 @@ public class WaypointStoreTest
     public void observersNotifiedOnMutation()
     {
         AtomicInteger calls = new AtomicInteger();
-        store.addListener(() -> calls.incrementAndGet());
+        store.subscribe(() -> calls.incrementAndGet());
         store.createWaypoint(1, "W", store.getUncategorized().getId());
         assertEquals(1, calls.get());
         store.renameWaypoint(store.getWaypointsInCategory(store.getUncategorized().getId())

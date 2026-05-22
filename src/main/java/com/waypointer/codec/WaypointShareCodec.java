@@ -25,8 +25,8 @@ import javax.inject.Inject;
  */
 public class WaypointShareCodec
 {
-    static final String SINGLE_MAGIC = "WP1:";
-    static final String LIBRARY_MAGIC = "WPL1:";
+    public static final String SINGLE_MAGIC = "WP1:";
+    public static final String LIBRARY_MAGIC = "WPL1:";
     static final int MAX_INFLATED_BYTES = 1024 * 1024;
 
     private final Gson gson;

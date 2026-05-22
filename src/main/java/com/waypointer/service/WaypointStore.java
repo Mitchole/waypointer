@@ -376,9 +376,6 @@ public class WaypointStore
         return result;
     }
 
-    public void addListener(Runnable r) { listeners.add(r); }
-    public void removeListener(Runnable r) { listeners.remove(r); }
-
     public Listeners.Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
 
     // ---- Debounced persistence wiring ----

@@ -91,6 +91,16 @@ public class WaypointMenuHandler
 
     private void addEntry(int idx, java.util.function.Consumer<MenuEntry> onClick)
     {
+        // MenuEntryAdded fires once per game-generated entry every cycle, so a menu with
+        // several entries would otherwise accumulate one "Save as Waypoint" per entry.
+        // Bail if ours is already present this cycle. Mirrors shortest-path's addMenuEntry.
+        for (MenuEntry existing : client.getMenu().getMenuEntries())
+        {
+            if (OPTION.equals(existing.getOption()) && TARGET.equals(existing.getTarget()))
+            {
+                return;
+            }
+        }
         client.getMenu().createMenuEntry(idx)
             .setOption(OPTION)
             .setTarget(TARGET)

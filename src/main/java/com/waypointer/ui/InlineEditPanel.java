@@ -71,14 +71,13 @@ public class InlineEditPanel extends JPanel
         g.gridx = 1; g.weightx = 1; add(nameField, g);
 
         g.gridx = 0; g.gridy++; g.weightx = 0; add(Styles.fieldLabel("Category"), g);
-        JComboBox<CategoryItem> cats = new JComboBox<>();
-        cats.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        cats.setForeground(Color.WHITE);
-        for (Category c : store.getCategoriesOrdered()) cats.addItem(new CategoryItem(c));
+        JComboBox<CategoryComboItem> cats = new JComboBox<>();
+        Styles.combo(cats);
+        for (Category c : store.getCategoriesOrdered()) cats.addItem(new CategoryComboItem(c));
         for (int i = 0; i < cats.getItemCount(); i++)
             if (cats.getItemAt(i).id().equals(w.getCategoryId())) cats.setSelectedIndex(i);
         cats.addActionListener(e -> {
-            CategoryItem sel = (CategoryItem) cats.getSelectedItem();
+            CategoryComboItem sel = (CategoryComboItem) cats.getSelectedItem();
             if (sel != null) store.moveWaypointToCategory(waypointId, sel.id());
         });
         g.gridx = 1; g.weightx = 1; add(cats, g);
@@ -232,13 +231,5 @@ public class InlineEditPanel extends JPanel
             @Override public void mouseClicked(MouseEvent e) { onClick.run(); }
         });
         return l;
-    }
-
-    public static final class CategoryItem
-    {
-        private final Category c;
-        public CategoryItem(Category c) { this.c = c; }
-        public UUID id() { return c.getId(); }
-        @Override public String toString() { return c.getName(); }
     }
 }
