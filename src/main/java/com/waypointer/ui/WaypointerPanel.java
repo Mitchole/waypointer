@@ -55,6 +55,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.ScrollBarUI;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
@@ -76,6 +78,7 @@ public class WaypointerPanel extends PluginPanel
     private final SpriteManager spriteManager;
     private final IconCatalog iconCatalog;
     private final OverflowMenu overflowMenu;
+    private final ActivePathBanner banner;
     private final JPanel body = new JPanel();
     private JScrollBar bodyScrollBar;
     private final JButton markBtn = new JButton("Mark current location");
@@ -196,20 +199,25 @@ public class WaypointerPanel extends PluginPanel
         vBar.setUI((ScrollBarUI) RuneLiteScrollBarUI.createUI(vBar));
         this.bodyScrollBar = vBar;
 
-        // Single waypoints layout: top stack (header buttons + search) above the scrollable body.
-        // No panel-level border: topStack handles its own 8-px inset, and body is allowed to
-        // reach the full PANEL_WIDTH (after the 7-px FlatLaf scrollbar) so WaypointRows and
-        // the inline edit form get the same effective width they had pre-scroll-wrap. Body
-        // children already have their own internal padding (WaypointRow 10-px sides;
-        // CategorySection headers full-bleed with the chevron carrying visual indent).
+        this.banner = new ActivePathBanner(pathfinder, config);
+        banner.setAlignmentX(LEFT_ALIGNMENT);
+
+        JPanel northStack = new JPanel();
+        northStack.setLayout(new BoxLayout(northStack, BoxLayout.Y_AXIS));
+        northStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        topStack.setAlignmentX(LEFT_ALIGNMENT);
+        northStack.add(topStack);
+        northStack.add(banner);
+
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
-        add(topStack, BorderLayout.NORTH);
+        add(northStack, BorderLayout.NORTH);
         add(bodyScroll, BorderLayout.CENTER);
 
         storeSub = store.subscribe(this::scheduleRebuild);
-        pathSub = pathfinder.subscribe(this::scheduleRebuild);
+        pathSub = pathfinder.subscribe(this::refreshBannerOnEdt);
         rebuild();
+        banner.refresh();
     }
 
     /**
@@ -373,6 +381,19 @@ public class WaypointerPanel extends PluginPanel
             rebuildPending = false;
             rebuild();
         });
+    }
+
+    private void refreshBannerOnEdt()
+    {
+        SwingUtilities.invokeLater(banner::refresh);
+    }
+
+    @Subscribe
+    public void onConfigChanged(ConfigChanged e)
+    {
+        if (!"waypointer".equals(e.getGroup())) return;
+        if (!"showPathingBanner".equals(e.getKey())) return;
+        SwingUtilities.invokeLater(banner::refresh);
     }
 
     private void onFilterChanged()
