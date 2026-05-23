@@ -17,6 +17,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.plaf.basic.BasicHTML;
+import javax.swing.text.View;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -159,9 +161,20 @@ class PresetSection extends JPanel
             ? ""
             : "<br><span style='color:#7d7d7d;'>" + Styles.escapeHtml(wp.getDescription())
                 + "</span>";
-        JLabel label = new JLabel("<html><div style='width:" + LABEL_WIDTH_PX + "px;'>"
-            + Styles.escapeHtml(wp.getName()) + descHtml + "</div></html>");
+        JLabel label = new JLabel("<html>"
+            + Styles.escapeHtml(wp.getName()) + descHtml + "</html>");
         label.setForeground(Color.WHITE);
+        // BasicHTML's <div style='width:Npx'> trick is unreliable: JLabel still reports
+        // its preferredSize at the unwrapped text width, which overflows the viewport and
+        // clips the EAST button. Force the View to lay out at LABEL_WIDTH_PX, then pin
+        // the label's preferredSize so BorderLayout honours the constraint.
+        View htmlView = (View) label.getClientProperty(BasicHTML.propertyKey);
+        if (htmlView != null)
+        {
+            htmlView.setSize(LABEL_WIDTH_PX, 0);
+            int h = (int) Math.ceil(htmlView.getPreferredSpan(View.Y_AXIS));
+            label.setPreferredSize(new Dimension(LABEL_WIDTH_PX, h));
+        }
         row.add(label, BorderLayout.CENTER);
 
         int packed = WorldPointPacker.pack(wp.getX(), wp.getY(), wp.getPlane());
