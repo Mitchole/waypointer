@@ -40,7 +40,7 @@ final class ToastBar extends JPanel
     /** Set the message text, make the strip visible, and restart the auto-hide timer. */
     void show(String text)
     {
-        message.setText("✓ " + Styles.escapeHtml(text));
+        message.setText("<html>✓ " + Styles.escapeHtml(text) + "</html>");
         setVisible(true);
         hideTimer.restart();
     }
