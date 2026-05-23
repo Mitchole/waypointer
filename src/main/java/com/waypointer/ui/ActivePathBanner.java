@@ -4,6 +4,7 @@ import com.waypointer.WaypointerConfig;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.WaypointPathfinder;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -70,5 +71,12 @@ final class ActivePathBanner extends JPanel
     void clickStopForTest()
     {
         stop.doClick();
+    }
+
+    @Override
+    public Dimension getMaximumSize()
+    {
+        Dimension pref = getPreferredSize();
+        return new Dimension(Integer.MAX_VALUE, pref.height);
     }
 }
