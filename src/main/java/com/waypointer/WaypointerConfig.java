@@ -16,6 +16,14 @@ public interface WaypointerConfig extends Config
     )
     default boolean tileRightClickEnabled() { return false; }
 
+    @ConfigItem(
+        keyName = "showPathingBanner",
+        name = "Show 'Pathing to' banner",
+        description = "Show a status strip at the top of the panel while a path is active.",
+        position = 20
+    )
+    default boolean showPathingBanner() { return true; }
+
     // Hidden:JSON-encoded map of categoryId -> collapsed boolean. Empty = all expanded.
     @ConfigItem(
         keyName = "categoryCollapsedJson",
