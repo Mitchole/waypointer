@@ -3,8 +3,6 @@ package com.waypointer.ui;
 import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
-import com.waypointer.model.WorldPointPacker;
-import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
 import java.awt.Component;
@@ -31,19 +29,16 @@ final class OverflowMenu
     private final WaypointShareCodec shareCodec;
     private final LibraryJsonCodec libraryCodec;
     private final WaypointStorePersistence persistence;
-    private final WaypointPathfinder pathfinder;
 
     @Inject
     OverflowMenu(WaypointStore store, WaypointerNavigator navigator, WaypointShareCodec shareCodec,
-        LibraryJsonCodec libraryCodec, WaypointStorePersistence persistence,
-        WaypointPathfinder pathfinder)
+        LibraryJsonCodec libraryCodec, WaypointStorePersistence persistence)
     {
         this.store = store;
         this.navigator = navigator;
         this.shareCodec = shareCodec;
         this.libraryCodec = libraryCodec;
         this.persistence = persistence;
-        this.pathfinder = pathfinder;
     }
 
     /** Show the popup anchored just below {@code near}; uses {@code panel} as JOption parent. */
@@ -83,12 +78,6 @@ final class OverflowMenu
         menu.add(openFolder);
 
         menu.addSeparator();
-
-        JMenuItem stop = new JMenuItem("Stop pathing");
-        stop.setEnabled(pathfinder.isAvailable()
-            && pathfinder.getActiveTarget() != WorldPointPacker.UNDEFINED);
-        stop.addActionListener(e -> pathfinder.clearPath());
-        menu.add(stop);
 
         JMenuItem reset = new JMenuItem("Reset library...");
         reset.addActionListener(e -> {
