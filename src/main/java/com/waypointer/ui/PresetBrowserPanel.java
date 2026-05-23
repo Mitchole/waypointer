@@ -36,6 +36,7 @@ class PresetBrowserPanel extends PluginPanel
     private final WaypointStore store;
     private final SpriteManager spriteManager;
     private final JPanel body = new JPanel();
+    private final ToastBar toast = new ToastBar();
 
     PresetBrowserPanel(PresetCatalog catalog, WaypointStore store, SpriteManager spriteManager,
         Runnable onBack)
@@ -47,7 +48,15 @@ class PresetBrowserPanel extends PluginPanel
 
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
-        add(buildHeader(onBack), BorderLayout.NORTH);
+
+        JPanel northStack = new JPanel();
+        northStack.setLayout(new BoxLayout(northStack, BoxLayout.Y_AXIS));
+        northStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        JPanel header = buildHeader(onBack);
+        header.setAlignmentX(LEFT_ALIGNMENT);
+        northStack.add(header);
+        northStack.add(toast);
+        add(northStack, BorderLayout.NORTH);
 
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -146,9 +155,15 @@ class PresetBrowserPanel extends PluginPanel
         return set;
     }
 
-    private void addWaypoint(Preset preset, PresetWaypoint wp)
+    void addWaypoint(Preset preset, PresetWaypoint wp)
     {
         store.importMerge(PresetImport.singleEntryLibrary(preset, wp));
+        toast.show("Added " + wp.getName());
         rebuild();
+    }
+
+    ToastBar getToastForTest()
+    {
+        return toast;
     }
 }
