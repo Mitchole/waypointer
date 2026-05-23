@@ -39,6 +39,17 @@ final class Styles
             BorderFactory.createEmptyBorder(2, 6, 2, 6)));
     }
 
+    static void addButton(JButton b)
+    {
+        b.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        b.setForeground(ColorScheme.PROGRESS_COMPLETE_COLOR);
+        b.setFocusPainted(false);
+        b.setFont(b.getFont().deriveFont(Font.BOLD, 14f));
+        b.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1),
+            BorderFactory.createEmptyBorder(4, 7, 4, 7)));
+    }
+
     static void primaryButton(JButton b)
     {
         b.setBackground(ColorScheme.BRAND_ORANGE);
