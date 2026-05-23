@@ -29,9 +29,9 @@ class PresetSection extends JPanel
     private static final String CHEVRON_COLLAPSED = "▸";
     private static final String CHEVRON_EXPANDED = "▾";
 
-    // Width budget for the row label inside the panel: PANEL_WIDTH (218) - left padding (22)
-    // - right padding (9) - button (~23) - hgap (12) - scrollbar (7), with a small margin.
-    private static final int LABEL_WIDTH_PX = 145;
+    // Width budget for the row label inside the panel: PANEL_WIDTH (225) - left padding (22)
+    // - right padding (9) - button (~23) - hgap (12) - scrollbar (~17), with a small margin.
+    private static final int LABEL_WIDTH_PX = 140;
 
     private final Preset preset;
     private final SpriteManager spriteManager;
@@ -167,6 +167,7 @@ class PresetSection extends JPanel
         int packed = WorldPointPacker.pack(wp.getX(), wp.getY(), wp.getPlane());
         if (existingPacked.contains(packed))
         {
+            // U+2713 check mark.
             JLabel added = new JLabel("✓ added");
             added.setForeground(Color.GRAY);
             added.setFont(FontManager.getRunescapeSmallFont());
