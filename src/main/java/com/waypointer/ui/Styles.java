@@ -29,6 +29,16 @@ final class Styles
             BorderFactory.createEmptyBorder(8, 12, 8, 12)));
     }
 
+    static void compactSecondaryButton(JButton b)
+    {
+        b.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1),
+            BorderFactory.createEmptyBorder(2, 6, 2, 6)));
+    }
+
     static void primaryButton(JButton b)
     {
         b.setBackground(ColorScheme.BRAND_ORANGE);
