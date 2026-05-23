@@ -163,9 +163,7 @@ class PresetBrowserPanel extends PluginPanel
     {
         store.importMerge(PresetImport.singleEntryLibrary(preset, wp));
         int packed = WorldPointPacker.pack(wp.getX(), wp.getY(), wp.getPlane());
-        UUID newId = findIdByPacked(store.getLibrary(), packed);
-        toast.show("Added " + wp.getName());
-        return newId;
+        return findIdByPacked(store.getLibrary(), packed);
     }
 
     void removeWaypoint(UUID id)

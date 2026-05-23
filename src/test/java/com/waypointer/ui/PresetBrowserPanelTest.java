@@ -38,7 +38,7 @@ public class PresetBrowserPanelTest
     }
 
     @Test
-    public void toastShowsAddedMessageAfterAdd()
+    public void addDoesNotShowToast()
     {
         PresetBrowserPanel panel = buildPanel();
         Preset preset = new Preset("Cities", "", null,
@@ -46,11 +46,7 @@ public class PresetBrowserPanelTest
 
         UUID newId = panel.addWaypoint(preset, preset.getWaypoints().get(0));
         assertNotNull("addWaypoint should return the new UUID", newId);
-
-        ToastBar toast = panel.getToastForTest();
-        assertTrue(toast.isVisible());
-        assertTrue("expected toast to mention the waypoint, got: " + toast.getMessageText(),
-            toast.getMessageText().contains("Varrock"));
+        assertFalse("toast should stay hidden after add", panel.getToastForTest().isVisible());
     }
 
     @Test
