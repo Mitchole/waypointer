@@ -1,6 +1,8 @@
 package com.waypointer.ui;
 
+import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
+import com.waypointer.model.WorldPointPacker;
 import com.waypointer.preset.Preset;
 import com.waypointer.preset.PresetCatalog;
 import com.waypointer.preset.PresetImport;
@@ -12,9 +14,10 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.UUID;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -27,9 +30,8 @@ import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 
-// The preset browser. Lists curated sets as collapsible sections; the + on a row adds that
-// one waypoint to the user's library through the shared importMerge path, then re-renders
-// so the row flips to its "added" state. Built fresh each time the browser is opened.
+// The preset browser. Lists curated sets as collapsible sections. Adding or removing a row's
+// waypoint flips that row's toggle in place without rebuilding the panel.
 class PresetBrowserPanel extends PluginPanel
 {
     private final PresetCatalog catalog;
@@ -120,7 +122,7 @@ class PresetBrowserPanel extends PluginPanel
     private void rebuild()
     {
         body.removeAll();
-        Set<Integer> existing = existingPackedCoords();
+        Map<Integer, UUID> existing = existingIdByPacked();
         List<Preset> presets = catalog.getPresets();
         if (presets.isEmpty())
         {
@@ -135,7 +137,9 @@ class PresetBrowserPanel extends PluginPanel
             for (Preset preset : presets)
             {
                 PresetSection section = new PresetSection(
-                    preset, spriteManager, existing, wp -> addWaypoint(preset, wp));
+                    preset, spriteManager, existing,
+                    wp -> addWaypoint(preset, wp),
+                    id -> removeWaypoint(id));
                 section.setAlignmentX(LEFT_ALIGNMENT);
                 body.add(section);
             }
@@ -145,21 +149,49 @@ class PresetBrowserPanel extends PluginPanel
         body.repaint();
     }
 
-    private Set<Integer> existingPackedCoords()
+    private Map<Integer, UUID> existingIdByPacked()
     {
-        Set<Integer> set = new HashSet<>();
+        Map<Integer, UUID> map = new HashMap<>();
         for (Waypoint w : store.getLibrary().getWaypoints())
         {
-            set.add(w.getPackedWorldPoint());
+            map.put(w.getPackedWorldPoint(), w.getId());
         }
-        return set;
+        return map;
     }
 
-    void addWaypoint(Preset preset, PresetWaypoint wp)
+    UUID addWaypoint(Preset preset, PresetWaypoint wp)
     {
         store.importMerge(PresetImport.singleEntryLibrary(preset, wp));
+        int packed = WorldPointPacker.pack(wp.getX(), wp.getY(), wp.getPlane());
+        UUID newId = findIdByPacked(store.getLibrary(), packed);
         toast.show("Added " + wp.getName());
-        rebuild();
+        return newId;
+    }
+
+    void removeWaypoint(UUID id)
+    {
+        Waypoint w = findWaypointById(store.getLibrary(), id);
+        String name = w != null ? w.getName() : "waypoint";
+        store.deleteWaypoint(id);
+        toast.show("Removed " + name);
+    }
+
+    private static UUID findIdByPacked(Library library, int packed)
+    {
+        for (Waypoint w : library.getWaypoints())
+        {
+            if (w.getPackedWorldPoint() == packed) return w.getId();
+        }
+        return null;
+    }
+
+    private static Waypoint findWaypointById(Library library, UUID id)
+    {
+        for (Waypoint w : library.getWaypoints())
+        {
+            if (w.getId().equals(id)) return w;
+        }
+        return null;
     }
 
     ToastBar getToastForTest()

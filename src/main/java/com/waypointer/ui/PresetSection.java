@@ -10,11 +10,12 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Set;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.plaf.basic.BasicHTML;
@@ -37,19 +38,21 @@ class PresetSection extends JPanel
 
     private final Preset preset;
     private final SpriteManager spriteManager;
-    private final Set<Integer> existingPacked;
-    private final Consumer<PresetWaypoint> onAdd;
+    private final Map<Integer, UUID> existingIdByPacked;
+    private final Function<PresetWaypoint, UUID> onAdd;
+    private final Consumer<UUID> onRemove;
     private final JPanel rows = new JPanel();
     private final JLabel chevron = new JLabel(CHEVRON_COLLAPSED);
     private boolean expanded;
 
-    PresetSection(Preset preset, SpriteManager spriteManager, Set<Integer> existingPacked,
-        Consumer<PresetWaypoint> onAdd)
+    PresetSection(Preset preset, SpriteManager spriteManager, Map<Integer, UUID> existingIdByPacked,
+        Function<PresetWaypoint, UUID> onAdd, Consumer<UUID> onRemove)
     {
         this.preset = preset;
         this.spriteManager = spriteManager;
-        this.existingPacked = existingPacked;
+        this.existingIdByPacked = existingIdByPacked;
         this.onAdd = onAdd;
+        this.onRemove = onRemove;
 
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -178,22 +181,12 @@ class PresetSection extends JPanel
         row.add(label, BorderLayout.CENTER);
 
         int packed = WorldPointPacker.pack(wp.getX(), wp.getY(), wp.getPlane());
-        if (existingPacked.contains(packed))
-        {
-            // U+2713 check mark.
-            JLabel added = new JLabel("✓ added");
-            added.setForeground(Color.GRAY);
-            added.setFont(FontManager.getRunescapeSmallFont());
-            label.setForeground(Color.GRAY);
-            row.add(added, BorderLayout.EAST);
-        }
-        else
-        {
-            JButton add = new JButton("+");
-            Styles.addButton(add);
-            add.addActionListener(e -> onAdd.accept(wp));
-            row.add(add, BorderLayout.EAST);
-        }
+        UUID existingId = existingIdByPacked.get(packed);
+        AddRemoveToggle toggle = new AddRemoveToggle(
+            existingId,
+            () -> onAdd.apply(wp),
+            id -> onRemove.accept(id));
+        row.add(toggle, BorderLayout.EAST);
         return row;
     }
 }
