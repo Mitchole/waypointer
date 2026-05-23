@@ -34,7 +34,7 @@ class PresetSection extends JPanel
 
     // Width budget for the row label inside the panel: PANEL_WIDTH (225) - left padding (22)
     // - right padding (22) - button (~23) - hgap (12) - scrollbar (~17), with a small margin.
-    private static final int LABEL_WIDTH_PX = 125;
+    private static final int LABEL_WIDTH_PX = 107;
 
     private final Preset preset;
     private final SpriteManager spriteManager;
@@ -158,7 +158,7 @@ class PresetSection extends JPanel
             }
         };
         row.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        row.setBorder(BorderFactory.createEmptyBorder(5, 22, 5, 22));
+        row.setBorder(BorderFactory.createEmptyBorder(5, 22, 5, 40));
 
         String descHtml = wp.getDescription() == null || wp.getDescription().trim().isEmpty()
             ? ""
