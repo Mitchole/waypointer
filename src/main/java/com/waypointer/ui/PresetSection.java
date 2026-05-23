@@ -29,6 +29,10 @@ class PresetSection extends JPanel
     private static final String CHEVRON_COLLAPSED = "▸";
     private static final String CHEVRON_EXPANDED = "▾";
 
+    // Width budget for the row label inside the panel: PANEL_WIDTH (218) - left padding (22)
+    // - right padding (9) - button (~23) - hgap (12) - scrollbar (7), with a small margin.
+    private static final int LABEL_WIDTH_PX = 145;
+
     private final Preset preset;
     private final SpriteManager spriteManager;
     private final Set<Integer> existingPacked;
@@ -140,7 +144,7 @@ class PresetSection extends JPanel
 
     private JPanel buildRow(PresetWaypoint wp)
     {
-        JPanel row = new JPanel(new BorderLayout(6, 0))
+        JPanel row = new JPanel(new BorderLayout(12, 0))
         {
             @Override
             public Dimension getMaximumSize()
@@ -155,14 +159,14 @@ class PresetSection extends JPanel
             ? ""
             : "<br><span style='color:#7d7d7d;'>" + Styles.escapeHtml(wp.getDescription())
                 + "</span>";
-        JLabel label = new JLabel("<html>" + Styles.escapeHtml(wp.getName()) + descHtml + "</html>");
+        JLabel label = new JLabel("<html><div style='width:" + LABEL_WIDTH_PX + "px;'>"
+            + Styles.escapeHtml(wp.getName()) + descHtml + "</div></html>");
         label.setForeground(Color.WHITE);
         row.add(label, BorderLayout.CENTER);
 
         int packed = WorldPointPacker.pack(wp.getX(), wp.getY(), wp.getPlane());
         if (existingPacked.contains(packed))
         {
-            // U+2713 check mark.
             JLabel added = new JLabel("✓ added");
             added.setForeground(Color.GRAY);
             added.setFont(FontManager.getRunescapeSmallFont());
@@ -172,8 +176,7 @@ class PresetSection extends JPanel
         else
         {
             JButton add = new JButton("+");
-            Styles.secondaryButton(add);
-            add.setPreferredSize(new Dimension(28, 24));
+            Styles.addButton(add);
             add.addActionListener(e -> onAdd.accept(wp));
             row.add(add, BorderLayout.EAST);
         }
