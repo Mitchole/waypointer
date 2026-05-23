@@ -154,6 +154,7 @@ public class WaypointerPanel extends PluginPanel
         topStack.setLayout(new BoxLayout(topStack, BoxLayout.Y_AXIS));
         topStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
         topStack.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        topStack.setAlignmentX(LEFT_ALIGNMENT);
         header.setAlignmentX(LEFT_ALIGNMENT);
         topStack.add(header);
         JComponent searchBar = buildSearchBar();
@@ -205,7 +206,6 @@ public class WaypointerPanel extends PluginPanel
         JPanel northStack = new JPanel();
         northStack.setLayout(new BoxLayout(northStack, BoxLayout.Y_AXIS));
         northStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        topStack.setAlignmentX(LEFT_ALIGNMENT);
         northStack.add(topStack);
         northStack.add(banner);
 
@@ -215,7 +215,10 @@ public class WaypointerPanel extends PluginPanel
         add(bodyScroll, BorderLayout.CENTER);
 
         storeSub = store.subscribe(this::scheduleRebuild);
-        pathSub = pathfinder.subscribe(this::refreshBannerOnEdt);
+        pathSub = pathfinder.subscribe(() -> {
+            scheduleRebuild();
+            refreshBannerOnEdt();
+        });
         rebuild();
         banner.refresh();
     }
