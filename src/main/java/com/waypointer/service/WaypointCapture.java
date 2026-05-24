@@ -41,12 +41,9 @@ public class WaypointCapture
     }
 
     /**
-     * Computes the smart default name for a packed tile.
-     * <ul>
-     *   <li>No landmark match: {@code "(x, y)"}.</li>
-     *   <li>Exact-tile or near-tile POI match: just the name (e.g. {@code "Lumbridge Bank"}).</li>
-     *   <li>Area / city match: name plus coords (e.g. {@code "Varrock (3210, 3422)"}).</li>
-     * </ul>
+     * Computes the smart default name for a packed tile. Point hits (a curated entry or a
+     * nearby POI) return just the name; area hits (sub-area / city) return name plus coords
+     * to disambiguate; no match falls back to coords alone.
      */
     public String defaultName(int packed)
     {
