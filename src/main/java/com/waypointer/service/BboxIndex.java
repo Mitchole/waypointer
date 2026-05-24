@@ -14,25 +14,39 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import com.waypointer.service.LandmarkType;
 
 @Slf4j
 @Singleton
 public class BboxIndex
 {
-    private static final String[] RESOURCES = {
-        "/com/waypointer/landmarks/banks-bboxes.tsv",
-        "/com/waypointer/landmarks/altars-bboxes.tsv",
-        "/com/waypointer/landmarks/anvils-bboxes.tsv",
-        "/com/waypointer/landmarks/furnaces-bboxes.tsv",
-        "/com/waypointer/landmarks/looms-bboxes.tsv",
-        "/com/waypointer/landmarks/spinning-wheels-bboxes.tsv",
-        "/com/waypointer/landmarks/tanners-bboxes.tsv",
-        "/com/waypointer/landmarks/spirit-trees-bboxes.tsv",
-        "/com/waypointer/landmarks/bank-chests-bboxes.tsv",
-        "/com/waypointer/landmarks/charter-ships-bboxes.tsv",
-        "/com/waypointer/landmarks/fairy-rings-bboxes.tsv",
-        "/com/waypointer/landmarks/slayer-masters-bboxes.tsv",
-        "/com/waypointer/landmarks/landmarks-bboxes.tsv",
+    private static final class ResourceEntry
+    {
+        final String path;
+        @javax.annotation.Nullable
+        final LandmarkType type;
+
+        ResourceEntry(String path, @javax.annotation.Nullable LandmarkType type)
+        {
+            this.path = path;
+            this.type = type;
+        }
+    }
+
+    private static final ResourceEntry[] RESOURCES = {
+        new ResourceEntry("/com/waypointer/landmarks/banks-bboxes.tsv",          LandmarkType.BANK),
+        new ResourceEntry("/com/waypointer/landmarks/bank-chests-bboxes.tsv",    LandmarkType.BANK),
+        new ResourceEntry("/com/waypointer/landmarks/altars-bboxes.tsv",         LandmarkType.ALTAR),
+        new ResourceEntry("/com/waypointer/landmarks/anvils-bboxes.tsv",         LandmarkType.ANVIL),
+        new ResourceEntry("/com/waypointer/landmarks/furnaces-bboxes.tsv",       LandmarkType.FURNACE),
+        new ResourceEntry("/com/waypointer/landmarks/looms-bboxes.tsv",          LandmarkType.LOOM),
+        new ResourceEntry("/com/waypointer/landmarks/spinning-wheels-bboxes.tsv", LandmarkType.SPINNING_WHEEL),
+        new ResourceEntry("/com/waypointer/landmarks/tanners-bboxes.tsv",        LandmarkType.TANNER),
+        new ResourceEntry("/com/waypointer/landmarks/spirit-trees-bboxes.tsv",   LandmarkType.SPIRIT_TREE),
+        new ResourceEntry("/com/waypointer/landmarks/charter-ships-bboxes.tsv",  LandmarkType.CHARTER_SHIP),
+        new ResourceEntry("/com/waypointer/landmarks/fairy-rings-bboxes.tsv",    LandmarkType.FAIRY_RING),
+        new ResourceEntry("/com/waypointer/landmarks/slayer-masters-bboxes.tsv", LandmarkType.SLAYER_MASTER),
+        new ResourceEntry("/com/waypointer/landmarks/landmarks-bboxes.tsv",      null),
     };
 
     static final class Entry
@@ -67,7 +81,7 @@ public class BboxIndex
     @Inject
     public BboxIndex()
     {
-        for (String res : RESOURCES) loadResource(res);
+        for (ResourceEntry res : RESOURCES) loadResource(res);
         log.info("BboxIndex loaded {} bbox entries across {} planes", total, byPlane.size());
     }
 
@@ -107,13 +121,13 @@ public class BboxIndex
         total++;
     }
 
-    private void loadResource(String resourcePath)
+    private void loadResource(ResourceEntry res)
     {
-        try (InputStream in = BboxIndex.class.getResourceAsStream(resourcePath))
+        try (InputStream in = BboxIndex.class.getResourceAsStream(res.path))
         {
             if (in == null)
             {
-                log.warn("Bbox resource not found: {}", resourcePath);
+                log.warn("Bbox resource not found: {}", res.path);
                 return;
             }
             try (BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)))
@@ -136,18 +150,18 @@ public class BboxIndex
                         int x2 = Integer.parseInt(parts[2]);
                         int y2 = Integer.parseInt(parts[3]);
                         int plane = Integer.parseInt(parts[4]);
-                        addEntry(new Entry(x1, y1, x2, y2, plane, name));
+                        addEntry(new Entry(x1, y1, x2, y2, plane, name, res.type));
                     }
                     catch (NumberFormatException ex)
                     {
-                        log.warn("Malformed bbox row in {}: {}", resourcePath, line);
+                        log.warn("Malformed bbox row in {}: {}", res.path, line);
                     }
                 }
             }
         }
         catch (Exception e)
         {
-            log.warn("Failed to load bbox resource {}", resourcePath, e);
+            log.warn("Failed to load bbox resource {}", res.path, e);
         }
     }
 }
