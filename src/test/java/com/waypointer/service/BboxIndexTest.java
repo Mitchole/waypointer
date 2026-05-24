@@ -98,4 +98,93 @@ public class BboxIndexTest
         assertNotNull(name);
         assertTrue("expected GE-area bbox, got " + name, name.toLowerCase().contains("grand exchange"));
     }
+
+    // --- nearest(type, from) -----------------------------------------------------
+
+    @Test
+    public void nearest_picksClosestOfRequestedType()
+    {
+        // Two banks at different distances; player at (3094, 3493). The Edgeville one
+        // (centre ~3094, 3494) is right next to the player; Falador (~3014, 3357) is far.
+        BboxIndex idx = BboxIndex.forTesting(java.util.Arrays.asList(
+            new BboxIndex.Entry(3087, 3486, 3103, 3502, 0, "Edgeville Bank", LandmarkType.BANK),
+            new BboxIndex.Entry(3010, 3353, 3018, 3361, 0, "Falador West Bank", LandmarkType.BANK)));
+
+        BboxIndex.Hit hit = idx.nearest(LandmarkType.BANK, WorldPointPacker.pack(3094, 3493, 0));
+
+        assertNotNull(hit);
+        assertEquals("Edgeville Bank", hit.name);
+    }
+
+    @Test
+    public void nearest_clampsToBboxEdgeNotCentre()
+    {
+        // 5x5 bank at (3050..3054, 3050..3054). Player at (3056, 3052) is 2 tiles east of
+        // the bbox; nearest must be 2, not the distance to centre (~4).
+        BboxIndex idx = BboxIndex.forTesting(java.util.Collections.singletonList(
+            new BboxIndex.Entry(3050, 3050, 3054, 3054, 0, "Test Bank", LandmarkType.BANK)));
+
+        BboxIndex.Hit hit = idx.nearest(LandmarkType.BANK, WorldPointPacker.pack(3056, 3052, 0));
+
+        assertNotNull(hit);
+        assertEquals(2, hit.distance);
+        // Hit.packed is the bbox tile closest to the player: x clamped to 3054, y = 3052.
+        assertEquals(3054, WorldPointPacker.getX(hit.packed));
+        assertEquals(3052, WorldPointPacker.getY(hit.packed));
+        assertEquals(0, WorldPointPacker.getPlane(hit.packed));
+    }
+
+    @Test
+    public void nearest_isPlaneAgnostic()
+    {
+        // Player on plane 1 (dungeon), only bank is on plane 0 (overworld).
+        // Plane-agnostic search returns it, and the Hit carries the bbox's plane (0).
+        BboxIndex idx = BboxIndex.forTesting(java.util.Collections.singletonList(
+            new BboxIndex.Entry(3087, 3486, 3103, 3502, 0, "Edgeville Bank", LandmarkType.BANK)));
+
+        BboxIndex.Hit hit = idx.nearest(LandmarkType.BANK, WorldPointPacker.pack(3094, 3493, 1));
+
+        assertNotNull(hit);
+        assertEquals(0, WorldPointPacker.getPlane(hit.packed));
+    }
+
+    @Test
+    public void nearest_returnsNullWhenNoEntriesOfType()
+    {
+        BboxIndex idx = BboxIndex.forTesting(java.util.Collections.singletonList(
+            new BboxIndex.Entry(3087, 3486, 3103, 3502, 0, "Edgeville Bank", LandmarkType.BANK)));
+
+        // No altars in the index at all.
+        assertNull(idx.nearest(LandmarkType.ALTAR, WorldPointPacker.pack(3094, 3493, 0)));
+    }
+
+    @Test
+    public void nearest_chebyshevDiagonalIsOne()
+    {
+        // 1x1 bank at (3050, 3050). Player at (3051, 3051) is one tile diagonally away.
+        // Chebyshev gives 1 (matches OSRS movement), not sqrt(2).
+        BboxIndex idx = BboxIndex.forTesting(java.util.Collections.singletonList(
+            new BboxIndex.Entry(3050, 3050, 3050, 3050, 0, "Tile Bank", LandmarkType.BANK)));
+
+        BboxIndex.Hit hit = idx.nearest(LandmarkType.BANK, WorldPointPacker.pack(3051, 3051, 0));
+
+        assertNotNull(hit);
+        assertEquals(1, hit.distance);
+    }
+
+    @Test
+    public void nearest_includesBankChests()
+    {
+        // Use the production constructor so the bank-chests TSV's BANK mapping is actually
+        // exercised. The Lunar Isle bank chest lives around (2099, 3919). Asking for the
+        // nearest BANK from that tile must return a hit (could be the chest or a Piscarilius
+        // bank further away -- both are LandmarkType.BANK).
+        BboxIndex idx = new BboxIndex();
+        BboxIndex.Hit hit = idx.nearest(LandmarkType.BANK, WorldPointPacker.pack(2099, 3919, 0));
+
+        assertNotNull(hit);
+        // distance to the nearest BANK from inside the dataset must be small (this point
+        // sits on or near the Lunar Isle bank chest itself).
+        assertTrue("expected nearby bank, got distance " + hit.distance, hit.distance < 10);
+    }
 }

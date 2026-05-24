@@ -114,6 +114,60 @@ public class BboxIndex
         return best == null ? null : best.name;
     }
 
+    public static final class Hit
+    {
+        public final int packed;
+        public final String name;
+        public final int distance;
+
+        Hit(int packed, String name, int distance)
+        {
+            this.packed = packed;
+            this.name = name;
+            this.distance = distance;
+        }
+    }
+
+    /**
+     * Returns the entry of the requested type whose bbox is closest to {@code fromPacked}
+     * in Chebyshev tile distance, plane-agnostic. The returned {@link Hit#packed} is the
+     * bbox tile nearest the player (clamped), carrying the bbox's plane. Returns null if
+     * the index holds no entries of that type.
+     */
+    @Nullable
+    public Hit nearest(LandmarkType type, int fromPacked)
+    {
+        int fx = WorldPointPacker.getX(fromPacked);
+        int fy = WorldPointPacker.getY(fromPacked);
+
+        Entry best = null;
+        int bestDist = Integer.MAX_VALUE;
+        int bestCx = 0;
+        int bestCy = 0;
+
+        for (List<Entry> bucket : byPlane.values())
+        {
+            for (Entry e : bucket)
+            {
+                if (e.type != type) continue;
+                int cx = Math.max(e.x1, Math.min(fx, e.x2));
+                int cy = Math.max(e.y1, Math.min(fy, e.y2));
+                int dx = Math.abs(cx - fx);
+                int dy = Math.abs(cy - fy);
+                int d = Math.max(dx, dy);
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = e;
+                    bestCx = cx;
+                    bestCy = cy;
+                }
+            }
+        }
+        if (best == null) return null;
+        return new Hit(WorldPointPacker.pack(bestCx, bestCy, best.plane), best.name, bestDist);
+    }
+
     private void addEntry(Entry e)
     {
         byPlane.computeIfAbsent(e.plane, k -> new ArrayList<>()).add(e);
