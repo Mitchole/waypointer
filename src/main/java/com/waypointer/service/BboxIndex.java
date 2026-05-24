@@ -75,7 +75,19 @@ public class BboxIndex
     @Nullable
     public String lookup(int packedPoint)
     {
-        return null; // filled in Task 24
+        int x = WorldPointPacker.getX(packedPoint);
+        int y = WorldPointPacker.getY(packedPoint);
+        int plane = WorldPointPacker.getPlane(packedPoint);
+        List<Entry> candidates = byPlane.get(plane);
+        if (candidates == null) return null;
+
+        Entry best = null;
+        for (Entry e : candidates)
+        {
+            if (x < e.x1 || x > e.x2 || y < e.y1 || y > e.y2) continue;
+            if (best == null || e.area < best.area) best = e;
+        }
+        return best == null ? null : best.name;
     }
 
     private void addEntry(Entry e)
