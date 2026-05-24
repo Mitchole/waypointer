@@ -39,8 +39,16 @@ public class BboxIndex
     {
         final int x1, y1, x2, y2, plane, area;
         final String name;
+        @javax.annotation.Nullable
+        final LandmarkType type;
 
         Entry(int x1, int y1, int x2, int y2, int plane, String name)
+        {
+            this(x1, y1, x2, y2, plane, name, null);
+        }
+
+        Entry(int x1, int y1, int x2, int y2, int plane, String name,
+            @javax.annotation.Nullable LandmarkType type)
         {
             this.x1 = x1;
             this.y1 = y1;
@@ -48,6 +56,7 @@ public class BboxIndex
             this.y2 = y2;
             this.plane = plane;
             this.name = name;
+            this.type = type;
             this.area = (x2 - x1 + 1) * (y2 - y1 + 1);
         }
     }
