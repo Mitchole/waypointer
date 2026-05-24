@@ -123,3 +123,9 @@ Bank, altar, anvil, and apothecary location data is adapted from
 
 Building from source, the code layout, and how to contribute are covered in
 [DEVELOPER.md](DEVELOPER.md).
+
+## Credits
+
+Bank, altar, anvil, furnace, loom, spinning wheel, tanner, spirit tree, bank chest, charter
+ship, and fairy ring locations are derived from the OSRS Wiki and used under the Creative
+Commons Attribution-ShareAlike 4.0 International licence. Source: https://oldschool.runescape.wiki/.
