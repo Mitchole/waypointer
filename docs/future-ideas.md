@@ -3,61 +3,6 @@
 Features deferred past v1. Not commitments. Each entry roughs out what it is, why it might
 be worth doing, and how big the work looks.
 
-
----
-
-## "Pathing to..." banner
-
-**What:** a small banner at the top of the panel showing which waypoint shortest-path is
-currently routing to, with a `Stop` button. Shows up only when a path is active.
-
-**Example:** `→ Pathing to Vorkath  [✕ Stop]`
-
-**Why interesting:** today the user clicks Play and shortest-path silently draws a path on
-the world map and minimap. The Waypointer panel itself gives no indication of which waypoint
-is active or how to cancel without diving into the overflow menu. This is the one missing
-feedback loop in the post-capture UX.
-
-**Scope:** small-medium. Subscribe to shortest-path's `transports` `PluginMessage` (it
-already posts these when a path is active; see `ShortestPathPlugin.postPluginMessages`).
-Keep the most recent target packed-int in `WaypointPathfinder`, look up the matching
-waypoint, render at the top of the panel body. Clear when shortest-path posts an empty path
-or we send our own `clear` message.
-
-**Edge cases:**
-- Path destinations that don't match any saved waypoint (e.g. user used shortest-path's own
-  right-click `Set Target` independently). Banner should hide or show "Pathing to (3162, 3486)".
-- Shortest-path being unavailable mid-session. Listen for the existing availability flip and
-  clear the banner.
-
----
-
-## Smarter capture default names
-
-**What:** when capturing a new waypoint, default the name to a region-aware string instead of
-`(3162, 3486)`. So Mark current location at the GE produces `Grand Exchange`
-rather than the raw coords.
-
-**Why interesting:** raw coords are unscannable. Users almost always rename, so the default
-is wasted. A region-name prefix turns "did I really visit this place?" into "yes, that's the
-one" without typing anything.
-
-**Scope:** small. Two paths to investigate:
-1. RuneLite's bundled `Region` enum / `WorldArea` lookups: fast and offline, but coverage may
-   be incomplete (covers major cities, may miss smaller landmarks).
-2. The OSRS Wiki's location data, cached locally on first use: best coverage but adds an
-   HTTP dependency and a one-time download.
-
-Start with (1); fall back to `(x, y)` when no region match. (2) becomes worth revisiting if
-the region table feels too sparse.
-
-**Affected entry points:**
-- `WaypointCapture.captureFromPackedPoint` (used by world-map right-click and Mark current
-  location).
-- `CaptureDialog`'s default name (currently builds `(x, y)` via `WorldPointPacker`; would
-  pull from the same helper).
-
-
 ---
 
 ## Bulk row actions
@@ -220,18 +165,14 @@ items.
 and it shouldn't require having saved that bank first. It is useful the moment the plugin
 is installed, before the user has built any library.
 
-**Scope:** small for the mechanism. `LandmarkLookup` already loads bank / altar / anvil /
-apothecary data; pick the nearest entry of the requested type by straight-line distance
-from the player, then hand it to `WaypointPathfinder` (shortest-path computes the real
-route from there). `LandmarkLookup` currently flattens everything into one tile→name map;
-it would keep per-type lists instead.
-
-**Open question, the real work:** the bundled TSVs are incomplete. Before this is worth
-shipping, the landmark data needs a fuller, maintained source. Investigate the OSRS Wiki,
-which holds structured location data. Decide between hand-expanding the vendored TSVs from
-wiki data, or committing a generated dataset built from a wiki export. Keep it an offline
-committed file either way: no runtime HTTP, so the Plugin Hub forbidden-API scan stays
-clean.
+**Scope:** small for the mechanism. The bundled wiki-sourced bbox dataset (banks, altars,
+anvils, furnaces, looms, spinning wheels, tanners, spirit trees, bank chests, charter ships,
+fairy rings, slayer masters, unique landmarks) gives the per-type coverage this needs.
+`BboxIndex` currently merges every TSV into one plane-keyed list and only exposes a
+containment lookup; for "nearest of type X" it would need to retain the source category per
+entry (or load and query each file separately) and add a distance-based query. From there,
+pick the nearest entry of the requested type by straight-line distance from the player, then
+hand it to `WaypointPathfinder` (shortest-path computes the real route from there).
 
 **Edge cases:**
 - Nearest by straight-line distance can pick a candidate that is slow to actually reach.
