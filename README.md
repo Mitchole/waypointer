@@ -52,7 +52,8 @@ There are three ways to capture a tile:
   it on in [Settings](#settings).
 
 Each way opens a small dialog where you set the name and pick a category. When the tile is
-a known bank, altar, anvil, or apothecary, the name is filled in for you.
+inside a known bank, altar, anvil, furnace, fairy ring, dungeon entrance, boss arena, or
+other named landmark, the name is filled in for you.
 
 > **[ Screenshot ]** The capture dialog with a name typed and a category chosen.
 
@@ -115,10 +116,7 @@ category back to how you had it.
 
 ## License
 
-Released under the [BSD 2-Clause License](LICENSE).
-
-Bank, altar, anvil, and apothecary location data is adapted from
-[Shortest Path](https://github.com/Skretzo/shortest-path) under BSD 2-Clause. Built on the
+Released under the [BSD 2-Clause License](LICENSE). Built on the
 [RuneLite](https://runelite.net/) plugin framework.
 
 Building from source, the code layout, and how to contribute are covered in

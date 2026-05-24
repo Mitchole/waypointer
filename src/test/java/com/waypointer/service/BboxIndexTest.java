@@ -14,7 +14,8 @@ public class BboxIndexTest
     public void loadsBundledTsvs()
     {
         BboxIndex idx = new BboxIndex();
-        // Stub: lookup returns null until Task 24. Just verify construction doesn't throw.
+        // (0, 0, 0) is outside every known bbox so the bundled-resource ctor must return null
+        // rather than throwing — proves loadResource walked every TSV without error.
         assertNull(idx.lookup(WorldPointPacker.pack(0, 0, 0)));
     }
 
