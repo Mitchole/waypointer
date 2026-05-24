@@ -31,6 +31,7 @@ public class BboxIndex
         "/com/waypointer/landmarks/bank-chests-bboxes.tsv",
         "/com/waypointer/landmarks/charter-ships-bboxes.tsv",
         "/com/waypointer/landmarks/fairy-rings-bboxes.tsv",
+        "/com/waypointer/landmarks/slayer-masters-bboxes.tsv",
     };
 
     static final class Entry
