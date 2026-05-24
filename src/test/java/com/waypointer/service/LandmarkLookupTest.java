@@ -11,31 +11,30 @@ import static org.mockito.Mockito.when;
 public class LandmarkLookupTest
 {
     @Test
-    public void curatedHitWinsAndIsTaggedCurated()
+    public void bboxHitWinsAndIsTaggedCurated()
     {
-        CuratedPointIndex curated = mock(CuratedPointIndex.class);
+        BboxIndex bbox = mock(BboxIndex.class);
         CacheLabelIndex cache = mock(CacheLabelIndex.class);
-        int packed = WorldPointPacker.pack(3208, 3220, 0);
-        when(curated.lookup(packed)).thenReturn("Lumbridge Bank");
+        int packed = WorldPointPacker.pack(3094, 3493, 0);
+        when(bbox.lookup(packed)).thenReturn("Edgeville Bank");
 
-        LandmarkLookup l = new LandmarkLookup(curated, cache);
-        LookupHit h = l.lookup(packed);
+        LookupHit h = new LandmarkLookup(bbox, cache).lookup(packed);
 
         assertNotNull(h);
-        assertEquals("Lumbridge Bank", h.getName());
+        assertEquals("Edgeville Bank", h.getName());
         assertEquals(LookupHit.Tier.CURATED, h.getTier());
     }
 
     @Test
-    public void cacheHitWinsWhenCuratedMisses()
+    public void cacheHitWinsWhenBboxMisses()
     {
-        CuratedPointIndex curated = mock(CuratedPointIndex.class);
+        BboxIndex bbox = mock(BboxIndex.class);
         CacheLabelIndex cache = mock(CacheLabelIndex.class);
         int packed = WorldPointPacker.pack(3210, 3424, 0);
-        when(curated.lookup(packed)).thenReturn(null);
+        when(bbox.lookup(packed)).thenReturn(null);
         when(cache.lookup(packed)).thenReturn(new LookupHit("Varrock", LookupHit.Tier.CITY));
 
-        LookupHit h = new LandmarkLookup(curated, cache).lookup(packed);
+        LookupHit h = new LandmarkLookup(bbox, cache).lookup(packed);
 
         assertNotNull(h);
         assertEquals("Varrock", h.getName());
@@ -45,12 +44,12 @@ public class LandmarkLookupTest
     @Test
     public void returnsNullWhenBothIndicesMiss()
     {
-        CuratedPointIndex curated = mock(CuratedPointIndex.class);
+        BboxIndex bbox = mock(BboxIndex.class);
         CacheLabelIndex cache = mock(CacheLabelIndex.class);
         int packed = WorldPointPacker.pack(1, 1, 0);
-        when(curated.lookup(packed)).thenReturn(null);
+        when(bbox.lookup(packed)).thenReturn(null);
         when(cache.lookup(packed)).thenReturn(null);
 
-        assertNull(new LandmarkLookup(curated, cache).lookup(packed));
+        assertNull(new LandmarkLookup(bbox, cache).lookup(packed));
     }
 }

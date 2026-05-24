@@ -5,30 +5,30 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
- * Composer over the two landmark indices. Lookups consult the curated index first (specific
- * names like "Lumbridge Bank") and fall back to the cache index (nearest-neighbour by
- * textScale-aware radius).
+ * Composer over the two landmark indices. Lookups consult the wiki-sourced bbox index first
+ * (specific named POIs like "Edgeville Bank") and fall back to the cache-label index for
+ * city / sub-area / region names.
  */
 @Singleton
 public class LandmarkLookup
 {
-    private final CuratedPointIndex curated;
+    private final BboxIndex bbox;
     private final CacheLabelIndex cache;
 
     @Inject
-    public LandmarkLookup(CuratedPointIndex curated, CacheLabelIndex cache)
+    public LandmarkLookup(BboxIndex bbox, CacheLabelIndex cache)
     {
-        this.curated = curated;
+        this.bbox = bbox;
         this.cache = cache;
     }
 
     @Nullable
     public LookupHit lookup(int packedPoint)
     {
-        String curatedName = curated.lookup(packedPoint);
-        if (curatedName != null)
+        String bboxName = bbox.lookup(packedPoint);
+        if (bboxName != null)
         {
-            return new LookupHit(curatedName, LookupHit.Tier.CURATED);
+            return new LookupHit(bboxName, LookupHit.Tier.CURATED);
         }
         return cache.lookup(packedPoint);
     }
