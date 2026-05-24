@@ -6,9 +6,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 public class CacheLabelIndex
 {
     private static final String RESOURCE = "/com/waypointer/landmarks/map-labels-raw.tsv";
-    private static final int CHUNK_SHIFT = 4;   // 16-tile chunks
+    private static final int CHUNK_SHIFT = 4;
+
+    private static final int POI_RADIUS = 3;
+    private static final int SUB_AREA_RADIUS = 50;
+    private static final int CITY_RADIUS = 200;
 
     static final class Entry
     {
@@ -49,7 +55,124 @@ public class CacheLabelIndex
         log.info("CacheLabelIndex loaded {} cache-label entries", all.size());
     }
 
+    /** Visible for tests: build an index from a literal list of entries instead of the TSV. */
+    static CacheLabelIndex forTesting(Collection<Entry> entries)
+    {
+        CacheLabelIndex idx = new CacheLabelIndex(true);
+        for (Entry e : entries)
+        {
+            idx.addEntry(e);
+        }
+        return idx;
+    }
+
+    private CacheLabelIndex(boolean skipResourceLoad)
+    {
+        // package-private ctor used only by forTesting()
+    }
+
     public int size() { return all.size(); }
+
+    @Nullable
+    public LookupHit lookup(int packedPoint)
+    {
+        int x = WorldPointPacker.getX(packedPoint);
+        int y = WorldPointPacker.getY(packedPoint);
+        int plane = WorldPointPacker.getPlane(packedPoint);
+
+        Entry best = null;
+        int bestRank = Integer.MAX_VALUE;
+        int bestDist = Integer.MAX_VALUE;
+        int bestCount = Integer.MAX_VALUE;
+
+        for (Entry e : candidates(x, y, plane, CITY_RADIUS))
+        {
+            if (WorldPointPacker.getPlane(e.packed) != plane) continue;
+            int dist = Math.max(
+                Math.abs(WorldPointPacker.getX(e.packed) - x),
+                Math.abs(WorldPointPacker.getY(e.packed) - y));
+            int radius = radiusFor(e.textScale);
+            if (dist > radius) continue;
+
+            int rank = rankFor(e.textScale);
+            int count = nameCounts.getOrDefault(e.name, 1);
+            // Lower rank = tighter tier; tie-break by lower name count; then closer distance.
+            if (rank < bestRank
+                || (rank == bestRank && count < bestCount)
+                || (rank == bestRank && count == bestCount && dist < bestDist))
+            {
+                best = e;
+                bestRank = rank;
+                bestDist = dist;
+                bestCount = count;
+            }
+        }
+        if (best == null) return null;
+        return new LookupHit(best.name, tierFor(best.textScale));
+    }
+
+    private static int radiusFor(int textScale)
+    {
+        switch (textScale)
+        {
+            case 0: return POI_RADIUS;
+            case 1: return SUB_AREA_RADIUS;
+            default: return CITY_RADIUS;
+        }
+    }
+
+    private static int rankFor(int textScale)
+    {
+        switch (textScale)
+        {
+            case 0: return 0; // POI wins ties against sub-area / city
+            case 1: return 1;
+            default: return 2;
+        }
+    }
+
+    private static LookupHit.Tier tierFor(int textScale)
+    {
+        switch (textScale)
+        {
+            case 0: return LookupHit.Tier.POI;
+            case 1: return LookupHit.Tier.SUB_AREA;
+            default: return LookupHit.Tier.CITY;
+        }
+    }
+
+    private List<Entry> candidates(int x, int y, int plane, int maxRadius)
+    {
+        int chunks = (maxRadius >> CHUNK_SHIFT) + 1;
+        List<Entry> out = new ArrayList<>();
+        int cx = x >> CHUNK_SHIFT;
+        int cy = y >> CHUNK_SHIFT;
+        for (int dx = -chunks; dx <= chunks; dx++)
+        {
+            for (int dy = -chunks; dy <= chunks; dy++)
+            {
+                List<Entry> bucket = byChunk.get(rawChunkKey(cx + dx, cy + dy, plane));
+                if (bucket != null) out.addAll(bucket);
+            }
+        }
+        return out;
+    }
+
+    private void addEntry(Entry e)
+    {
+        all.add(e);
+        int x = WorldPointPacker.getX(e.packed);
+        int y = WorldPointPacker.getY(e.packed);
+        int plane = WorldPointPacker.getPlane(e.packed);
+        byChunk.computeIfAbsent(rawChunkKey(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, plane),
+            k -> new ArrayList<>()).add(e);
+        nameCounts.merge(e.name, 1, Integer::sum);
+    }
+
+    private static long rawChunkKey(int cx, int cy, int plane)
+    {
+        return ((long) plane << 40) | ((long) cy << 20) | (cx & 0xFFFFF);
+    }
 
     private void load()
     {
@@ -80,12 +203,8 @@ public class CacheLabelIndex
                         int spriteId = Integer.parseInt(tabs[3].trim());
                         int textScale = Integer.parseInt(tabs[4].trim());
                         if (name.isEmpty()) continue;
-
-                        int packed = WorldPointPacker.pack(x, y, plane);
-                        Entry e = new Entry(packed, name, category, spriteId, textScale);
-                        all.add(e);
-                        byChunk.computeIfAbsent(chunkKey(x, y, plane), k -> new ArrayList<>()).add(e);
-                        nameCounts.merge(name, 1, Integer::sum);
+                        addEntry(new Entry(WorldPointPacker.pack(x, y, plane),
+                            name, category, spriteId, textScale));
                     }
                     catch (NumberFormatException ignored) {}
                 }
@@ -95,10 +214,5 @@ public class CacheLabelIndex
         {
             log.warn("Failed to load cache-label resource {}", RESOURCE, e);
         }
-    }
-
-    static long chunkKey(int x, int y, int plane)
-    {
-        return ((long) plane << 40) | ((long)(y >> CHUNK_SHIFT) << 20) | (long)(x >> CHUNK_SHIFT);
     }
 }
