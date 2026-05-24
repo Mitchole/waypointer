@@ -2,7 +2,10 @@ package com.waypointer.service;
 
 import com.waypointer.model.WorldPointPacker;
 import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class CuratedPointIndexTest
 {
@@ -15,7 +18,25 @@ public class CuratedPointIndexTest
         // Specific assertion deliberately avoids hardcoding the exact string,
         // because shortest-path's vendored data may change; the contract is
         // "non-null name for a known bank tile".
-        org.junit.Assert.assertNotNull(idx.lookup(packed));
+        assertNotNull(idx.lookup(packed));
+    }
+
+    @Test
+    public void bankNameEndsWithBankSuffix()
+    {
+        CuratedPointIndex idx = new CuratedPointIndex();
+        int packed = WorldPointPacker.pack(3208, 3220, 2); // Lumbridge bank
+        String name = idx.lookup(packed);
+        assertNotNull(name);
+        assertTrue("expected name to end with ' Bank', got: " + name, name.endsWith(" Bank"));
+    }
+
+    @Test
+    public void anvilWithBlankNameUsesSuffixOnly()
+    {
+        CuratedPointIndex idx = new CuratedPointIndex();
+        int packed = WorldPointPacker.pack(1514, 2995, 0);
+        assertEquals("Anvil", idx.lookup(packed));
     }
 
     @Test

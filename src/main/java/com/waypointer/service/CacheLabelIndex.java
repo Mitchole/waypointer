@@ -91,10 +91,14 @@ public class CacheLabelIndex
             int dist = Math.max(
                 Math.abs(WorldPointPacker.getX(e.packed) - x),
                 Math.abs(WorldPointPacker.getY(e.packed) - y));
-            int radius = radiusFor(e.textScale);
+
+            // Unique-name POIs get sub-area radius so they're not eclipsed by a city label just
+            // because the player is more than 3 tiles from the exact label tile.
+            boolean promoted = e.textScale == 0 && nameCounts.getOrDefault(e.name, 1) == 1;
+            int radius = promoted ? SUB_AREA_RADIUS : radiusFor(e.textScale);
             if (dist > radius) continue;
 
-            int rank = rankFor(e.textScale);
+            int rank = promoted ? 1 : rankFor(e.textScale);
             int count = nameCounts.getOrDefault(e.name, 1);
             // Lower rank = tighter tier; tie-break by lower name count; then closer distance.
             if (rank < bestRank
