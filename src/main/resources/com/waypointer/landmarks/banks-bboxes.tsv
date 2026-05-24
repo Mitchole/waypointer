@@ -1,14 +1,14 @@
 # Source: OSRS Wiki List_of_banks, fetched 2026-05-24, 125 rows
 # x1 y1 x2 y2 plane	name
-2984 2267 2986 2269 0	The Onyx Crest Chest Bank
-2193 2313 2195 2315 0	Sunbleak Island Chest Bank
-2654 2386 2656 2388 0	Charred Island Chest Bank
+2983 2266 2987 2270 0	The Onyx Crest Chest Bank
+2192 2312 2196 2316 0	Sunbleak Island Chest Bank
+2653 2385 2657 2389 0	Charred Island Chest Bank
 3178 2416 3186 2422 0	The Great Conch Bank
-2808 2520 2810 2522 0	Red Rock Chest Bank
-2279 2543 2281 2545 0	Bank Boat Bank
+2807 2519 2811 2523 0	Red Rock Chest Bank
+2278 2542 2282 2546 0	Bank Boat Bank
 2663 2649 2671 2657 0	Void Knights' Outpost Bank
 3335 2715 3355 2735 0	Tombs Of Amascut Bank
-1935 2753 1937 2755 0	Deepfin Point Chest Bank
+1934 2752 1938 2756 0	Deepfin Point Chest Bank
 2778 2781 2784 2787 0	Ape Atoll Bank
 3305 2792 3319 2806 0	Sophanem Bank
 3154 2835 3158 2839 0	Unkah Chest Bank
@@ -18,7 +18,7 @@
 1396 2923 1403 2931 0	Aldarin Bank
 2842 2945 2862 2965 0	Shilo Village Bank
 3677 2978 3685 2986 0	Mos Le’Harmless Bank
-3038 2999 3040 3001 0	The Pandemonium Bank Crab Bank
+3037 2998 3041 3002 0	The Pandemonium Bank Crab Bank
 3808 3018 3812 3022 0	Trouble Brewing Chest Bank
 1539 3037 1545 3043 0	Hunter Guild Bank
 2442 3079 2448 3085 0	Castle Wars Lobby Chest Bank
@@ -41,8 +41,8 @@
 3379 3265 3389 3275 0	Emir's Arena Bank
 2644 3275 2662 3293 0	Ardougne South Bank
 2934 3278 2938 3282 0	Crafting Guild Chest Bank
-1525 3292 1527 3294 0	The Darkfrost Bank
-1386 3310 1388 3312 0	Nemus Retreat Bank
+1524 3291 1528 3295 0	The Darkfrost Bank
+1385 3309 1389 3313 0	Nemus Retreat Bank
 1880 3312 1886 3320 0	Port Roberts Bank
 2610 3326 2624 3340 0	Ardougne North Bank
 2967 3339 2973 3345 0	Falador PvP Chest Bank
@@ -79,8 +79,8 @@
 3128 3630 3132 3634 0	Ferox Enclave Bank
 1483 3644 1487 3648 0	Shayzien Encampment Bank Chest Bank
 2632 3666 2636 3670 0	Peer The Seer Bank
+2095 3685 2099 3689 0	Buccaneers' Haven Chest Bank
 2325 3685 2335 3695 0	Piscatoris Bank
-2096 3686 2098 3688 0	Buccaneers' Haven Chest Bank
 1516 3729 1536 3749 0	Lovakengj Bank
 1620 3735 1640 3755 0	Arceuus Bank
 1251 3740 1255 3744 0	Farming Guild Chest Bank
@@ -102,24 +102,24 @@
 3416 4054 3436 4074 0	Daimon's Crater Chests Bank
 1925 5002 1929 5006 0	Mausoleum Bank
 3544 5152 3548 5156 0	Deposit Pot Bank
-3332 5194 3334 5196 0	Chambers Of Xeric Lobby Chest Bank
-3302 5198 3304 5200 0	Chambers Of Xeric Lobby Chest Bank
-3277 5200 3279 5202 0	Chambers Of Xeric Lobby Chest Bank
+3331 5193 3335 5197 0	Chambers Of Xeric Lobby Chest Bank
+3301 5197 3305 5201 0	Chambers Of Xeric Lobby Chest Bank
+3276 5199 3280 5203 0	Chambers Of Xeric Lobby Chest Bank
 2902 5203 2906 5207 0	Ancient Prison Bank
 1744 5472 1752 5480 0	Clan Hall Bank
 1742 5473 1746 5477 0	Clan Halldeposit Box Bank
 2976 5797 2980 5801 0	Camdozaal Chest Bank
 2188 6225 2192 6229 0	Nutcracker Chest Bank
-2010 9184 2012 9186 0	Deepfin Mine Western Chest Bank
-2092 9196 2094 9198 0	Deepfin Mine Eastern Chest Bank
-1398 9312 1400 9314 0	Alchemical Society Chest Bank
+2009 9183 2013 9187 0	Deepfin Mine Western Chest Bank
+2091 9195 2095 9199 0	Deepfin Mine Eastern Chest Bank
+1397 9311 1401 9315 0	Alchemical Society Chest Bank
 3609 9463 3629 9483 0	Guardians Of The Rift Chest Bank
 3608 9486 3610 9488 0	Deposit Pool Bank
-1804 9500 1806 9502 0	Fortis Colosseum Chest Bank
+1803 9499 1807 9503 0	Fortis Colosseum Chest Bank
 1452 9564 1460 9572 0	Cam Torum Bank
-3307 12442 3309 12444 0	Trahaearnmine Cart Bank
+3306 12441 3310 12445 0	Trahaearnmine Cart Bank
 2461 2846 2465 2850 1	Myths' Guild Chest Bank
-3366 3317 3368 3319 1	Mage Training Arena Chest Bank
+3365 3316 3369 3320 1	Mage Training Arena Chest Bank
 2435 3476 2453 3494 1	Gnome Stronghold North Bank
 3037 6128 3039 6130 1	Gauntletdeposit Box Bank
 3204 3214 3214 3224 2	Lumbridge Castle Bank
