@@ -41,16 +41,32 @@ public class WaypointCapture
     }
 
     /**
-     * Computes the smart default name for a packed tile: "&lt;Landmark&gt; (x, y)" if the tile
-     * matches a known landmark, otherwise just "(x, y)".
+     * Computes the smart default name for a packed tile.
+     * <ul>
+     *   <li>No landmark match: {@code "(x, y)"}.</li>
+     *   <li>Exact-tile or near-tile POI match: just the name (e.g. {@code "Lumbridge Bank"}).</li>
+     *   <li>Area / city match: name plus coords (e.g. {@code "Varrock (3210, 3422)"}).</li>
+     * </ul>
      */
     public String defaultName(int packed)
     {
-        String landmark = landmarkLookup.lookup(packed);
+        LookupHit hit = landmarkLookup.lookup(packed);
         int x = WorldPointPacker.getX(packed);
         int y = WorldPointPacker.getY(packed);
-        if (landmark != null) return String.format("%s (%d, %d)", landmark, x, y);
-        return String.format("(%d, %d)", x, y);
+        if (hit == null)
+        {
+            return String.format("(%d, %d)", x, y);
+        }
+        switch (hit.getTier())
+        {
+            case CURATED:
+            case POI:
+                return hit.getName();
+            case SUB_AREA:
+            case CITY:
+            default:
+                return String.format("%s (%d, %d)", hit.getName(), x, y);
+        }
     }
 
     /**

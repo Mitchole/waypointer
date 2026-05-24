@@ -26,7 +26,7 @@ public class WaypointCaptureTest
         store = new WaypointStore();
         store.bootstrap(new Library());
         ClientThread clientThread = mock(ClientThread.class);
-        LandmarkLookup lookup = new LandmarkLookup();
+        LandmarkLookup lookup = new LandmarkLookup(new CuratedPointIndex(), new CacheLabelIndex());
         capture = new WaypointCapture(client, store, clientThread, lookup);
     }
 
@@ -71,5 +71,58 @@ public class WaypointCaptureTest
         assertEquals("(2500, 9800)", w.getName());
         assertEquals(packed, w.getPackedWorldPoint());
         assertEquals(store.getUncategorized().getId(), w.getCategoryId());
+    }
+
+    @org.junit.Test
+    public void defaultNameDropsCoordsForCuratedHit()
+    {
+        com.waypointer.model.WorldPointPacker.pack(3208, 3220, 0);
+        LandmarkLookup mockLookup = org.mockito.Mockito.mock(LandmarkLookup.class);
+        org.mockito.Mockito.when(mockLookup.lookup(org.mockito.ArgumentMatchers.anyInt()))
+            .thenReturn(new LookupHit("Lumbridge Bank", LookupHit.Tier.CURATED));
+        WaypointCapture cap = new WaypointCapture(client, store,
+            org.mockito.Mockito.mock(net.runelite.client.callback.ClientThread.class), mockLookup);
+
+        assertEquals("Lumbridge Bank", cap.defaultName(
+            com.waypointer.model.WorldPointPacker.pack(3208, 3220, 0)));
+    }
+
+    @org.junit.Test
+    public void defaultNameDropsCoordsForPoiHit()
+    {
+        LandmarkLookup mockLookup = org.mockito.Mockito.mock(LandmarkLookup.class);
+        org.mockito.Mockito.when(mockLookup.lookup(org.mockito.ArgumentMatchers.anyInt()))
+            .thenReturn(new LookupHit("Bank", LookupHit.Tier.POI));
+        WaypointCapture cap = new WaypointCapture(client, store,
+            org.mockito.Mockito.mock(net.runelite.client.callback.ClientThread.class), mockLookup);
+
+        assertEquals("Bank", cap.defaultName(
+            com.waypointer.model.WorldPointPacker.pack(3208, 3220, 0)));
+    }
+
+    @org.junit.Test
+    public void defaultNameAppendsCoordsForSubAreaHit()
+    {
+        LandmarkLookup mockLookup = org.mockito.Mockito.mock(LandmarkLookup.class);
+        org.mockito.Mockito.when(mockLookup.lookup(org.mockito.ArgumentMatchers.anyInt()))
+            .thenReturn(new LookupHit("Grand Exchange", LookupHit.Tier.SUB_AREA));
+        WaypointCapture cap = new WaypointCapture(client, store,
+            org.mockito.Mockito.mock(net.runelite.client.callback.ClientThread.class), mockLookup);
+
+        assertEquals("Grand Exchange (3164, 3486)", cap.defaultName(
+            com.waypointer.model.WorldPointPacker.pack(3164, 3486, 0)));
+    }
+
+    @org.junit.Test
+    public void defaultNameAppendsCoordsForCityHit()
+    {
+        LandmarkLookup mockLookup = org.mockito.Mockito.mock(LandmarkLookup.class);
+        org.mockito.Mockito.when(mockLookup.lookup(org.mockito.ArgumentMatchers.anyInt()))
+            .thenReturn(new LookupHit("Varrock", LookupHit.Tier.CITY));
+        WaypointCapture cap = new WaypointCapture(client, store,
+            org.mockito.Mockito.mock(net.runelite.client.callback.ClientThread.class), mockLookup);
+
+        assertEquals("Varrock (3210, 3422)", cap.defaultName(
+            com.waypointer.model.WorldPointPacker.pack(3210, 3422, 0)));
     }
 }
