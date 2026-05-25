@@ -71,11 +71,14 @@ public final class NearestLandmarkBar extends JPanel
     private final SpriteManager spriteManager;
 
     private final Map<LandmarkType, JButton> primaryButtons = new EnumMap<>(LandmarkType.class);
-    private final ToastBar toast = new ToastBar();
+    private Toasts toasts = Toasts.NO_OP;
     private final JButton overflowBtn;
 
-    // Package-private for test inspection only.
-    ToastBar testGetToast() { return toast; }
+    /** Wired by WaypointerPanel once it has built its ToastOverlay. */
+    public void setToasts(Toasts toasts)
+    {
+        this.toasts = toasts;
+    }
 
     @Inject
     public NearestLandmarkBar(BboxIndex bbox, WaypointPathfinder pathfinder, Client client,
@@ -114,8 +117,6 @@ public final class NearestLandmarkBar extends JPanel
         iconRow.add(overflowBtn);
 
         add(iconRow);
-        toast.setAlignmentX(LEFT_ALIGNMENT);
-        add(toast);
 
         setButtonsEnabled(false);
     }
@@ -195,7 +196,7 @@ public final class NearestLandmarkBar extends JPanel
     {
         if (!pathfinder.isAvailable())
         {
-            toast.show("Install the Shortest Path plugin to use Play.");
+            toasts.show("Install the Shortest Path plugin to use Play.");
             return;
         }
         clientThread.invoke(() -> {
@@ -215,7 +216,7 @@ public final class NearestLandmarkBar extends JPanel
     {
         if (hit == null)
         {
-            toast.show("No " + type.displayName().toLowerCase() + " found.");
+            toasts.show("No " + type.displayName().toLowerCase() + " found.");
             return;
         }
         // ActivePathBanner takes over the "Pathing to..." status once requestPath fires,

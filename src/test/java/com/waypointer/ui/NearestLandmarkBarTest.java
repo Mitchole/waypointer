@@ -30,6 +30,29 @@ public class NearestLandmarkBarTest
     @Mock private ClientThread clientThread;
     @Mock private SpriteManager spriteManager;
 
+    private static final class CapturingToasts implements Toasts
+    {
+        String lastText;
+        String lastActionLabel;
+        Runnable lastOnClick;
+
+        @Override
+        public void show(String text)
+        {
+            this.lastText = text;
+            this.lastActionLabel = null;
+            this.lastOnClick = null;
+        }
+
+        @Override
+        public void show(String text, String actionLabel, Runnable onClick)
+        {
+            this.lastText = text;
+            this.lastActionLabel = actionLabel;
+            this.lastOnClick = onClick;
+        }
+    }
+
     @Test
     public void barHasFivePrimaryButtonsAndOverflow()
     {
@@ -85,17 +108,34 @@ public class NearestLandmarkBarTest
     }
 
     @Test
+    public void applyHitWithNullHitShowsToast()
+    {
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+        CapturingToasts toasts = new CapturingToasts();
+        bar.setToasts(toasts);
+
+        bar.applyHit(LandmarkType.BANK, null);
+
+        org.junit.Assert.assertNotNull("expected toast on null hit", toasts.lastText);
+        org.junit.Assert.assertTrue("expected toast to mention bank, got: " + toasts.lastText,
+            toasts.lastText.toLowerCase().contains("bank"));
+    }
+
+    @Test
     public void onPickShortcircuitsWhenShortestPathUnavailable()
     {
         when(pathfinder.isAvailable()).thenReturn(false);
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+        CapturingToasts toasts = new CapturingToasts();
+        bar.setToasts(toasts);
 
         bar.onPick(LandmarkType.BANK);
 
         verify(clientThread, never()).invoke(any(Runnable.class));
         verify(bbox, never()).nearest(any(LandmarkType.class), anyInt());
-        org.junit.Assert.assertTrue(bar.testGetToast().getMessageText().toLowerCase().contains("shortest path"));
-        org.junit.Assert.assertTrue(bar.testGetToast().isVisible());
+        org.junit.Assert.assertNotNull("expected a toast to be shown", toasts.lastText);
+        org.junit.Assert.assertTrue("expected toast to mention shortest path, got: " + toasts.lastText,
+            toasts.lastText.toLowerCase().contains("shortest path"));
     }
 
     @Test
