@@ -82,4 +82,36 @@ public class DragAndDropHandlerTest
         assertEquals(a, input.get(0));
         assertEquals(b, input.get(1));
     }
+
+    @Test
+    public void decideMode_waypointOnRow_returnsBorderAndTint()
+    {
+        assertEquals(DropIndicatorMode.BORDER_AND_TINT,
+            DragAndDropHandler.decideMode("waypoint:" + UUID.randomUUID(),
+                DragAndDropHandler.TargetKind.WAYPOINT_ROW));
+    }
+
+    @Test
+    public void decideMode_waypointOnHeader_returnsTintOnly()
+    {
+        assertEquals(DropIndicatorMode.TINT,
+            DragAndDropHandler.decideMode("waypoint:" + UUID.randomUUID(),
+                DragAndDropHandler.TargetKind.CATEGORY_HEADER));
+    }
+
+    @Test
+    public void decideMode_categoryOnHeader_returnsBorderAndTint()
+    {
+        assertEquals(DropIndicatorMode.BORDER_AND_TINT,
+            DragAndDropHandler.decideMode("category:" + UUID.randomUUID(),
+                DragAndDropHandler.TargetKind.CATEGORY_HEADER));
+    }
+
+    @Test
+    public void decideMode_categoryOnRow_returnsNone()
+    {
+        assertEquals(DropIndicatorMode.NONE,
+            DragAndDropHandler.decideMode("category:" + UUID.randomUUID(),
+                DragAndDropHandler.TargetKind.WAYPOINT_ROW));
+    }
 }

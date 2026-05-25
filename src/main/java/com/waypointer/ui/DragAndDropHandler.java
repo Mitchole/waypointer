@@ -198,6 +198,28 @@ public class DragAndDropHandler
         store.reorderCategories(moved);
     }
 
+    /** Which kind of component the drag is hovering over. */
+    enum TargetKind { WAYPOINT_ROW, CATEGORY_HEADER }
+
+    /**
+     * Decides which indicator visual to apply for the (payload, target) combination.
+     * Pure function: the per-target rule lives here and only here.
+     */
+    static DropIndicatorMode decideMode(String payload, TargetKind kind)
+    {
+        if (payload == null) return DropIndicatorMode.NONE;
+        boolean isWaypoint = payload.startsWith(WAYPOINT_PREFIX);
+        boolean isCategory = payload.startsWith(CATEGORY_PREFIX);
+        if (kind == TargetKind.WAYPOINT_ROW)
+        {
+            return isWaypoint ? DropIndicatorMode.BORDER_AND_TINT : DropIndicatorMode.NONE;
+        }
+        // CATEGORY_HEADER
+        if (isCategory) return DropIndicatorMode.BORDER_AND_TINT;
+        if (isWaypoint) return DropIndicatorMode.TINT;
+        return DropIndicatorMode.NONE;
+    }
+
     // Moves dragged to immediately before target. Returns null if either id is missing or
     // dragged == target (caller treats null as no-op).
     static List<UUID> move(List<UUID> order, UUID dragged, UUID target)
