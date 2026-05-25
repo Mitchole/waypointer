@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.border.Border;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 
@@ -57,6 +58,8 @@ public class CategorySection extends JPanel
         JPanel headerRow = new JPanel(new BorderLayout(4, 0));
         headerRow.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         headerRow.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        final Border restingHeaderBorder = headerRow.getBorder();
+        final Color restingHeaderBg = headerRow.getBackground();
 
         headerLabel = new JLabel(headerText());
         headerLabel.setForeground(Color.WHITE);
@@ -70,7 +73,29 @@ public class CategorySection extends JPanel
 
         // Drag must come from the label only; on headerRow, a click on the menu trigger
         // would accidentally start a drag.
-        if (dnd != null) dnd.attachCategoryHeader(headerLabel, DropIndicatable.NO_OP, category.getId());
+        DropIndicatable headerIndicator = mode ->
+        {
+            switch (mode)
+            {
+                case NONE:
+                    headerRow.setBorder(restingHeaderBorder);
+                    headerRow.setBackground(restingHeaderBg);
+                    break;
+                case TINT:
+                    headerRow.setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
+                    break;
+                case BORDER_AND_TINT:
+                    headerRow.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(2, 0, 0, 0, ColorScheme.BRAND_ORANGE),
+                        restingHeaderBorder == null
+                            ? BorderFactory.createEmptyBorder()
+                            : restingHeaderBorder));
+                    headerRow.setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
+                    break;
+            }
+            headerRow.repaint();
+        };
+        if (dnd != null) dnd.attachCategoryHeader(headerLabel, headerIndicator, category.getId());
 
         // Optional icon on the LEFT of the header row.
         if (category.getIconId() != null && spriteManager != null)
