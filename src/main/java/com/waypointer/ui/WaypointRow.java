@@ -14,7 +14,9 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.border.Border;
 import net.runelite.client.game.SpriteManager;
+import net.runelite.client.ui.ColorScheme;
 
 /**
  * A single waypoint row, rendered as a clickable card. Click body -> expand inline edit.
@@ -22,10 +24,12 @@ import net.runelite.client.game.SpriteManager;
  * "Play" button on the right. Custom sprite icons (when set) attach to the name label so
  * icon + text share JLabel's built-in vertical centering and align with the Play button.
  */
-public class WaypointRow extends JPanel
+public class WaypointRow extends JPanel implements DropIndicatable
 {
     private final Waypoint waypoint;
     private final JLabel dragHandle;
+    private final java.awt.Color restingBackground;
+    private Border prevBorder;
 
     public WaypointRow(Waypoint waypoint, Runnable onPlay, Runnable onClickBody,
         Runnable onDelete, Runnable onExport, Runnable onExportFile, SpriteManager spriteManager)
@@ -82,11 +86,36 @@ public class WaypointRow extends JPanel
         Styles.primaryButton(play);
         play.addActionListener(e -> onPlay.run());
         add(play, BorderLayout.EAST);
+
+        this.restingBackground = getBackground();
     }
 
     public Waypoint getWaypoint() { return waypoint; }
 
     public JLabel getDragHandle() { return dragHandle; }
+
+    @Override
+    public void setDropIndicator(DropIndicatorMode mode)
+    {
+        switch (mode)
+        {
+            case NONE:
+                if (prevBorder != null) { setBorder(prevBorder); prevBorder = null; }
+                setBackground(restingBackground);
+                break;
+            case TINT:
+                setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
+                break;
+            case BORDER_AND_TINT:
+                if (prevBorder == null) prevBorder = getBorder();
+                setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(2, 0, 0, 0, ColorScheme.BRAND_ORANGE),
+                    prevBorder == null ? BorderFactory.createEmptyBorder() : prevBorder));
+                setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
+                break;
+        }
+        repaint();
+    }
 
     /**
      * Hover tooltip: name on its own when notes are empty; with notes, shows the first

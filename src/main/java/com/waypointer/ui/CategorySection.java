@@ -139,7 +139,7 @@ public class CategorySection extends JPanel
             row.setAlignmentX(LEFT_ALIGNMENT);
             body.add(row);
             if (dnd != null) dnd.attachWaypointRow(row, row.getDragHandle(),
-                DropIndicatable.NO_OP, w.getId(), category.getId());
+                row, w.getId(), category.getId());
             if (inlineProvider != null)
             {
                 Component inline = inlineProvider.apply(w);
