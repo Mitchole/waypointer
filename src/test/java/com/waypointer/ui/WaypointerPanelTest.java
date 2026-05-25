@@ -61,6 +61,7 @@ public class WaypointerPanelTest
             persistence,
             mock(SpriteManager.class),
             null,
-            null);
+            null,
+            new NearestLandmarkBar());
     }
 }

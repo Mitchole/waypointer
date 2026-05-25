@@ -33,7 +33,7 @@ import net.runelite.client.ui.ColorScheme;
  * behind the trailing overflow button.
  */
 @Singleton
-public final class NearestLandmarkBar extends JPanel
+public class NearestLandmarkBar extends JPanel
 {
     private static final int BUTTON_SIZE = 30;
 
@@ -67,6 +67,17 @@ public final class NearestLandmarkBar extends JPanel
     private final Map<LandmarkType, JButton> primaryButtons = new EnumMap<>(LandmarkType.class);
     private final ToastBar toast = new ToastBar();
     private final JButton overflowBtn;
+
+    /** No-arg constructor for use in tests only. Leaves all service fields null. */
+    NearestLandmarkBar()
+    {
+        this.bbox = null;
+        this.pathfinder = null;
+        this.client = null;
+        this.clientThread = null;
+        this.spriteManager = null;
+        this.overflowBtn = new JButton();
+    }
 
     @Inject
     public NearestLandmarkBar(BboxIndex bbox, WaypointPathfinder pathfinder, Client client,

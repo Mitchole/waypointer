@@ -78,6 +78,7 @@ public class WaypointerPanel extends PluginPanel
     private final SpriteManager spriteManager;
     private final IconCatalog iconCatalog;
     private final OverflowMenu overflowMenu;
+    private final NearestLandmarkBar nearestLandmarkBar;
     private final ActivePathBanner banner;
     private final JPanel body = new JPanel();
     private JScrollBar bodyScrollBar;
@@ -104,7 +105,8 @@ public class WaypointerPanel extends PluginPanel
         WaypointPathfinder pathfinder, WaypointerConfig config, CollapseStateCodec collapseCodec,
         WaypointerNavigator navigator, WaypointShareCodec shareCodec,
         WaypointStorePersistence persistence, SpriteManager spriteManager,
-        IconCatalog iconCatalog, OverflowMenu overflowMenu)
+        IconCatalog iconCatalog, OverflowMenu overflowMenu,
+        NearestLandmarkBar nearestLandmarkBar)
     {
         super(false);
         this.store = store;
@@ -118,6 +120,7 @@ public class WaypointerPanel extends PluginPanel
         this.spriteManager = spriteManager;
         this.iconCatalog = iconCatalog;
         this.overflowMenu = overflowMenu;
+        this.nearestLandmarkBar = nearestLandmarkBar;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
 
         // Build the waypoints-tab inner header (Mark current + Category + overflow buttons,
@@ -157,6 +160,9 @@ public class WaypointerPanel extends PluginPanel
         topStack.setAlignmentX(LEFT_ALIGNMENT);
         header.setAlignmentX(LEFT_ALIGNMENT);
         topStack.add(header);
+        nearestLandmarkBar.setAlignmentX(LEFT_ALIGNMENT);
+        nearestLandmarkBar.setVisible(config.showNearestLandmarkBar());
+        topStack.add(nearestLandmarkBar);
         JComponent searchBar = buildSearchBar();
         searchBar.setAlignmentX(LEFT_ALIGNMENT);
         topStack.add(searchBar);
@@ -392,11 +398,29 @@ public class WaypointerPanel extends PluginPanel
     }
 
     @Subscribe
+    public void onGameStateChanged(net.runelite.api.events.GameStateChanged e)
+    {
+        boolean loggedIn = e.getGameState() == net.runelite.api.GameState.LOGGED_IN;
+        SwingUtilities.invokeLater(() -> nearestLandmarkBar.setLoggedIn(loggedIn));
+    }
+
+    @Subscribe
     public void onConfigChanged(ConfigChanged e)
     {
         if (!"waypointer".equals(e.getGroup())) return;
-        if (!"showPathingBanner".equals(e.getKey())) return;
-        SwingUtilities.invokeLater(banner::refresh);
+        if ("showPathingBanner".equals(e.getKey()))
+        {
+            SwingUtilities.invokeLater(banner::refresh);
+            return;
+        }
+        if ("showNearestLandmarkBar".equals(e.getKey()))
+        {
+            SwingUtilities.invokeLater(() -> {
+                nearestLandmarkBar.setVisible(config.showNearestLandmarkBar());
+                revalidate();
+                repaint();
+            });
+        }
     }
 
     private void onFilterChanged()
