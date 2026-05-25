@@ -48,6 +48,20 @@ final class OverflowMenu
         LibraryFileIo fileIo = new LibraryFileIo(store, libraryCodec, anchor);
         JPopupMenu menu = new JPopupMenu();
 
+        JMenuItem newCategory = new JMenuItem("New category...");
+        newCategory.addActionListener(e -> {
+            String name = JOptionPane.showInputDialog(anchor, "Category name:", "New category",
+                JOptionPane.PLAIN_MESSAGE);
+            if (name == null || name.trim().isEmpty()) return;
+            try { store.createCategory(name.trim()); }
+            catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(anchor, ex.getMessage(), "Waypointer",
+                    JOptionPane.WARNING_MESSAGE);
+            }
+        });
+        menu.add(newCategory);
+        menu.addSeparator();
+
         JMenuItem browsePresets = new JMenuItem("Browse preset waypoints");
         browsePresets.addActionListener(e -> navigator.openPresetBrowser());
         menu.add(browsePresets);

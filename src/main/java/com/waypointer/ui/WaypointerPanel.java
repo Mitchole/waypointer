@@ -133,24 +133,20 @@ public class WaypointerPanel extends PluginPanel
         header.setBackground(ColorScheme.DARK_GRAY_COLOR);
         markBtn.addActionListener(e -> onMarkClicked());
         Styles.primaryButton(markBtn);
-        header.add(markBtn);
 
-        JPanel toolRow = new JPanel(new BorderLayout(4, 0));
-        toolRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        JButton newCatBtn = new JButton("+ Category");
-        newCatBtn.addActionListener(e -> onNewCategoryClicked());
-        Styles.secondaryButton(newCatBtn);
-        toolRow.add(newCatBtn, BorderLayout.CENTER);
+        JPanel markRow = new JPanel(new BorderLayout(4, 0));
+        markRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        markRow.add(markBtn, BorderLayout.CENTER);
         JButton overflowBtn = new JButton("⋮"); // U+22EE vertical ellipsis
         overflowBtn.setToolTipText("More");
         overflowBtn.addActionListener(e -> overflowMenu.show(overflowBtn, this));
         Styles.secondaryButton(overflowBtn);
-        Dimension overflowSize = new Dimension(30, newCatBtn.getPreferredSize().height);
+        Dimension overflowSize = new Dimension(30, markBtn.getPreferredSize().height);
         overflowBtn.setPreferredSize(overflowSize);
         overflowBtn.setMinimumSize(overflowSize);
         overflowBtn.setMaximumSize(overflowSize);
-        toolRow.add(overflowBtn, BorderLayout.EAST);
-        header.add(toolRow);
+        markRow.add(overflowBtn, BorderLayout.EAST);
+        header.add(markRow);
 
         // Stack header + search bar in NORTH so the search field sits between
         // the action buttons and the body category list. The 8-px horizontal inset on
@@ -292,18 +288,6 @@ public class WaypointerPanel extends PluginPanel
             Window owner = SwingUtilities.getWindowAncestor(this);
             new CaptureDialog(owner, store, capture, packed).setVisible(true);
         });
-    }
-
-    private void onNewCategoryClicked()
-    {
-        String name = JOptionPane.showInputDialog(this, "Category name:", "New category",
-            JOptionPane.PLAIN_MESSAGE);
-        if (name == null || name.trim().isEmpty()) return;
-        try { store.createCategory(name.trim()); }
-        catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Waypointer",
-                JOptionPane.WARNING_MESSAGE);
-        }
     }
 
     // Category-level menu actions, wired into each CategorySection via CategorySection.Actions.
