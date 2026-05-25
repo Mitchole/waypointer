@@ -147,8 +147,8 @@ public class InlineEditPanel extends JPanel
         add(footer, g);
     }
 
-    // Commits in-flight name/notes edits. Called on focus loss, on detach, and before any
-    // action that reads the waypoint's persisted value (recapture, share-code copy).
+    // Commits in-flight name/notes edits. Called on focus loss, on detach, and before
+    // recapture so the swap doesn't drop the user's pending text.
     public void flushPending()
     {
         flushName();

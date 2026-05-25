@@ -638,6 +638,13 @@ public class WaypointerPanel extends PluginPanel
             }
             case EXPORT_FILE:
             {
+                if (store.getCategoryById(w.getCategoryId()) == null)
+                {
+                    JOptionPane.showMessageDialog(this,
+                        "Waypoint has no category - cannot export.",
+                        "Waypointer", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 Library subset = waypointSubset(w);
                 String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
                 String suggested = "waypointer-waypoint-"
