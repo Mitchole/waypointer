@@ -133,6 +133,8 @@ public class CategorySection extends JPanel
                 () -> onRowAction.accept(w, RowAction.PLAY),
                 () -> onRowAction.accept(w, RowAction.EXPAND),
                 () -> onRowAction.accept(w, RowAction.DELETE),
+                () -> onRowAction.accept(w, RowAction.EXPORT),
+                () -> onRowAction.accept(w, RowAction.EXPORT_FILE),
                 spriteManager);
             row.setAlignmentX(LEFT_ALIGNMENT);
             body.add(row);
@@ -190,7 +192,7 @@ public class CategorySection extends JPanel
         onCollapseChange.accept(collapsed);
     }
 
-    public enum RowAction { PLAY, EXPAND, DELETE }
+    public enum RowAction { PLAY, EXPAND, DELETE, EXPORT, EXPORT_FILE }
 
     /** The category-level menu actions, bundled so the constructor stays readable. */
     public static final class Actions

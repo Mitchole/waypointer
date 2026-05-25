@@ -338,6 +338,15 @@ public class WaypointerPanel extends PluginPanel
             iconId -> store.setCategoryIcon(c.getId(), iconId)).setVisible(true);
     }
 
+    private Library waypointSubset(Waypoint w)
+    {
+        Library subset = new Library();
+        Category c = store.getCategoryById(w.getCategoryId());
+        if (c != null) subset.getCategories().add(c);
+        subset.getWaypoints().add(w);
+        return subset;
+    }
+
     private Library categorySubset(Category c)
     {
         Library subset = new Library();
@@ -514,7 +523,7 @@ public class WaypointerPanel extends PluginPanel
                     },
                     this::handleRowAction,
                     w -> expandedWaypoints.contains(w.getId())
-                        ? new InlineEditPanel(w, store, capture, shareCodec, spriteManager, iconCatalog) : null,
+                        ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog) : null,
                     dnd,
                     new CategorySection.Actions(
                         () -> promptRenameCategory(c),
@@ -613,6 +622,29 @@ public class WaypointerPanel extends PluginPanel
                 if (!expandedWaypoints.add(w.getId())) expandedWaypoints.remove(w.getId());
                 rebuild();
                 break;
+            case EXPORT:
+            {
+                Category c = store.getCategoryById(w.getCategoryId());
+                if (c == null)
+                {
+                    JOptionPane.showMessageDialog(this,
+                        "Waypoint has no category - cannot export.",
+                        "Waypointer", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                String code = shareCodec.encodeSingle(w, c);
+                new LibraryFileIo(store, libraryCodec, this).copyShareCodeToClipboard(code, 1);
+                break;
+            }
+            case EXPORT_FILE:
+            {
+                Library subset = waypointSubset(w);
+                String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+                String suggested = "waypointer-waypoint-"
+                    + Styles.sanitizeFilenameSegment(w.getName()) + "-" + stamp + ".json";
+                new LibraryFileIo(store, libraryCodec, this).exportLibraryToFile(subset, suggested);
+                break;
+            }
         }
     }
 

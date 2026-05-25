@@ -28,7 +28,7 @@ public class WaypointRow extends JPanel
     private final JLabel dragHandle;
 
     public WaypointRow(Waypoint waypoint, Runnable onPlay, Runnable onClickBody,
-        Runnable onDelete, SpriteManager spriteManager)
+        Runnable onDelete, Runnable onExport, Runnable onExportFile, SpriteManager spriteManager)
     {
         this.waypoint = waypoint;
         setLayout(new BorderLayout(8, 0));
@@ -38,11 +38,18 @@ public class WaypointRow extends JPanel
         // Hover-clickable surface: body clicks expand the row.
         MouseAdapter ma = Cards.clickable(this, onClickBody);
 
-        // Right-click anywhere on the row body opens a tiny popup with a single Delete item.
+        // Right-click anywhere on the row body opens a popup with export and delete items.
         // Cross-platform popup-trigger handling is provided automatically by setComponentPopupMenu.
         JPopupMenu popup = new JPopupMenu();
+        JMenuItem exportItem = new JMenuItem("Export waypoint");
+        exportItem.addActionListener(e -> onExport.run());
+        JMenuItem exportFileItem = new JMenuItem("Export waypoint to file...");
+        exportFileItem.addActionListener(e -> onExportFile.run());
         JMenuItem deleteItem = new JMenuItem("Delete");
         deleteItem.addActionListener(e -> onDelete.run());
+        popup.add(exportItem);
+        popup.add(exportFileItem);
+        popup.addSeparator();
         popup.add(deleteItem);
         setComponentPopupMenu(popup);
 

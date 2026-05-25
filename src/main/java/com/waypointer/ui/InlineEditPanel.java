@@ -1,6 +1,5 @@
 package com.waypointer.ui;
 
-import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
@@ -14,9 +13,7 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Toolkit;
 import java.awt.Window;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -49,7 +46,7 @@ public class InlineEditPanel extends JPanel
     private boolean notesDirty = false;
 
     public InlineEditPanel(Waypoint w, WaypointStore store, WaypointCapture capture,
-        WaypointShareCodec codec, SpriteManager spriteManager, IconCatalog iconCatalog)
+        SpriteManager spriteManager, IconCatalog iconCatalog)
     {
         this.store = store;
         this.waypointId = w.getId();
@@ -137,24 +134,9 @@ public class InlineEditPanel extends JPanel
                 store.updateWaypointIcon(waypointId, iconId);
             }).setVisible(true);
         });
-        JLabel copy = makeLink("Copy share code", () -> {
-            // Flush pending edits so the share code reflects what the user just typed.
-            flushPending();
-            Waypoint cur = store.getWaypointById(waypointId);
-            if (cur == null) return;
-            Category cat = store.getCategoryById(cur.getCategoryId());
-            if (cat == null) return;
-            String code = codec.encodeSingle(cur, cat);
-            Toolkit.getDefaultToolkit().getSystemClipboard()
-                .setContents(new StringSelection(code), null);
-            JOptionPane.showMessageDialog(this, "Share code copied to clipboard.",
-                "Waypointer", JOptionPane.INFORMATION_MESSAGE);
-        });
         footer.add(recapture);
         footer.add(makeSeparator());
         footer.add(setIcon);
-        footer.add(makeSeparator());
-        footer.add(copy);
         footer.add(makeSeparator());
         JLabel delete = makeLink("Delete", () -> {
             flushPending();
