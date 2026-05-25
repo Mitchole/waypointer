@@ -92,4 +92,61 @@ public class CaptureFormTest
         assertFalse(form.isVisible());
         assertEquals(0, store.getLibrary().getWaypoints().size());
     }
+
+    @Test
+    public void newCategorySentinelRevealsInlineSubRow()
+    {
+        form.show(packed);
+        assertFalse(form.isNewCategoryRowVisible());
+
+        form.selectNewCategorySentinel();
+
+        assertTrue(form.isNewCategoryRowVisible());
+    }
+
+    @Test
+    public void createInlineCategoryAddsCategoryAndSelectsIt()
+    {
+        form.show(packed);
+        form.selectNewCategorySentinel();
+        form.setNewCategoryNameText("Bosses");
+
+        form.clickCreateNewCategory();
+
+        assertFalse("sub-row should hide once category is created",
+            form.isNewCategoryRowVisible());
+        assertEquals("Bosses",
+            ((CategoryComboItem) form.selectedCategoryItem()).toString());
+    }
+
+    @Test
+    public void saveAfterCreateInlineCategoryStoresWaypointInThatCategory()
+    {
+        form.show(packed);
+        form.selectNewCategorySentinel();
+        form.setNewCategoryNameText("Bosses");
+        form.clickCreateNewCategory();
+        form.setNameText("Vorkath");
+
+        form.clickSave();
+
+        com.waypointer.model.Category created = store.getCategoryByName("Bosses");
+        assertEquals(created.getId(),
+            store.getLibrary().getWaypoints().get(0).getCategoryId());
+    }
+
+    @Test
+    public void cancelInlineCategoryRevertsComboSelection()
+    {
+        store.createCategory("Existing");
+        form.show(packed);
+        form.selectCategoryByName("Existing");
+        form.selectNewCategorySentinel();
+
+        form.clickCancelNewCategory();
+
+        assertFalse(form.isNewCategoryRowVisible());
+        assertEquals("Existing",
+            ((CategoryComboItem) form.selectedCategoryItem()).toString());
+    }
 }

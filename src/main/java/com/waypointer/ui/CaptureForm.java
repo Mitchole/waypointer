@@ -10,6 +10,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.UUID;
 import javax.swing.AbstractAction;
@@ -40,6 +41,12 @@ class CaptureForm extends JPanel
     private final JPanel stack = new JPanel();
     private final JButton saveBtn = new JButton("Save");
     private final JButton cancelBtn = new JButton("Cancel");
+
+    private final JPanel newCategoryRow = new JPanel(new GridBagLayout());
+    private final JTextField newCategoryName = new JTextField();
+    private final JButton newCategoryCreate = new JButton("Create");
+    private final JButton newCategoryCancel = new JButton("Cancel");
+    private CategoryComboItem lastNonSentinelSelection;
 
     private int packedPoint;
 
@@ -83,6 +90,25 @@ class CaptureForm extends JPanel
 
         stack.add(form);
 
+        newCategoryRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        newCategoryRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        newCategoryRow.setVisible(false);
+        Styles.textField(newCategoryName);
+        Styles.compactSecondaryButton(newCategoryCreate);
+        Styles.compactSecondaryButton(newCategoryCancel);
+        newCategoryCreate.addActionListener(e -> doCreateInlineCategory());
+        newCategoryCancel.addActionListener(e -> cancelInlineCategory());
+        GridBagConstraints gn = new GridBagConstraints();
+        gn.fill = GridBagConstraints.HORIZONTAL;
+        gn.insets = new Insets(2, 2, 2, 2);
+        gn.gridx = 0; gn.gridy = 0; gn.weightx = 1;
+        newCategoryRow.add(newCategoryName, gn);
+        gn.gridx = 1; gn.weightx = 0;
+        newCategoryRow.add(newCategoryCreate, gn);
+        gn.gridx = 2;
+        newCategoryRow.add(newCategoryCancel, gn);
+        stack.add(newCategoryRow);
+
         add(stack, BorderLayout.CENTER);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
@@ -109,6 +135,8 @@ class CaptureForm extends JPanel
         {
             @Override public void actionPerformed(ActionEvent e) { saveBtn.doClick(); }
         });
+
+        categoryCombo.addActionListener(e -> onCategorySelectionChanged());
         setVisible(false);
     }
 
@@ -145,6 +173,9 @@ class CaptureForm extends JPanel
 
     private void rebuildCategoryCombo(UUID selectId)
     {
+        ActionListener[] listeners = categoryCombo.getActionListeners();
+        for (ActionListener l : listeners) categoryCombo.removeActionListener(l);
+
         categoryCombo.removeAllItems();
         CategoryComboItem toSelect = null;
         for (Category c : store.getCategoriesOrdered())
@@ -154,7 +185,54 @@ class CaptureForm extends JPanel
             if (c.getId().equals(selectId)) toSelect = item;
         }
         categoryCombo.addItem(CategoryComboItem.sentinel("+ New category..."));
-        if (toSelect != null) categoryCombo.setSelectedItem(toSelect);
+        if (toSelect != null)
+        {
+            categoryCombo.setSelectedItem(toSelect);
+            lastNonSentinelSelection = toSelect;
+        }
+
+        for (ActionListener l : listeners) categoryCombo.addActionListener(l);
+    }
+
+    private void onCategorySelectionChanged()
+    {
+        CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
+        if (sel == null) return;
+        if (!sel.isSentinel())
+        {
+            lastNonSentinelSelection = sel;
+            newCategoryRow.setVisible(false);
+            revalidate();
+            repaint();
+            return;
+        }
+        newCategoryName.setText("");
+        newCategoryRow.setVisible(true);
+        revalidate();
+        repaint();
+        newCategoryName.requestFocusInWindow();
+    }
+
+    private void doCreateInlineCategory()
+    {
+        String name = newCategoryName.getText();
+        if (name == null || name.trim().isEmpty()) return;
+        Category created = store.createCategory(name.trim());
+        rebuildCategoryCombo(created.getId());
+        newCategoryRow.setVisible(false);
+        revalidate();
+        repaint();
+    }
+
+    private void cancelInlineCategory()
+    {
+        UUID revertTo = lastNonSentinelSelection != null
+            ? lastNonSentinelSelection.id()
+            : store.getUncategorized().getId();
+        rebuildCategoryCombo(revertTo);
+        newCategoryRow.setVisible(false);
+        revalidate();
+        repaint();
     }
 
     private void doSave()
@@ -198,5 +276,42 @@ class CaptureForm extends JPanel
     void clickCancel()
     {
         cancelBtn.doClick();
+    }
+
+    boolean isNewCategoryRowVisible()
+    {
+        return newCategoryRow.isVisible();
+    }
+
+    void selectNewCategorySentinel()
+    {
+        for (int i = 0; i < categoryCombo.getItemCount(); i++)
+        {
+            if (categoryCombo.getItemAt(i).isSentinel())
+            {
+                categoryCombo.setSelectedIndex(i);
+                return;
+            }
+        }
+    }
+
+    void setNewCategoryNameText(String text)
+    {
+        newCategoryName.setText(text);
+    }
+
+    void clickCreateNewCategory()
+    {
+        newCategoryCreate.doClick();
+    }
+
+    void clickCancelNewCategory()
+    {
+        newCategoryCancel.doClick();
+    }
+
+    Object selectedCategoryItem()
+    {
+        return categoryCombo.getSelectedItem();
     }
 }
