@@ -51,4 +51,33 @@ public class CaptureFormTest
         form.dismiss();
         assertFalse(form.isVisible());
     }
+
+    @Test
+    public void saveCreatesWaypointWithTypedNameInSelectedCategory()
+    {
+        store.createCategory("Bosses");
+        form.show(packed);
+        form.setNameText("Vorkath");
+        form.selectCategoryByName("Bosses");
+
+        form.clickSave();
+
+        assertFalse(form.isVisible());
+        assertEquals(1, store.getLibrary().getWaypoints().size());
+        com.waypointer.model.Waypoint w = store.getLibrary().getWaypoints().get(0);
+        assertEquals("Vorkath", w.getName());
+        assertEquals(packed, w.getPackedWorldPoint());
+        assertEquals(store.getCategoryByName("Bosses").getId(), w.getCategoryId());
+    }
+
+    @Test
+    public void saveWithBlankNameFallsBackToDefault()
+    {
+        form.show(packed);
+        form.setNameText("   ");
+
+        form.clickSave();
+
+        assertEquals("Lumbridge", store.getLibrary().getWaypoints().get(0).getName());
+    }
 }

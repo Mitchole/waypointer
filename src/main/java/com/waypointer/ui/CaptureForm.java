@@ -5,12 +5,14 @@ import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointStore;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.UUID;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -30,6 +32,7 @@ class CaptureForm extends JPanel
     private final JTextField nameField = new JTextField();
     private final JComboBox<CategoryComboItem> categoryCombo = new JComboBox<>();
     private final JPanel stack = new JPanel();
+    private final JButton saveBtn = new JButton("Save");
 
     private int packedPoint;
 
@@ -74,6 +77,13 @@ class CaptureForm extends JPanel
         stack.add(form);
 
         add(stack, BorderLayout.CENTER);
+
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        Styles.primaryButton(saveBtn);
+        saveBtn.addActionListener(e -> doSave());
+        buttons.add(saveBtn);
+        add(buttons, BorderLayout.SOUTH);
         setVisible(false);
     }
 
@@ -112,5 +122,43 @@ class CaptureForm extends JPanel
         }
         categoryCombo.addItem(CategoryComboItem.sentinel("+ New category..."));
         if (toSelect != null) categoryCombo.setSelectedItem(toSelect);
+    }
+
+    private void doSave()
+    {
+        String typed = nameField.getText();
+        String trimmed = typed == null ? "" : typed.trim();
+        if (trimmed.isEmpty()) trimmed = capture.defaultName(packedPoint);
+
+        CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
+        UUID categoryId = (sel == null || sel.isSentinel())
+            ? store.getUncategorized().getId() : sel.id();
+
+        store.createWaypoint(packedPoint, trimmed, categoryId);
+        dismiss();
+    }
+
+    void setNameText(String text)
+    {
+        nameField.setText(text);
+    }
+
+    void selectCategoryByName(String name)
+    {
+        for (int i = 0; i < categoryCombo.getItemCount(); i++)
+        {
+            CategoryComboItem item = categoryCombo.getItemAt(i);
+            if (!item.isSentinel() && name.equals(item.toString()))
+            {
+                categoryCombo.setSelectedIndex(i);
+                return;
+            }
+        }
+        throw new IllegalArgumentException("No category named: " + name);
+    }
+
+    void clickSave()
+    {
+        saveBtn.doClick();
     }
 }
