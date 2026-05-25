@@ -70,7 +70,7 @@ public class CategorySection extends JPanel
 
         // Drag must come from the label only; on headerRow, a click on the menu trigger
         // would accidentally start a drag.
-        if (dnd != null) dnd.attachCategoryHeader(headerLabel, category.getId());
+        if (dnd != null) dnd.attachCategoryHeader(headerLabel, DropIndicatable.NO_OP, category.getId());
 
         // Optional icon on the LEFT of the header row.
         if (category.getIconId() != null && spriteManager != null)
@@ -138,7 +138,8 @@ public class CategorySection extends JPanel
                 spriteManager);
             row.setAlignmentX(LEFT_ALIGNMENT);
             body.add(row);
-            if (dnd != null) dnd.attachWaypointRow(row, row.getDragHandle(), w.getId(), category.getId());
+            if (dnd != null) dnd.attachWaypointRow(row, row.getDragHandle(),
+                DropIndicatable.NO_OP, w.getId(), category.getId());
             if (inlineProvider != null)
             {
                 Component inline = inlineProvider.apply(w);

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.JComponent;
 import javax.swing.TransferHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,15 @@ public class DragAndDropHandler
     private final WaypointStore store;
     private final Runnable onChange;
 
+    // Closures that clear indicator state on each attached target. Run on every
+    // mouseReleased so an aborted drag (ESC, cursor leaves the window) doesn't
+    // leave a row stuck in a highlighted state.
+    private final List<Runnable> clearActions = new CopyOnWriteArrayList<>();
+
+    // The indicator that's currently visually active. Tracked so canImport on a new
+    // target can clear the old one before lighting itself up.
+    private DropIndicatable activeIndicator;
+
     public DragAndDropHandler(WaypointStore store, Runnable onChange)
     {
         this.store = store;
@@ -42,8 +52,8 @@ public class DragAndDropHandler
 
     // Row is the drop target; drag only fires from dragHandle so the row body's click-to-expand
     // still works.
-    public void attachWaypointRow(JComponent row, JComponent dragHandle, UUID waypointId,
-        UUID categoryId)
+    public void attachWaypointRow(JComponent row, JComponent dragHandle,
+        DropIndicatable indicatable, UUID waypointId, UUID categoryId)
     {
         row.setTransferHandler(new TransferHandler()
         {
@@ -56,7 +66,19 @@ public class DragAndDropHandler
 
             @Override public boolean canImport(TransferSupport s)
             {
-                return s.isDataFlavorSupported(STR);
+                if (!s.isDataFlavorSupported(STR)) return false;
+                String payload = readPayload(s.getTransferable());
+                if (isSelfDrop(payload, TargetKind.WAYPOINT_ROW, waypointId))
+                {
+                    if (activeIndicator == indicatable)
+                    {
+                        indicatable.setDropIndicator(DropIndicatorMode.NONE);
+                        activeIndicator = null;
+                    }
+                    return false;
+                }
+                onHoverEnter(indicatable, decideMode(payload, TargetKind.WAYPOINT_ROW));
+                return true;
             }
 
             @Override public boolean importData(TransferSupport s)
@@ -80,14 +102,15 @@ public class DragAndDropHandler
                 return false;
             }
         });
+        clearActions.add(() -> indicatable.setDropIndicator(DropIndicatorMode.NONE));
         DragGestureListener gesture = new DragGestureListener(row);
         dragHandle.addMouseListener(gesture);
         dragHandle.addMouseMotionListener(gesture);
     }
 
-    public void attachCategoryHeader(JComponent c, UUID categoryId)
+    public void attachCategoryHeader(JComponent dragTarget, DropIndicatable indicatable, UUID categoryId)
     {
-        c.setTransferHandler(new TransferHandler()
+        dragTarget.setTransferHandler(new TransferHandler()
         {
             @Override public int getSourceActions(JComponent c) { return MOVE; }
 
@@ -98,7 +121,19 @@ public class DragAndDropHandler
 
             @Override public boolean canImport(TransferSupport s)
             {
-                return s.isDataFlavorSupported(STR);
+                if (!s.isDataFlavorSupported(STR)) return false;
+                String payload = readPayload(s.getTransferable());
+                if (isSelfDrop(payload, TargetKind.CATEGORY_HEADER, categoryId))
+                {
+                    if (activeIndicator == indicatable)
+                    {
+                        indicatable.setDropIndicator(DropIndicatorMode.NONE);
+                        activeIndicator = null;
+                    }
+                    return false;
+                }
+                onHoverEnter(indicatable, decideMode(payload, TargetKind.CATEGORY_HEADER));
+                return true;
             }
 
             @Override public boolean importData(TransferSupport s)
@@ -123,12 +158,13 @@ public class DragAndDropHandler
                 return false;
             }
         });
-        DragGestureListener gesture = new DragGestureListener(c);
-        c.addMouseListener(gesture);
-        c.addMouseMotionListener(gesture);
+        clearActions.add(() -> indicatable.setDropIndicator(DropIndicatorMode.NONE));
+        DragGestureListener gesture = new DragGestureListener(dragTarget);
+        dragTarget.addMouseListener(gesture);
+        dragTarget.addMouseMotionListener(gesture);
     }
 
-    private static final class DragGestureListener extends MouseAdapter
+    private final class DragGestureListener extends MouseAdapter
         implements MouseMotionListener
     {
         private final JComponent dragSource;
@@ -150,6 +186,7 @@ public class DragAndDropHandler
         {
             pressPoint = null;
             dragStarted = false;
+            clearAllIndicators();
         }
 
         @Override public void mouseDragged(MouseEvent e)
@@ -178,6 +215,45 @@ public class DragAndDropHandler
         {
             return null;
         }
+    }
+
+    // Called from canImport on every target the drag passes over. Clears the previous
+    // active indicator (if it's a different target) and sets the new one.
+    private void onHoverEnter(DropIndicatable indicatable, DropIndicatorMode mode)
+    {
+        if (activeIndicator != null && activeIndicator != indicatable)
+        {
+            activeIndicator.setDropIndicator(DropIndicatorMode.NONE);
+        }
+        indicatable.setDropIndicator(mode);
+        activeIndicator = indicatable;
+    }
+
+    private void clearAllIndicators()
+    {
+        for (Runnable r : clearActions) r.run();
+        activeIndicator = null;
+    }
+
+    private static String readPayload(Transferable t)
+    {
+        if (t == null) return null;
+        try { return (String) t.getTransferData(STR); }
+        catch (Exception e) { return null; }
+    }
+
+    private static boolean isSelfDrop(String payload, TargetKind kind, UUID selfId)
+    {
+        if (payload == null || selfId == null) return false;
+        if (kind == TargetKind.WAYPOINT_ROW && payload.startsWith(WAYPOINT_PREFIX))
+        {
+            return payload.substring(WAYPOINT_PREFIX.length()).equals(selfId.toString());
+        }
+        if (kind == TargetKind.CATEGORY_HEADER && payload.startsWith(CATEGORY_PREFIX))
+        {
+            return payload.substring(CATEGORY_PREFIX.length()).equals(selfId.toString());
+        }
+        return false;
     }
 
     private void swapWithinCategory(UUID categoryId, UUID dragged, UUID target)
