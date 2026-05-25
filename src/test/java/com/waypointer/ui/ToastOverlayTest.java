@@ -80,4 +80,23 @@ public class ToastOverlayTest
             action.getText().contains("Undo"));
         org.junit.Assert.assertTrue("expected action label visible", action.isVisible());
     }
+
+    @Test
+    public void clickingActionInvokesRunnableAndHidesCard()
+    {
+        ToastOverlay overlay = new ToastOverlay(new JLabel("inner"));
+        overlay.setSize(200, 300);
+        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        overlay.show("Deleted Catherby", "Undo", calls::incrementAndGet);
+
+        // Simulate a mouse click on the action label by dispatching the canonical click event.
+        JLabel action = overlay.actionLabelForTest();
+        java.awt.event.MouseEvent click = new java.awt.event.MouseEvent(
+            action, java.awt.event.MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(),
+            0, 0, 0, 1, false);
+        for (java.awt.event.MouseListener l : action.getMouseListeners()) l.mouseClicked(click);
+
+        org.junit.Assert.assertEquals("runnable should fire exactly once", 1, calls.get());
+        assertFalse("card should hide after action click", overlay.cardIsVisibleForTest());
+    }
 }

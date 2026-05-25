@@ -98,10 +98,26 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         message.setText("<html>" + Styles.escapeHtml(text) + "</html>");
         this.actionLabel.setText("<html><u>" + Styles.escapeHtml(actionLabel) + "</u></html>");
         this.actionLabel.setVisible(true);
+
+        // Replace any previous listener so a stale runnable from the prior toast doesn't fire.
+        for (java.awt.event.MouseListener l : this.actionLabel.getMouseListeners())
+        {
+            this.actionLabel.removeMouseListener(l);
+        }
+        this.actionLabel.addMouseListener(new java.awt.event.MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e)
+            {
+                if (autoHideTimer != null) autoHideTimer.stop();
+                card.setVisible(false);
+                if (onClick != null) onClick.run();
+            }
+        });
+
         positionCard();
         card.setVisible(true);
         restartAutoHide(DEFAULT_DURATION_MS);
-        // Action click wiring lands in Task 7.
     }
 
     boolean cardIsVisibleForTest() { return card.isVisible(); }
