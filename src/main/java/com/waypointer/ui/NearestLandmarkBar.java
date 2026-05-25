@@ -106,7 +106,7 @@ public final class NearestLandmarkBar extends JPanel
         }
 
         overflowBtn = makeButton("More");
-        overflowBtn.setText("⋮"); // vertical ellipsis
+        overflowBtn.setText("▾"); // down-pointing triangle (dropdown affordance)
         overflowBtn.addActionListener(e -> {
             JPopupMenu menu = buildOverflowMenu();
             menu.show(overflowBtn, 0, overflowBtn.getHeight());
