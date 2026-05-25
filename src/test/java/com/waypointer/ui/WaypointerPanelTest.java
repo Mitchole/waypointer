@@ -4,11 +4,14 @@ import com.google.gson.Gson;
 import com.waypointer.WaypointerConfig;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
+import com.waypointer.service.BboxIndex;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
 import com.waypointer.util.Listeners;
+import net.runelite.api.Client;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -50,6 +53,13 @@ public class WaypointerPanelTest
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
 
+        NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
+            mock(BboxIndex.class),
+            pathfinder,
+            mock(Client.class),
+            mock(ClientThread.class),
+            mock(SpriteManager.class));
+
         return new WaypointerPanel(
             store,
             mock(WaypointCapture.class),
@@ -62,6 +72,6 @@ public class WaypointerPanelTest
             mock(SpriteManager.class),
             null,
             null,
-            new NearestLandmarkBar());
+            nearestLandmarkBar);
     }
 }

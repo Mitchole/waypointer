@@ -94,6 +94,8 @@ public class NearestLandmarkBarTest
 
         verify(clientThread, never()).invoke(any(Runnable.class));
         verify(bbox, never()).nearest(any(LandmarkType.class), anyInt());
+        org.junit.Assert.assertTrue(bar.testGetToast().getMessageText().toLowerCase().contains("shortest path"));
+        org.junit.Assert.assertTrue(bar.testGetToast().isVisible());
     }
 
     @Test

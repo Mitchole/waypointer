@@ -33,7 +33,7 @@ import net.runelite.client.ui.ColorScheme;
  * behind the trailing overflow button.
  */
 @Singleton
-public class NearestLandmarkBar extends JPanel
+public final class NearestLandmarkBar extends JPanel
 {
     private static final int BUTTON_SIZE = 30;
 
@@ -68,16 +68,8 @@ public class NearestLandmarkBar extends JPanel
     private final ToastBar toast = new ToastBar();
     private final JButton overflowBtn;
 
-    /** No-arg constructor for use in tests only. Leaves all service fields null. */
-    NearestLandmarkBar()
-    {
-        this.bbox = null;
-        this.pathfinder = null;
-        this.client = null;
-        this.clientThread = null;
-        this.spriteManager = null;
-        this.overflowBtn = new JButton();
-    }
+    // Package-private for test inspection only.
+    ToastBar testGetToast() { return toast; }
 
     @Inject
     public NearestLandmarkBar(BboxIndex bbox, WaypointPathfinder pathfinder, Client client,
@@ -167,12 +159,7 @@ public class NearestLandmarkBar extends JPanel
     {
         if (!pathfinder.isAvailable())
         {
-            if (!java.awt.GraphicsEnvironment.isHeadless())
-            {
-                javax.swing.JOptionPane.showMessageDialog(this,
-                    "Install the Shortest Path plugin to use Play.",
-                    "Waypointer", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            }
+            toast.show("Install the Shortest Path plugin to use Play.");
             return;
         }
         clientThread.invoke(() -> {
