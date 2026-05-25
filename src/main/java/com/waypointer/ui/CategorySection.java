@@ -90,10 +90,18 @@ public class CategorySection extends JPanel
             rename.addActionListener(e -> actions.onRename.run());
             JMenuItem setIcon = new JMenuItem("Set icon...");
             setIcon.addActionListener(e -> { if (actions.onSetIcon != null) actions.onSetIcon.run(); });
+            JMenuItem exportCat = new JMenuItem("Export category");
+            exportCat.addActionListener(e -> actions.onExport.run());
+            JMenuItem exportFile = new JMenuItem("Export category to file...");
+            exportFile.addActionListener(e -> actions.onExportFile.run());
             JMenuItem delete = new JMenuItem("Delete category");
             delete.addActionListener(e -> actions.onDelete.run());
             menu.add(rename);
             menu.add(setIcon);
+            menu.addSeparator();
+            menu.add(exportCat);
+            menu.add(exportFile);
+            menu.addSeparator();
             menu.add(delete);
             // Right-click on the label still opens the popup (legacy discoverability).
             headerLabel.setComponentPopupMenu(menu);
@@ -184,18 +192,23 @@ public class CategorySection extends JPanel
 
     public enum RowAction { PLAY, EXPAND, DELETE }
 
-    /** The three category-level menu actions, bundled so the constructor stays readable. */
+    /** The category-level menu actions, bundled so the constructor stays readable. */
     public static final class Actions
     {
         final Runnable onRename;
         final Runnable onDelete;
         final Runnable onSetIcon;
+        final Runnable onExport;
+        final Runnable onExportFile;
 
-        public Actions(Runnable onRename, Runnable onDelete, Runnable onSetIcon)
+        public Actions(Runnable onRename, Runnable onDelete, Runnable onSetIcon,
+            Runnable onExport, Runnable onExportFile)
         {
             this.onRename = onRename;
             this.onDelete = onDelete;
             this.onSetIcon = onSetIcon;
+            this.onExport = onExport;
+            this.onExportFile = onExportFile;
         }
     }
 }

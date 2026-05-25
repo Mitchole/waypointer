@@ -338,6 +338,31 @@ public class WaypointerPanel extends PluginPanel
             iconId -> store.setCategoryIcon(c.getId(), iconId)).setVisible(true);
     }
 
+    private Library categorySubset(Category c)
+    {
+        Library subset = new Library();
+        subset.getCategories().add(c);
+        subset.setWaypoints(new ArrayList<>(store.getWaypointsInCategory(c.getId())));
+        return subset;
+    }
+
+    private void exportCategory(Category c)
+    {
+        Library subset = categorySubset(c);
+        String code = shareCodec.encodeLibrary(subset);
+        new LibraryFileIo(store, libraryCodec, this)
+            .copyShareCodeToClipboard(code, subset.getWaypoints().size());
+    }
+
+    private void exportCategoryToFile(Category c)
+    {
+        Library subset = categorySubset(c);
+        String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+        String suggested = "waypointer-category-"
+            + Styles.sanitizeFilenameSegment(c.getName()) + "-" + stamp + ".json";
+        new LibraryFileIo(store, libraryCodec, this).exportLibraryToFile(subset, suggested);
+    }
+
     private JComponent buildSearchBar()
     {
         JPanel container = new JPanel(new BorderLayout(4, 0));
@@ -494,7 +519,9 @@ public class WaypointerPanel extends PluginPanel
                     new CategorySection.Actions(
                         () -> promptRenameCategory(c),
                         () -> promptDeleteCategory(c),
-                        () -> promptSetCategoryIcon(c)),
+                        () -> promptSetCategoryIcon(c),
+                        () -> exportCategory(c),
+                        () -> exportCategoryToFile(c)),
                     spriteManager);
                 body.add(section);
                 rendered = true;
