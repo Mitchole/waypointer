@@ -382,4 +382,17 @@ public class WaypointStoreTest
         assertEquals("A", restoredA.getName());
         assertEquals("B", restoredB.getName());
     }
+
+    @Test
+    public void undoLastCalledTwiceSecondCallIsNoOp()
+    {
+        Waypoint w = store.createWaypoint(100, "X", store.getUncategorized().getId());
+        store.deleteWaypoint(w.getId());
+        store.undoLast();
+        // Slot is cleared by undoLast. A second call has nothing to do and must not throw,
+        // duplicate the restored waypoint, or arm the slot.
+        store.undoLast();
+        assertEquals(1, store.getLibrary().getWaypoints().size());
+        assertFalse(store.hasUndoable());
+    }
 }
