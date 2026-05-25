@@ -117,6 +117,10 @@ public class InlineEditPanel extends JPanel
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         footer.setOpaque(false);
         JLabel recapture = makeLink("Recapture", () -> {
+            int ok = JOptionPane.showConfirmDialog(this,
+                "Replace this waypoint's tile with your current location?",
+                "Recapture waypoint", JOptionPane.OK_CANCEL_OPTION);
+            if (ok != JOptionPane.OK_OPTION) return;
             // Flush any in-flight name/notes edits before swapping the tile under us.
             flushPending();
             capture.readCurrentLocation(packed -> {
