@@ -292,8 +292,19 @@ public class WaypointStore
 
     public void deleteWaypoint(UUID id)
     {
-        boolean removed = library.getWaypoints().removeIf(w -> w.getId().equals(id));
-        if (removed) notifyChanged();
+        Waypoint w = getWaypointById(id);
+        if (w == null)
+        {
+            lastUndo = null;
+            return;
+        }
+        library.getWaypoints().removeIf(x -> x.getId().equals(id));
+        Waypoint snapshot = w;
+        lastUndo = () -> {
+            library.getWaypoints().add(snapshot);
+            notifyChanged();
+        };
+        notifyChanged();
     }
 
     public void moveWaypointToCategory(UUID waypointId, UUID newCategoryId)

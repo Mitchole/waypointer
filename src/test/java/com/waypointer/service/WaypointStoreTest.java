@@ -281,4 +281,26 @@ public class WaypointStoreTest
             java.util.Collections.singletonList(w.getId()));
         assertFalse(store.hasUndoable());
     }
+
+    @Test
+    public void undoLastAfterDeleteWaypointRestoresIt()
+    {
+        Waypoint w = store.createWaypoint(100, "Catherby",
+            store.getUncategorized().getId());
+        UUID id = w.getId();
+        int sortOrderBefore = w.getSortOrder();
+
+        store.deleteWaypoint(id);
+        assertNull("waypoint should be gone after delete", store.getWaypointById(id));
+        assertTrue("delete should arm undo", store.hasUndoable());
+
+        store.undoLast();
+        Waypoint restored = store.getWaypointById(id);
+        assertNotNull("undo should restore the waypoint", restored);
+        assertEquals("Catherby", restored.getName());
+        assertEquals(100, restored.getPackedWorldPoint());
+        assertEquals(store.getUncategorized().getId(), restored.getCategoryId());
+        assertEquals(sortOrderBefore, restored.getSortOrder());
+        assertFalse("slot should be cleared after undo", store.hasUndoable());
+    }
 }
