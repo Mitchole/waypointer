@@ -126,9 +126,8 @@ public class WaypointerPanel extends PluginPanel
         this.libraryCodec = libraryCodec;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
 
-        // Build the waypoints-tab inner header (Mark current + Category + overflow buttons,
-        // search bar). This is the same UI as before; the change is that it now lives inside
-        // a tab panel rather than on the root.
+        // Build the panel header: Mark current location with the overflow trigger pinned
+        // to its right, then the nearest-landmark bar, then the search bar.
         JPanel header = new JPanel(new DynamicGridLayout(0, 1, 0, 4));
         header.setBackground(ColorScheme.DARK_GRAY_COLOR);
         markBtn.addActionListener(e -> onMarkClicked());
