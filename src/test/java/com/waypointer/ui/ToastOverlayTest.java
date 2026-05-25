@@ -128,4 +128,23 @@ public class ToastOverlayTest
         org.junit.Assert.assertTrue("expected second show() text to be reflected",
             overlay.cardLabelTextForTest().contains("second"));
     }
+
+    @Test
+    public void firstShowStartsAnimationOffScreenAndSettlesAtRestingY()
+    {
+        ToastOverlay overlay = new ToastOverlay(new JLabel("inner"));
+        overlay.setSize(200, 300);
+
+        overlay.show("hello");
+
+        // Right after show(), the card should be at the off-screen start position.
+        int startY = overlay.cardCurrentYForTest();
+        org.junit.Assert.assertEquals("card should start at the bottom edge", 300, startY);
+
+        // Finish the animation synchronously.
+        overlay.completeEntryAnimationForTest();
+        int settledY = overlay.cardCurrentYForTest();
+        org.junit.Assert.assertTrue("card must settle above the bottom edge, got y=" + settledY,
+            settledY < 300);
+    }
 }

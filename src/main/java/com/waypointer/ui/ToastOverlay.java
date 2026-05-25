@@ -21,6 +21,8 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     private static final int MARGIN_PX = 8;
     private static final int DEFAULT_DURATION_MS = 2500;
     private static final int ACTION_DURATION_MS = 6000;
+    private static final int ANIMATION_FRAMES = 12;
+    private static final int ANIMATION_FRAME_DELAY_MS = 15;
 
     private final JComponent content;
     private final JPanel card = new JPanel();
@@ -28,6 +30,11 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     private final JLabel actionLabel = new JLabel();
     private javax.swing.Timer autoHideTimer;
     private int entryAnimationCount;
+    private javax.swing.Timer entryTimer;
+    private int entryStartY;
+    private int entryTargetY;
+    private int entryFrame;
+    private int currentCardY = -1;
 
     public ToastOverlay(JComponent content)
     {
@@ -72,17 +79,35 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         if (size.width <= 0 || size.height <= 0) return;
         Dimension pref = card.getPreferredSize();
         int cardWidth = Math.max(0, size.width - 2 * MARGIN_PX);
-        int restingY = Math.max(0, size.height - pref.height - MARGIN_PX);
-        card.setBounds(MARGIN_PX, restingY, cardWidth, pref.height);
+        entryTargetY = Math.max(0, size.height - pref.height - MARGIN_PX);
+        if (currentCardY < 0) currentCardY = entryTargetY;
+        card.setBounds(MARGIN_PX, currentCardY, cardWidth, pref.height);
     }
 
     private void presentEntry()
     {
-        if (!card.isVisible())
+        if (card.isVisible())
         {
-            entryAnimationCount++;
+            // Replace-in-place: no animation.
+            return;
         }
-        // Animation start lands in Task 10.
+        entryAnimationCount++;
+        Dimension size = getSize();
+        Dimension pref = card.getPreferredSize();
+        entryStartY = size.height; // just below the visible area
+        currentCardY = entryStartY;
+        card.setBounds(MARGIN_PX, currentCardY, Math.max(0, size.width - 2 * MARGIN_PX), pref.height);
+        entryFrame = 0;
+
+        if (entryTimer != null && entryTimer.isRunning()) entryTimer.stop();
+        entryTimer = new javax.swing.Timer(ANIMATION_FRAME_DELAY_MS, e -> {
+            entryFrame++;
+            double t = Math.min(1.0, (double) entryFrame / ANIMATION_FRAMES);
+            currentCardY = (int) Math.round(entryStartY + (entryTargetY - entryStartY) * t);
+            card.setLocation(MARGIN_PX, currentCardY);
+            if (entryFrame >= ANIMATION_FRAMES) ((javax.swing.Timer) e.getSource()).stop();
+        });
+        entryTimer.start();
     }
 
     private void restartAutoHide(int durationMs)
@@ -138,4 +163,22 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     javax.swing.Timer autoHideTimerForTest() { return autoHideTimer; }
     JLabel actionLabelForTest() { return actionLabel; }
     int entryAnimationCountForTest() { return entryAnimationCount; }
+
+    int cardCurrentYForTest()
+    {
+        return card.getY();
+    }
+
+    void completeEntryAnimationForTest()
+    {
+        if (entryTimer == null) return;
+        while (entryFrame < ANIMATION_FRAMES)
+        {
+            entryFrame++;
+            double t = Math.min(1.0, (double) entryFrame / ANIMATION_FRAMES);
+            currentCardY = (int) Math.round(entryStartY + (entryTargetY - entryStartY) * t);
+            card.setLocation(MARGIN_PX, currentCardY);
+        }
+        entryTimer.stop();
+    }
 }
