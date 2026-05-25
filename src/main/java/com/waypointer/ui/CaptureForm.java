@@ -4,6 +4,7 @@ import com.waypointer.model.Category;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointStore;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -46,6 +47,7 @@ class CaptureForm extends JPanel
     private final JTextField newCategoryName = new JTextField();
     private final JButton newCategoryCreate = new JButton("Create");
     private final JButton newCategoryCancel = new JButton("Cancel");
+    private final JLabel errorLabel = new JLabel(" ");
     private CategoryComboItem lastNonSentinelSelection;
 
     private int packedPoint;
@@ -108,6 +110,11 @@ class CaptureForm extends JPanel
         gn.gridx = 2;
         newCategoryRow.add(newCategoryCancel, gn);
         stack.add(newCategoryRow);
+
+        errorLabel.setForeground(new Color(220, 90, 90));
+        errorLabel.setAlignmentX(LEFT_ALIGNMENT);
+        errorLabel.setVisible(false);
+        stack.add(errorLabel);
 
         add(stack, BorderLayout.CENTER);
 
@@ -202,6 +209,7 @@ class CaptureForm extends JPanel
         {
             lastNonSentinelSelection = sel;
             newCategoryRow.setVisible(false);
+            errorLabel.setVisible(false);
             revalidate();
             repaint();
             return;
@@ -217,9 +225,19 @@ class CaptureForm extends JPanel
     {
         String name = newCategoryName.getText();
         if (name == null || name.trim().isEmpty()) return;
-        Category created = store.createCategory(name.trim());
-        rebuildCategoryCombo(created.getId());
-        newCategoryRow.setVisible(false);
+        try
+        {
+            Category created = store.createCategory(name.trim());
+            rebuildCategoryCombo(created.getId());
+            newCategoryRow.setVisible(false);
+            errorLabel.setVisible(false);
+            errorLabel.setText(" ");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            errorLabel.setText(ex.getMessage());
+            errorLabel.setVisible(true);
+        }
         revalidate();
         repaint();
     }
@@ -231,6 +249,7 @@ class CaptureForm extends JPanel
             : store.getUncategorized().getId();
         rebuildCategoryCombo(revertTo);
         newCategoryRow.setVisible(false);
+        errorLabel.setVisible(false);
         revalidate();
         repaint();
     }
@@ -313,5 +332,10 @@ class CaptureForm extends JPanel
     Object selectedCategoryItem()
     {
         return categoryCombo.getSelectedItem();
+    }
+
+    String getErrorText()
+    {
+        return errorLabel.getText();
     }
 }

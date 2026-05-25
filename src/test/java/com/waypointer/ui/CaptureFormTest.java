@@ -149,4 +149,23 @@ public class CaptureFormTest
         assertEquals("Existing",
             ((CategoryComboItem) form.selectedCategoryItem()).toString());
     }
+
+    @Test
+    public void duplicateCategoryNameShowsInlineErrorAndKeepsFormOpen()
+    {
+        store.createCategory("Bosses");
+        form.show(packed);
+        form.selectNewCategorySentinel();
+        form.setNewCategoryNameText("Bosses");
+
+        form.clickCreateNewCategory();
+
+        assertTrue(form.isVisible());
+        assertTrue(form.isNewCategoryRowVisible());
+        assertTrue("inline error should mention duplicate name, got: " + form.getErrorText(),
+            form.getErrorText().contains("Bosses"));
+        assertEquals("no second category should have been created",
+            1L, store.getCategoriesOrdered().stream()
+                .filter(c -> "Bosses".equals(c.getName())).count());
+    }
 }
