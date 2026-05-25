@@ -95,4 +95,39 @@ public class NearestLandmarkBarTest
         verify(clientThread, never()).invoke(any(Runnable.class));
         verify(bbox, never()).nearest(any(LandmarkType.class), anyInt());
     }
+
+    @Test
+    public void setLoggedInTogglesButtonEnabledState()
+    {
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+
+        // Default is disabled (constructor calls setButtonsEnabled(false)).
+        for (java.awt.Component c : findAllButtons(bar))
+        {
+            org.junit.Assert.assertFalse("expected disabled at construction", c.isEnabled());
+        }
+
+        bar.setLoggedIn(true);
+        for (java.awt.Component c : findAllButtons(bar))
+        {
+            org.junit.Assert.assertTrue("expected enabled after setLoggedIn(true)", c.isEnabled());
+        }
+
+        bar.setLoggedIn(false);
+        for (java.awt.Component c : findAllButtons(bar))
+        {
+            org.junit.Assert.assertFalse("expected disabled after setLoggedIn(false)", c.isEnabled());
+        }
+    }
+
+    private static java.util.List<java.awt.Component> findAllButtons(java.awt.Container root)
+    {
+        java.util.List<java.awt.Component> out = new java.util.ArrayList<>();
+        for (java.awt.Component c : root.getComponents())
+        {
+            if (c instanceof JButton) out.add(c);
+            else if (c instanceof java.awt.Container) out.addAll(findAllButtons((java.awt.Container) c));
+        }
+        return out;
+    }
 }

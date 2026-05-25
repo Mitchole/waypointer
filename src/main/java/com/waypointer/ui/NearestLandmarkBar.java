@@ -134,6 +134,12 @@ public final class NearestLandmarkBar extends JPanel
         overflowBtn.setToolTipText("More" + suffix);
     }
 
+    /** Driven by WaypointerPanel from GameStateChanged. */
+    public void setLoggedIn(boolean loggedIn)
+    {
+        setButtonsEnabled(loggedIn);
+    }
+
     JPopupMenu buildOverflowMenu()
     {
         JPopupMenu menu = new JPopupMenu();
