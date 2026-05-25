@@ -120,7 +120,7 @@ public class BboxIndex
         public final String name;
         public final int distance;
 
-        Hit(int packed, String name, int distance)
+        public Hit(int packed, String name, int distance)
         {
             this.packed = packed;
             this.name = name;

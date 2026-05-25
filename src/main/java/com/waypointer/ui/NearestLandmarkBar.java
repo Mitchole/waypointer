@@ -1,5 +1,6 @@
 package com.waypointer.ui;
 
+import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkType;
 import com.waypointer.service.WaypointPathfinder;
@@ -12,11 +13,16 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
+import net.runelite.api.Player;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
@@ -59,6 +65,7 @@ public final class NearestLandmarkBar extends JPanel
     private final SpriteManager spriteManager;
 
     private final Map<LandmarkType, JButton> primaryButtons = new EnumMap<>(LandmarkType.class);
+    private final ToastBar toast = new ToastBar();
     private final JButton overflowBtn;
 
     @Inject
@@ -71,16 +78,21 @@ public final class NearestLandmarkBar extends JPanel
         this.clientThread = clientThread;
         this.spriteManager = spriteManager;
 
-        setLayout(new FlowLayout(FlowLayout.LEFT, 2, 0));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
         setAlignmentX(LEFT_ALIGNMENT);
 
+        JPanel iconRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+        iconRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        iconRow.setAlignmentX(LEFT_ALIGNMENT);
+
         for (LandmarkType type : PRIMARY)
         {
             JButton b = makeButton(type.displayName());
+            b.addActionListener(e -> onPick(type));
             primaryButtons.put(type, b);
-            add(b);
+            iconRow.add(b);
         }
 
         overflowBtn = makeButton("More");
@@ -89,7 +101,11 @@ public final class NearestLandmarkBar extends JPanel
             JPopupMenu menu = buildOverflowMenu();
             menu.show(overflowBtn, 0, overflowBtn.getHeight());
         });
-        add(overflowBtn);
+        iconRow.add(overflowBtn);
+
+        add(iconRow);
+        toast.setAlignmentX(LEFT_ALIGNMENT);
+        add(toast);
 
         setButtonsEnabled(false);
     }
@@ -130,9 +146,40 @@ public final class NearestLandmarkBar extends JPanel
         return menu;
     }
 
-    // Click handler -- Task 8 wires this to BboxIndex + WaypointPathfinder. Stub for now.
     void onPick(LandmarkType type)
     {
+        if (!pathfinder.isAvailable())
+        {
+            if (!java.awt.GraphicsEnvironment.isHeadless())
+            {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                    "Install the Shortest Path plugin to use Play.",
+                    "Waypointer", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            }
+            return;
+        }
+        clientThread.invoke(() -> {
+            if (client.getGameState() != GameState.LOGGED_IN) return true;
+            Player p = client.getLocalPlayer();
+            if (p == null) return true;
+            WorldPoint loc = p.getWorldLocation();
+            if (loc == null) return true;
+            int fromPacked = WorldPointPacker.pack(loc);
+            BboxIndex.Hit hit = bbox.nearest(type, fromPacked);
+            SwingUtilities.invokeLater(() -> applyHit(type, hit));
+            return true;
+        });
+    }
+
+    void applyHit(LandmarkType type, @javax.annotation.Nullable BboxIndex.Hit hit)
+    {
+        if (hit == null)
+        {
+            toast.show("No " + type.displayName().toLowerCase() + " found.");
+            return;
+        }
+        pathfinder.requestPath(hit.packed, hit.name);
+        toast.show("Pathing to " + hit.name + " (" + hit.distance + " tiles)");
     }
 
     private static Map<LandmarkType, Integer> spriteIds()

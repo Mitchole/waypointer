@@ -14,6 +14,12 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NearestLandmarkBarTest
@@ -29,8 +35,10 @@ public class NearestLandmarkBarTest
     {
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
 
+        // Buttons live inside the icon row (first child panel), not directly on bar.
+        java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
         int buttonCount = 0;
-        for (java.awt.Component c : bar.getComponents())
+        for (java.awt.Component c : iconRow.getComponents())
         {
             if (c instanceof JButton) buttonCount++;
         }
@@ -53,5 +61,38 @@ public class NearestLandmarkBarTest
         assertEquals("Spinning wheel", ((JMenuItem) menu.getComponent(3)).getText());
         assertEquals("Tanner",         ((JMenuItem) menu.getComponent(4)).getText());
         assertEquals("Charter ship",   ((JMenuItem) menu.getComponent(5)).getText());
+    }
+
+    @Test
+    public void applyHitRequestsPathAndShowsToast()
+    {
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+
+        BboxIndex.Hit hit = new BboxIndex.Hit(123456, "Edgeville Bank", 7);
+        bar.applyHit(LandmarkType.BANK, hit);
+
+        verify(pathfinder).requestPath(123456, "Edgeville Bank");
+    }
+
+    @Test
+    public void applyHitWithNullHitSkipsPathRequest()
+    {
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+
+        bar.applyHit(LandmarkType.BANK, null);
+
+        verify(pathfinder, never()).requestPath(anyInt(), anyString());
+    }
+
+    @Test
+    public void onPickShortcircuitsWhenShortestPathUnavailable()
+    {
+        when(pathfinder.isAvailable()).thenReturn(false);
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+
+        bar.onPick(LandmarkType.BANK);
+
+        verify(clientThread, never()).invoke(any(Runnable.class));
+        verify(bbox, never()).nearest(any(LandmarkType.class), anyInt());
     }
 }
