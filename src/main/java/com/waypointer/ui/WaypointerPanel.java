@@ -82,6 +82,7 @@ public class WaypointerPanel extends PluginPanel
     private final NearestLandmarkBar nearestLandmarkBar;
     private final LibraryJsonCodec libraryCodec;
     private final ActivePathBanner banner;
+    private final CaptureForm captureForm;
     private final JPanel body = new JPanel();
     private JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
@@ -210,11 +211,15 @@ public class WaypointerPanel extends PluginPanel
         this.banner = new ActivePathBanner(pathfinder, config);
         banner.setAlignmentX(LEFT_ALIGNMENT);
 
+        this.captureForm = new CaptureForm(store, capture);
+        captureForm.setAlignmentX(LEFT_ALIGNMENT);
+
         JPanel northStack = new JPanel();
         northStack.setLayout(new BoxLayout(northStack, BoxLayout.Y_AXIS));
         northStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
         northStack.add(topStack);
         northStack.add(banner);
+        northStack.add(captureForm);
 
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -287,8 +292,7 @@ public class WaypointerPanel extends PluginPanel
                     "Waypointer", JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
-            Window owner = SwingUtilities.getWindowAncestor(this);
-            new CaptureDialog(owner, store, capture, packed).setVisible(true);
+            captureForm.show(packed);
         });
     }
 
