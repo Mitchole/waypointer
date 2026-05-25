@@ -24,6 +24,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     private final JComponent content;
     private final JPanel card = new JPanel();
     private final JLabel message = new JLabel();
+    private javax.swing.Timer autoHideTimer;
 
     public ToastOverlay(JComponent content)
     {
@@ -66,12 +67,21 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         card.setBounds(MARGIN_PX, restingY, cardWidth, pref.height);
     }
 
+    private void restartAutoHide(int durationMs)
+    {
+        if (autoHideTimer != null && autoHideTimer.isRunning()) autoHideTimer.stop();
+        autoHideTimer = new javax.swing.Timer(durationMs, e -> card.setVisible(false));
+        autoHideTimer.setRepeats(false);
+        autoHideTimer.start();
+    }
+
     @Override
     public void show(String text)
     {
         message.setText("<html>" + Styles.escapeHtml(text) + "</html>");
         positionCard();
         card.setVisible(true);
+        restartAutoHide(DEFAULT_DURATION_MS);
     }
 
     @Override
@@ -82,4 +92,5 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
 
     boolean cardIsVisibleForTest() { return card.isVisible(); }
     String cardLabelTextForTest() { return message.getText(); }
+    javax.swing.Timer autoHideTimerForTest() { return autoHideTimer; }
 }

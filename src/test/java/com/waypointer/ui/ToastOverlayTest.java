@@ -51,4 +51,18 @@ public class ToastOverlayTest
             rendered.contains("<b>cheeky</b>"));
         assertTrue("escaped marker should appear, got: " + rendered, rendered.contains("&lt;b&gt;"));
     }
+
+    @Test
+    public void showSchedulesAutoHideAtDefaultDuration()
+    {
+        ToastOverlay overlay = new ToastOverlay(new JLabel("inner"));
+        overlay.setSize(200, 300);
+
+        overlay.show("hi");
+
+        javax.swing.Timer t = overlay.autoHideTimerForTest();
+        org.junit.Assert.assertNotNull("expected timer to exist after show()", t);
+        org.junit.Assert.assertTrue("expected timer to be running", t.isRunning());
+        org.junit.Assert.assertEquals(2500, t.getDelay());
+    }
 }
