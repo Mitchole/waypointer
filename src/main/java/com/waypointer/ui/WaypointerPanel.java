@@ -535,7 +535,7 @@ public class WaypointerPanel extends PluginPanel
                     },
                     this::handleRowAction,
                     w -> expandedWaypoints.contains(w.getId())
-                        ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog,
+                        ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
                             () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
                             () -> focusWorldMap(w.getPackedWorldPoint()))
                         : null,

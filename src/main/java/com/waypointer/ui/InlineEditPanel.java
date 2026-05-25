@@ -39,6 +39,7 @@ public class InlineEditPanel extends JPanel
 {
     private final WaypointStore store;
     private final UUID waypointId;
+    private final Toasts toasts;
 
     private final JTextField nameField;
     private final JTextArea notesArea;
@@ -48,11 +49,12 @@ public class InlineEditPanel extends JPanel
     private boolean categoryDirty = false;
 
     public InlineEditPanel(Waypoint w, WaypointStore store, WaypointCapture capture,
-        SpriteManager spriteManager, IconCatalog iconCatalog, Runnable onClose,
-        Runnable onShowOnMap)
+        SpriteManager spriteManager, IconCatalog iconCatalog, Toasts toasts,
+        Runnable onClose, Runnable onShowOnMap)
     {
         this.store = store;
         this.waypointId = w.getId();
+        this.toasts = toasts;
         setLayout(new GridBagLayout());
         setBorder(BorderFactory.createEmptyBorder(4, 24, 4, 4));
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
