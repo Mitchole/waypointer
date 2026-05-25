@@ -6,6 +6,8 @@ import com.waypointer.service.LandmarkType;
 import com.waypointer.service.WaypointPathfinder;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -37,7 +39,10 @@ import net.runelite.client.ui.ColorScheme;
 @Singleton
 public final class NearestLandmarkBar extends JPanel
 {
-    private static final int BUTTON_SIZE = 30;
+    private static final int BUTTON_SIZE = 34;
+    // Cap icon dimension so MINIMAP_BOAT_SLOOP and other oversized sprites match the
+    // MAP_ICON_* set, which tops out around 16x16. Smaller sprites render unscaled.
+    private static final int MAX_ICON_PX = 18;
 
     // The 5 primary types shown as top-level buttons.
     private static final List<LandmarkType> PRIMARY = Arrays.asList(
@@ -168,11 +173,22 @@ public final class NearestLandmarkBar extends JPanel
         spriteManager.getSpriteAsync(id, 0, img -> {
             if (img == null) return;
             SwingUtilities.invokeLater(() -> {
-                b.setIcon(new ImageIcon(img));
+                b.setIcon(new ImageIcon(scaleDownIfNeeded(img)));
                 b.revalidate();
                 b.repaint();
             });
         });
+    }
+
+    private static Image scaleDownIfNeeded(BufferedImage src)
+    {
+        int w = src.getWidth();
+        int h = src.getHeight();
+        int longest = Math.max(w, h);
+        if (longest <= MAX_ICON_PX) return src;
+        double scale = (double) MAX_ICON_PX / longest;
+        return src.getScaledInstance((int) Math.round(w * scale),
+            (int) Math.round(h * scale), Image.SCALE_SMOOTH);
     }
 
     void onPick(LandmarkType type)
