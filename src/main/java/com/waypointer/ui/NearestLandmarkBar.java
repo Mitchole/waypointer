@@ -87,7 +87,7 @@ public final class NearestLandmarkBar extends JPanel
         setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
         setAlignmentX(LEFT_ALIGNMENT);
 
-        JPanel iconRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+        JPanel iconRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 0));
         iconRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
         iconRow.setAlignmentX(LEFT_ALIGNMENT);
 
