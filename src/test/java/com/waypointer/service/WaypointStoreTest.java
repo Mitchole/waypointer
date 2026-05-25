@@ -331,4 +331,55 @@ public class WaypointStoreTest
         assertEquals("only the most recent recapture is undone", 200,
             store.getWaypointById(w.getId()).getPackedWorldPoint());
     }
+
+    @Test
+    public void undoLastAfterDeleteCategoryMoveChildrenRestoresEverything()
+    {
+        Category cat = store.createCategory("Herbs");
+        Waypoint a = store.createWaypoint(100, "A", cat.getId());
+        Waypoint b = store.createWaypoint(200, "B", cat.getId());
+        int aSortBefore = a.getSortOrder();
+        int bSortBefore = b.getSortOrder();
+
+        store.deleteCategory(cat.getId(), true);
+        // Category is gone, waypoints survived but moved to Uncategorized.
+        assertNull(store.getCategoryById(cat.getId()));
+        assertEquals(store.getUncategorized().getId(),
+            store.getWaypointById(a.getId()).getCategoryId());
+
+        store.undoLast();
+        assertNotNull("category should be restored", store.getCategoryById(cat.getId()));
+        assertEquals("waypoint A should be back in original category",
+            cat.getId(), store.getWaypointById(a.getId()).getCategoryId());
+        assertEquals("waypoint B should be back in original category",
+            cat.getId(), store.getWaypointById(b.getId()).getCategoryId());
+        assertEquals("waypoint A sort order should be restored",
+            aSortBefore, store.getWaypointById(a.getId()).getSortOrder());
+        assertEquals("waypoint B sort order should be restored",
+            bSortBefore, store.getWaypointById(b.getId()).getSortOrder());
+    }
+
+    @Test
+    public void undoLastAfterDeleteCategoryWithChildrenRestoresEverything()
+    {
+        Category cat = store.createCategory("Herbs");
+        Waypoint a = store.createWaypoint(100, "A", cat.getId());
+        Waypoint b = store.createWaypoint(200, "B", cat.getId());
+
+        store.deleteCategory(cat.getId(), false);
+        assertNull(store.getCategoryById(cat.getId()));
+        assertNull("waypoint A should be deleted", store.getWaypointById(a.getId()));
+        assertNull("waypoint B should be deleted", store.getWaypointById(b.getId()));
+
+        store.undoLast();
+        assertNotNull("category should be restored", store.getCategoryById(cat.getId()));
+        Waypoint restoredA = store.getWaypointById(a.getId());
+        Waypoint restoredB = store.getWaypointById(b.getId());
+        assertNotNull(restoredA);
+        assertNotNull(restoredB);
+        assertEquals(cat.getId(), restoredA.getCategoryId());
+        assertEquals(cat.getId(), restoredB.getCategoryId());
+        assertEquals("A", restoredA.getName());
+        assertEquals("B", restoredB.getName());
+    }
 }

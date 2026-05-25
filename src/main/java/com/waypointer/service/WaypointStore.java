@@ -193,26 +193,61 @@ public class WaypointStore
     public void deleteCategory(UUID id, boolean moveChildrenToUncategorized)
     {
         Category c = getCategoryById(id);
-        if (c == null) return;
+        if (c == null)
+        {
+            lastUndo = null;
+            return;
+        }
         if (c.isUncategorized())
         {
             throw new IllegalArgumentException("Cannot delete Uncategorized");
         }
+        Category snapshotCategory = c;
         if (moveChildrenToUncategorized)
         {
+            // Capture each affected waypoint's previous categoryId AND sortOrder so the
+            // undo restores them exactly. The destructive path overwrites BOTH below.
+            List<Waypoint> affected = new ArrayList<>(getWaypointsInCategory(id));
+            Map<UUID, Integer> prevSort = new HashMap<>();
+            for (Waypoint w : affected) prevSort.put(w.getId(), w.getSortOrder());
+
             UUID uId = getUncategorized().getId();
             int nextOrder = nextWaypointSortOrder(uId);
-            for (Waypoint w : getWaypointsInCategory(id))
+            for (Waypoint w : affected)
             {
                 w.setCategoryId(uId);
                 w.setSortOrder(nextOrder++);
             }
+            library.getCategories().removeIf(cc -> cc.getId().equals(id));
+
+            UUID origCategoryId = id;
+            lastUndo = () -> {
+                library.getCategories().add(snapshotCategory);
+                for (Waypoint w : affected)
+                {
+                    w.setCategoryId(origCategoryId);
+                    Integer s = prevSort.get(w.getId());
+                    if (s != null) w.setSortOrder(s);
+                }
+                notifyChanged();
+            };
         }
         else
         {
+            List<Waypoint> deletedChildren = new ArrayList<>();
+            for (Waypoint w : library.getWaypoints())
+            {
+                if (w.getCategoryId().equals(id)) deletedChildren.add(w);
+            }
             library.getWaypoints().removeIf(w -> w.getCategoryId().equals(id));
+            library.getCategories().removeIf(cc -> cc.getId().equals(id));
+
+            lastUndo = () -> {
+                library.getCategories().add(snapshotCategory);
+                library.getWaypoints().addAll(deletedChildren);
+                notifyChanged();
+            };
         }
-        library.getCategories().removeIf(cc -> cc.getId().equals(id));
         notifyChanged();
     }
 
