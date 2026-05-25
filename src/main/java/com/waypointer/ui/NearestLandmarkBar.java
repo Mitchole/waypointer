@@ -218,8 +218,9 @@ public final class NearestLandmarkBar extends JPanel
             toast.show("No " + type.displayName().toLowerCase() + " found.");
             return;
         }
+        // ActivePathBanner takes over the "Pathing to..." status once requestPath fires,
+        // so no in-bar toast is needed for the success case.
         pathfinder.requestPath(hit.packed, hit.name);
-        toast.show("Pathing to " + hit.name + " (" + hit.distance + " tiles)");
     }
 
     private static Map<LandmarkType, Integer> spriteIds()

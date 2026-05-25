@@ -64,7 +64,7 @@ public class NearestLandmarkBarTest
     }
 
     @Test
-    public void applyHitRequestsPathAndShowsToast()
+    public void applyHitRequestsPath()
     {
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
 
