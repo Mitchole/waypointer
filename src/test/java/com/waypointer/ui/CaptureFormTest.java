@@ -80,4 +80,16 @@ public class CaptureFormTest
 
         assertEquals("Lumbridge", store.getLibrary().getWaypoints().get(0).getName());
     }
+
+    @Test
+    public void cancelHidesFormAndCreatesNoWaypoint()
+    {
+        form.show(packed);
+        form.setNameText("ignored");
+
+        form.clickCancel();
+
+        assertFalse(form.isVisible());
+        assertEquals(0, store.getLibrary().getWaypoints().size());
+    }
 }

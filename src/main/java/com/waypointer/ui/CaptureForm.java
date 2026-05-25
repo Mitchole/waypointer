@@ -9,14 +9,20 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.UUID;
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRootPane;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import net.runelite.client.ui.ColorScheme;
 
 /**
@@ -33,6 +39,7 @@ class CaptureForm extends JPanel
     private final JComboBox<CategoryComboItem> categoryCombo = new JComboBox<>();
     private final JPanel stack = new JPanel();
     private final JButton saveBtn = new JButton("Save");
+    private final JButton cancelBtn = new JButton("Cancel");
 
     private int packedPoint;
 
@@ -80,11 +87,37 @@ class CaptureForm extends JPanel
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
         buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        Styles.secondaryButton(cancelBtn);
+        cancelBtn.addActionListener(e -> dismiss());
         Styles.primaryButton(saveBtn);
         saveBtn.addActionListener(e -> doSave());
+        buttons.add(cancelBtn);
         buttons.add(saveBtn);
         add(buttons, BorderLayout.SOUTH);
+
+        // ESC cancels, ENTER on the name field saves. Both bound on the form's own
+        // input map so they don't fire when focus is somewhere else in the panel.
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "captureCancel");
+        getActionMap().put("captureCancel", new AbstractAction()
+        {
+            @Override public void actionPerformed(ActionEvent e) { dismiss(); }
+        });
+        nameField.getInputMap(JComponent.WHEN_FOCUSED)
+            .put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "captureSave");
+        nameField.getActionMap().put("captureSave", new AbstractAction()
+        {
+            @Override public void actionPerformed(ActionEvent e) { saveBtn.doClick(); }
+        });
         setVisible(false);
+    }
+
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        JRootPane root = getRootPane();
+        if (root != null) root.setDefaultButton(saveBtn);
     }
 
     void show(int packed)
@@ -160,5 +193,10 @@ class CaptureForm extends JPanel
     void clickSave()
     {
         saveBtn.doClick();
+    }
+
+    void clickCancel()
+    {
+        cancelBtn.doClick();
     }
 }
