@@ -24,6 +24,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     private final JComponent content;
     private final JPanel card = new JPanel();
     private final JLabel message = new JLabel();
+    private final JLabel actionLabel = new JLabel();
     private javax.swing.Timer autoHideTimer;
 
     public ToastOverlay(JComponent content)
@@ -41,6 +42,12 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         message.setForeground(ColorScheme.PROGRESS_COMPLETE_COLOR);
         message.setFont(FontManager.getRunescapeSmallFont());
         card.add(message, BorderLayout.CENTER);
+
+        actionLabel.setForeground(ColorScheme.BRAND_ORANGE);
+        actionLabel.setFont(FontManager.getRunescapeSmallFont());
+        actionLabel.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        actionLabel.setVisible(false);
+        card.add(actionLabel, BorderLayout.EAST);
 
         add(card, JLayeredPane.POPUP_LAYER);
         card.setVisible(false);
@@ -79,6 +86,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     public void show(String text)
     {
         message.setText("<html>" + Styles.escapeHtml(text) + "</html>");
+        actionLabel.setVisible(false);
         positionCard();
         card.setVisible(true);
         restartAutoHide(DEFAULT_DURATION_MS);
@@ -87,10 +95,17 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     @Override
     public void show(String text, String actionLabel, Runnable onClick)
     {
-        // Implemented in a later task.
+        message.setText("<html>" + Styles.escapeHtml(text) + "</html>");
+        this.actionLabel.setText("<html><u>" + Styles.escapeHtml(actionLabel) + "</u></html>");
+        this.actionLabel.setVisible(true);
+        positionCard();
+        card.setVisible(true);
+        restartAutoHide(DEFAULT_DURATION_MS);
+        // Action click wiring lands in Task 7.
     }
 
     boolean cardIsVisibleForTest() { return card.isVisible(); }
     String cardLabelTextForTest() { return message.getText(); }
     javax.swing.Timer autoHideTimerForTest() { return autoHideTimer; }
+    JLabel actionLabelForTest() { return actionLabel; }
 }

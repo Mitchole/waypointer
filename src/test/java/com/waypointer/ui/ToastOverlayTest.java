@@ -65,4 +65,19 @@ public class ToastOverlayTest
         org.junit.Assert.assertTrue("expected timer to be running", t.isRunning());
         org.junit.Assert.assertEquals(2500, t.getDelay());
     }
+
+    @Test
+    public void showWithActionRendersActionLabel()
+    {
+        ToastOverlay overlay = new ToastOverlay(new JLabel("inner"));
+        overlay.setSize(200, 300);
+
+        overlay.show("Deleted Catherby", "Undo", () -> {});
+
+        JLabel action = overlay.actionLabelForTest();
+        org.junit.Assert.assertNotNull("expected action label to be rendered", action);
+        org.junit.Assert.assertTrue("expected action label text 'Undo', got: " + action.getText(),
+            action.getText().contains("Undo"));
+        org.junit.Assert.assertTrue("expected action label visible", action.isVisible());
+    }
 }
