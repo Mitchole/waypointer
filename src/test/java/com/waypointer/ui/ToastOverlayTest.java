@@ -99,4 +99,15 @@ public class ToastOverlayTest
         org.junit.Assert.assertEquals("runnable should fire exactly once", 1, calls.get());
         assertFalse("card should hide after action click", overlay.cardIsVisibleForTest());
     }
+
+    @Test
+    public void showWithActionUsesLongerDuration()
+    {
+        ToastOverlay overlay = new ToastOverlay(new JLabel("inner"));
+        overlay.setSize(200, 300);
+
+        overlay.show("Deleted Catherby", "Undo", () -> {});
+
+        org.junit.Assert.assertEquals(6000, overlay.autoHideTimerForTest().getDelay());
+    }
 }

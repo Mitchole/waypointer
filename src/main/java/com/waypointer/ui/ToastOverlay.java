@@ -20,6 +20,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
 {
     private static final int MARGIN_PX = 8;
     private static final int DEFAULT_DURATION_MS = 2500;
+    private static final int ACTION_DURATION_MS = 6000;
 
     private final JComponent content;
     private final JPanel card = new JPanel();
@@ -117,7 +118,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
 
         positionCard();
         card.setVisible(true);
-        restartAutoHide(DEFAULT_DURATION_MS);
+        restartAutoHide(ACTION_DURATION_MS);
     }
 
     boolean cardIsVisibleForTest() { return card.isVisible(); }
