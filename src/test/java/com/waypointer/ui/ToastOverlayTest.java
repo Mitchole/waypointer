@@ -37,4 +37,18 @@ public class ToastOverlayTest
         assertTrue("expected label to mention the message, got: " + overlay.cardLabelTextForTest(),
             overlay.cardLabelTextForTest().contains("Added Varrock"));
     }
+
+    @Test
+    public void showEscapesHtmlInMessage()
+    {
+        ToastOverlay overlay = new ToastOverlay(new JLabel("inner"));
+        overlay.setSize(200, 300);
+
+        overlay.show("<b>cheeky</b>");
+
+        String rendered = overlay.cardLabelTextForTest();
+        assertFalse("raw <b> should not appear in label HTML, got: " + rendered,
+            rendered.contains("<b>cheeky</b>"));
+        assertTrue("escaped marker should appear, got: " + rendered, rendered.contains("&lt;b&gt;"));
+    }
 }
