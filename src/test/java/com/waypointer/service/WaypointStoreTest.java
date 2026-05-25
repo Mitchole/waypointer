@@ -303,4 +303,32 @@ public class WaypointStoreTest
         assertEquals(sortOrderBefore, restored.getSortOrder());
         assertFalse("slot should be cleared after undo", store.hasUndoable());
     }
+
+    @Test
+    public void undoLastAfterRecaptureRestoresOldPoint()
+    {
+        Waypoint w = store.createWaypoint(100, "Catherby",
+            store.getUncategorized().getId());
+
+        store.updateWaypointPoint(w.getId(), 200);
+        assertEquals(200, store.getWaypointById(w.getId()).getPackedWorldPoint());
+        assertTrue("recapture should arm undo", store.hasUndoable());
+
+        store.undoLast();
+        assertEquals("undo should restore the original packed point", 100,
+            store.getWaypointById(w.getId()).getPackedWorldPoint());
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void undoLastAfterTwoRecapturesRestoresOnlyTheMostRecent()
+    {
+        Waypoint w = store.createWaypoint(100, "X", store.getUncategorized().getId());
+        store.updateWaypointPoint(w.getId(), 200);
+        store.updateWaypointPoint(w.getId(), 300);
+
+        store.undoLast();
+        assertEquals("only the most recent recapture is undone", 200,
+            store.getWaypointById(w.getId()).getPackedWorldPoint());
+    }
 }

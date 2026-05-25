@@ -285,8 +285,22 @@ public class WaypointStore
     public void updateWaypointPoint(UUID id, int packed)
     {
         Waypoint w = getWaypointById(id);
-        if (w == null) return;
+        if (w == null)
+        {
+            lastUndo = null;
+            return;
+        }
+        int oldPacked = w.getPackedWorldPoint();
         w.setPackedWorldPoint(packed);
+        UUID targetId = id;
+        lastUndo = () -> {
+            Waypoint cur = getWaypointById(targetId);
+            if (cur != null)
+            {
+                cur.setPackedWorldPoint(oldPacked);
+                notifyChanged();
+            }
+        };
         notifyChanged();
     }
 
