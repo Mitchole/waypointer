@@ -324,8 +324,22 @@ public class WaypointerPanel extends PluginPanel
             "Delete category '" + c.getName() + "'?\n\nWhat to do with its waypoints?",
             "Delete category", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
             null, options, options[0]);
-        if (choice == 0) store.deleteCategory(c.getId(), true);
-        else if (choice == 1) store.deleteCategory(c.getId(), false);
+        String name = c.getName();
+        if (choice == 0)
+        {
+            store.deleteCategory(c.getId(), true);
+            toastOverlay.show("Deleted category '" + name + "'", "Undo", store::undoLast);
+        }
+        else if (choice == 1)
+        {
+            // childCount is captured BEFORE the delete - deleteCategory(_, false) removes
+            // those waypoints so getWaypointsInCategory would return 0 afterwards.
+            int childCount = store.getWaypointsInCategory(c.getId()).size();
+            store.deleteCategory(c.getId(), false);
+            String msg = "Deleted '" + name + "' and " + childCount
+                + (childCount == 1 ? " waypoint" : " waypoints");
+            toastOverlay.show(msg, "Undo", store::undoLast);
+        }
     }
 
     private void promptSetCategoryIcon(Category c)
