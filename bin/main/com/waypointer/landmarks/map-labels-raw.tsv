@@ -1,0 +1,1042 @@
+# Source: OSRS game cache via runelite/cache (BSD 2-Clause).
+# x y plane	name	category	spriteId	textScale
+1310 1253 0	Key Master	1129	-1	0
+1310 1277 0	Beware of the dog	1129	-1	1
+3356 2205 0	The Little Pearl	1129	-1	0
+3262 2237 0	Pearl Bank	1129	-1	1
+2977 2271 0	The Onyx Crest	1129	-1	0
+2335 2273 0	Rainbow's End	1129	-1	0
+3669 2307 0	The Accursed Sea	1129	-1	1
+2518 2316 0	The Lonely Sea	1129	-1	1
+2212 2327 0	Sunbleak Island	1129	-1	0
+2857 2330 0	Last Light	1129	-1	0
+3286 2334 0	Cape Conch	1129	-1	0
+2278 2340 0	Rainbow Reef	1129	-1	1
+3054 2344 0	Sea of Shells	1129	-1	1
+2759 2359 0	Anglerfish's Light	1129	-1	1
+1278 2371 0	Horizon's End	1129	-1	1
+1984 2397 0	Southern Expanse	1129	-1	1
+2642 2405 0	Charred Island	1129	-1	0
+1850 2413 0	Isle of Serpents	1129	-1	0
+3166 2414 0	The Summer Shore	1129	-1	1
+2865 2436 0	Unquiet Ocean	1129	-1	2
+3187 2455 0	The Great Conch	1129	-1	2
+3337 2461 0	Tortugan Sea	1129	-1	1
+3200 2485 0	The Sacred Grove	1129	-1	0
+2104 2491 0	Shrouded Ocean	1129	-1	2
+2874 2497 0	Red Reef	1129	-1	1
+3808 2499 0	Forbidden Depths	1129	-1	1
+2445 2505 0	The Skullhorde	1129	-1	1
+2797 2518 0	Red Rock	1129	-1	1
+1510 2528 0	Ochre Sea	1129	-1	1
+2274 2531 0	Barracuda HQ	1129	-1	1
+3105 2532 0	Abalone Cliffs	1129	-1	0
+2530 2533 0	Isle of Bones	1129	-1	0
+2169 2558 0	Barracuda Belt	1129	-1	1
+1784 2578 0	Sapphire Sea	1129	-1	1
+3767 2581 0	Cursed Archipelago	1129	-1	2
+2656 2587 0	Pest Control	1129	-1	0
+3025 2595 0	Turtle Belt	1129	-1	1
+2067 2608 0	Wintumber Island	1129	-1	0
+3462 2614 0	The Iron Sea	1129	-1	1
+1387 2629 0	Sunset Ocean	1129	-1	2
+2757 2636 0	The Simian Sea	1129	-1	1
+1190 2642 0	Calidum Reach	1129	-1	1
+3048 2648 0	Dognose Island	1129	-1	0
+1758 2665 0	The Crown Jewel	1129	-1	0
+2636 2666 0	Void Knights' Outpost	1129	-1	1
+3282 2667 0	Bay of Elidinis	1129	-1	1
+3644 2674 0	Tainted Tides	1129	-1	1
+3894 2691 0	Shrieking Waters	1129	-1	1
+3365 2705 0	Jaltevas Pyramid	1129	-1	0
+2250 2707 0	Sea of Souls	1129	-1	1
+2477 2711 0	Anglers' Retreat	1129	-1	0
+2700 2711 0	Cape Atoll	1129	-1	0
+3269 2718 0	Elid Delta	1129	-1	0
+3057 2721 0	Menaphite Sea	1129	-1	1
+2915 2723 0	Crash Island	1129	-1	0
+1884 2729 0	The Everdeep	1129	-1	1
+3335 2730 0	Necropolis	1129	-1	0
+2530 2742 0	Mythic Sea	1129	-1	1
+1427 2747 0	Misty Sea	1129	-1	1
+2849 2754 0	Arrow Passage	1129	-1	1
+2755 2755 0	Ape Atoll	1129	-1	2
+3211 2762 0	Menaphos	1129	-1	1
+2333 2770 0	Tear of the Soul	1129	-1	0
+1190 2778 0	Laguna Aurorae	1129	-1	0
+3298 2783 0	Sophanem	1129	-1	1
+2585 2784 0	Fort Locke	1129	-1	0
+2763 2784 0	Marim	1129	-1	1
+1568 2786 0	Shimmering Atoll	1129	-1	0
+2916 2790 0	Ardent Ocean	1129	-1	2
+1949 2793 0	Deepfin Point	1129	-1	1
+3288 2798 0	Jalsavrah Pyramid	1129	-1	0
+2091 2806 0	Soul Bay	1129	-1	1
+3485 2818 0	Scabaras' Shallows	1129	-1	1
+2644 2828 0	Oo'glog Channel	1129	-1	1
+3413 2832 0	Ruins of Ullek	1129	-1	1
+2898 2837 0	Rock Island Prison	1129	-1	0
+3123 2839 0	Sea Spirit Dock	1129	-1	0
+3171 2841 0	Ruins of Unkah	1129	-1	1
+1632 2844 0	Wyrm's Waters	1129	-1	1
+3365 2845 0	Jaleustrophos Pyramid	1129	-1	0
+3015 2847 0	Tempoross Cove	1129	-1	1
+2457 2848 0	Myths' Guild	1129	-1	0
+2210 2851 0	Soul Wars Lobby	1129	-1	1
+2822 2851 0	Kharazi Strait	1129	-1	1
+3682 2854 0	Eastern Ocean	1129	-1	2
+2570 2858 0	Corsair Cove	1129	-1	1
+3808 2863 0	Harmony	1129	-1	1
+1384 2866 0	Mistrock	1129	-1	1
+2388 2866 0	Breakbone Strait	1129	-1	1
+2209 2878 0	Isle of Souls	1129	-1	2
+3082 2878 0	The Storm Tempor	1129	-1	1
+2127 2893 0	Avatar of Creation	1129	-1	0
+3233 2900 0	Jaldraocht Pyramid	1129	-1	0
+1765 2901 0	Aureum Coast	1129	-1	1
+2163 2902 0	Western Graveyard	1129	-1	0
+3429 2902 0	Nardah	1129	-1	1
+3172 2904 0	Quarry	1129	-1	0
+3754 2908 0	Strait of Discord	1129	-1	1
+2128 2909 0	Blue Base	1129	-1	0
+2207 2915 0	Soul Obelisk	1129	-1	0
+2287 2919 0	Red Base	1129	-1	0
+1311 2920 0	Darkmoon Ravine	1129	-1	0
+1640 2921 0	Colossal Wyrm Remains	1129	-1	0
+1360 2922 0	Moonrise Brewery and Winery	1129	-1	0
+2844 2923 0	Kharazi Jungle	1129	-1	1
+2254 2929 0	Eastern Graveyard	1129	-1	0
+3311 2930 0	Kharidian Desert	1129	-1	2
+2207 2932 0	Soul Wars Arena	1129	-1	1
+1448 2933 0	Villa Lucens	1129	-1	0
+1538 2933 0	Sunset Bay	1129	-1	1
+2287 2935 0	Avatar of Destruction	1129	-1	0
+1391 2942 0	Aldarin	1129	-1	1
+1239 2948 0	Dusk's Maw	1129	-1	1
+2546 2950 0	Feldip Hills	1129	-1	2
+2699 2955 0	Feldip Gulf	1129	-1	1
+3103 2968 0	Kharidian Sea	1129	-1	1
+1740 2969 0	Stonecutter Outpost	1129	-1	0
+2814 2972 0	River Shilo	1129	-1	0
+3512 2973 0	Ancient Vault	1129	-1	0
+1994 2977 0	Western Gate	1129	-1	1
+3175 2977 0	Bandit Camp	1129	-1	0
+2764 2979 0	Cairn Isle	1129	-1	0
+3356 2980 0	Pollnivneach	1129	-1	1
+3902 2981 0	Mos Le'Water	1129	-1	1
+1886 2984 0	Vatrachos Island	1129	-1	0
+2849 2986 0	Shilo Village	1129	-1	1
+1516 2990 0	Sunset Coast	1129	-1	1
+1686 2991 0	Locus Oasis	1129	-1	0
+3042 2992 0	The Pandemonium	1129	-1	1
+3786 2998 0	Trouble Brewing	1129	-1	0
+2349 3002 0	Backwater	1129	-1	1
+3586 3010 0	Uzer Channel	1129	-1	1
+1618 3020 0	Avium Savannah	1129	-1	1
+1821 3020 0	Fortis Bay	1129	-1	1
+3291 3022 0	Desert Mining Camp	1129	-1	0
+3109 3025 0	The Node	1129	-1	0
+3725 3028 0	Mos Le'Harmless	1129	-1	2
+2158 3032 0	Zul-Egil	1129	-1	1
+2914 3032 0	River Amja	1129	-1	0
+1306 3035 0	Crypt of Tonali	1129	-1	0
+2623 3036 0	Gu'tanoth Bay	1129	-1	1
+3170 3038 0	Bedabin Camp	1129	-1	0
+3489 3043 0	Uzer Oasis	1129	-1	0
+1372 3044 0	Kastori	1129	-1	1
+1103 3045 0	Aehecatl	1129	-1	1
+2528 3046 0	Gu'Tanoth	1129	-1	1
+2464 3047 0	Jiggig	1129	-1	0
+1558 3048 0	Hunter Guild	1129	-1	0
+2379 3055 0	Chompy Marsh	1129	-1	0
+2990 3055 0	Shipyard	1129	-1	0
+2860 3059 0	Karamja	1129	-1	2
+1707 3064 0	Outer Fortis	1129	-1	0
+2794 3066 0	Tai Bwo Wannai	1129	-1	1
+2201 3068 0	Zul-Andra	1129	-1	0
+3371 3068 0	River Elid	1129	-1	0
+2270 3074 0	Zulrah's shrine	1129	-1	0
+2589 3077 0	Wizards' Guild	1129	-1	0
+2981 3090 0	Mudskipper Sound	1129	-1	1
+2549 3091 0	Yanille	1129	-1	1
+1302 3098 0	Tlati Rainforest	1129	-1	1
+2241 3098 0	Poison Waste	1129	-1	1
+3479 3098 0	Ruins of Uzer	1129	-1	1
+3105 3099 0	Tutorial Island	1129	-1	1
+3226 3099 0	Kalphite Lair	1129	-1	0
+2664 3102 0	Yanille Chain	1129	-1	0
+1737 3105 0	Park	1129	-1	0
+3184 3106 0	Lumbridge Basin	1129	-1	1
+1681 3108 0	Bazaar	1129	-1	0
+1825 3109 0	Fortis Colosseum	1129	-1	0
+1963 3110 0	Minotaurs' Rest	1129	-1	0
+2432 3111 0	Castle Wars	1129	-1	0
+1220 3113 0	Tal Teklan	1129	-1	1
+1375 3117 0	River Varla	1129	-1	0
+2990 3118 0	Mudskipper Point	1129	-1	0
+2608 3120 0	Nightmare Zone	1129	-1	0
+3331 3120 0	Kalphite Cave	1129	-1	0
+2155 3122 0	Port Tyras	1129	-1	0
+3694 3122 0	Murkshore Sea	1129	-1	1
+1436 3124 0	Cam Torum Entrance	1129	-1	0
+3304 3126 0	Shantay Pass	1129	-1	0
+1570 3127 0	Ortus Farm	1129	-1	0
+1713 3127 0	Civitas illa Fortis	1129	-1	1
+2704 3131 0	Strait of Khazard	1129	-1	1
+2855 3133 0	Musa Passage	1129	-1	0
+3253 3144 0	Lum Lagoon	1129	-1	0
+3518 3145 0	Sanctuary's End	1129	-1	1
+1760 3146 0	Fortis Cothon	1129	-1	0
+2180 3147 0	Tyras Camp	1129	-1	0
+3892 3148 0	Eastern Ridge	1129	-1	1
+1645 3150 0	Kualti Headquarters	1129	-1	0
+2440 3151 0	Observatory	1129	-1	0
+3112 3153 0	Wizards' Tower	1129	-1	0
+1562 3154 0	Fortis Aqueduct	1129	-1	0
+2914 3161 0	Musa Point	1129	-1	0
+2594 3162 0	Fight Arena	1129	-1	0
+1445 3164 0	Ralos' Rise	1129	-1	1
+3376 3164 0	Giants' Plateau	1129	-1	1
+1713 3165 0	Grand Museum	1129	-1	0
+1681 3166 0	Sunrise Palace	1129	-1	0
+1248 3169 0	Tal Teok	1129	-1	0
+3313 3171 0	Al Kharid	1129	-1	1
+2528 3174 0	Tree Gnome Village	1129	-1	1
+2779 3174 0	Brimhaven	1129	-1	1
+2843 3176 0	Karamja Volcano	1129	-1	0
+3070 3177 0	Bay of Sarim	1129	-1	1
+2346 3180 0	Lletya	1129	-1	1
+3413 3182 0	Citharede Abbey	1129	-1	0
+3195 3183 0	Lumbridge Swamp	1129	-1	0
+2243 3186 0	Isafdar	1129	-1	1
+2085 3188 0	Lledrith Island	1129	-1	0
+3697 3188 0	Icyene Graveyard	1129	-1	0
+2659 3189 0	Port Khazard	1129	-1	1
+1450 3190 0	The Teomat	1129	-1	0
+2815 3193 0	Agility Arena	1129	-1	0
+1510 3195 0	Kingdom of Varlamore	1129	-1	2
+1624 3200 0	River Ortus	1129	-1	0
+2124 3205 0	Porth Neigwl	1129	-1	1
+2650 3213 0	Tower of Life	1129	-1	0
+2603 3218 0	Monastery	1129	-1	0
+3497 3219 0	Burgh de Rott	1129	-1	1
+3662 3220 0	Ver Sinhaza	1129	-1	0
+3047 3221 0	Port Sarim	1129	-1	1
+2960 3222 0	Rimmington	1129	-1	1
+1641 3225 0	Tower of Ascension	1129	-1	0
+1167 3226 0	Aestuarium Tempestus	1129	-1	1
+3275 3227 0	Toll Gate	1129	-1	0
+2522 3232 0	Battlefield	1129	-1	0
+1378 3234 0	Gloomthorn Trail	1129	-1	0
+3239 3234 0	Lumbridge	1129	-1	1
+3358 3237 0	Emir's Arena	1129	-1	1
+1506 3241 0	Quetzacalli Gorge	1129	-1	1
+1570 3241 0	The Proudspire	1129	-1	1
+1767 3241 0	Litus Lucis	1129	-1	1
+2573 3242 0	Clock Tower	1129	-1	0
+2669 3243 0	Necromancer's Tower	1129	-1	0
+3444 3243 0	Abandoned Mine	1129	-1	0
+3126 3244 0	Jail	1129	-1	0
+2258 3246 0	Afon Ganol	1129	-1	0
+1982 3247 0	Crystal Sea	1129	-1	1
+2937 3248 0	Melzar's Maze	1129	-1	0
+3733 3248 0	Sleep Sound	1129	-1	1
+2887 3249 0	Rimmington Strait	1129	-1	1
+1442 3250 0	Mons Gratia	1129	-1	1
+3080 3250 0	Market	1129	-1	0
+1284 3256 0	Tempestus	1129	-1	1
+1697 3257 0	Twilight Temple	1129	-1	0
+2196 3257 0	Iorwerth Camp	1129	-1	0
+2752 3263 0	Brimhaven Passage	1129	-1	1
+3619 3263 0	Meiyerditch	1129	-1	1
+2240 3264 0	Tirannwn	1129	-1	2
+3120 3267 0	Draynor Village	1129	-1	1
+2839 3271 0	Crandor	1129	-1	1
+2614 3273 0	Ardougne Zoo	1129	-1	0
+3491 3281 0	Mort'ton	1129	-1	1
+2921 3282 0	Crafting Guild	1129	-1	0
+1512 3288 0	The Darkfrost	1129	-1	1
+2776 3288 0	Fishing Platform	1129	-1	0
+2710 3291 0	Witchaven	1129	-1	1
+3566 3291 0	Barrows	1129	-1	0
+3038 3294 0	South Falador Farm	1129	-1	0
+2339 3295 0	Arandar	1129	-1	1
+1635 3296 0	Salvager Overlook	1129	-1	1
+2597 3298 0	East Ardougne	1129	-1	1
+1892 3303 0	Port Roberts	1129	-1	1
+3363 3303 0	Mage Training Arena	1129	-1	0
+2524 3308 0	West Ardougne	1129	-1	1
+1572 3311 0	Shipwreck Cove	1129	-1	0
+1373 3313 0	Nemus Retreat	1129	-1	0
+2443 3315 0	Underground Pass	1129	-1	0
+1417 3320 0	Auburn Valley	1129	-1	1
+3217 3321 0	Kingdom of Misthalin	1129	-1	2
+2240 3328 0	Prifddinas	1129	-1	1
+3718 3330 0	Slepe	1129	-1	1
+3866 3330 0	Hallowed Sea	1129	-1	1
+1996 3331 0	Western Ocean	1129	-1	2
+2907 3336 0	Dark Wizards' Tower	1129	-1	0
+3020 3344 0	Mining Guild	1129	-1	0
+2961 3345 0	White Knights' Castle	1129	-1	0
+3108 3345 0	Draynor Manor	1129	-1	0
+3361 3345 0	Exam Centre	1129	-1	0
+3167 3350 0	River Lum	1129	-1	0
+3201 3354 0	Champions' Guild	1129	-1	0
+2435 3355 0	Outpost	1129	-1	0
+2989 3355 0	Falador	1129	-1	1
+1268 3360 0	Custodia Pass	1129	-1	0
+3553 3360 0	Castle Drakan	1129	-1	0
+3726 3360 0	Crombwick Manor	1129	-1	0
+2119 3362 0	Tirannwn Bight	1129	-1	1
+1405 3363 0	Auburnvale	1129	-1	1
+3626 3363 0	Darkmeyer	1129	-1	1
+2519 3370 0	Combat Training Camp	1129	-1	0
+2578 3370 0	Kingdom of Kandarin	1129	-1	2
+2737 3374 0	Legends' Guild	1129	-1	0
+1060 3379 0	Last Gasp	1129	-1	1
+2850 3379 0	Entrana	1129	-1	1
+3005 3379 0	Park	1129	-1	0
+1527 3380 0	Great Sound	1129	-1	1
+3046 3380 0	Party Room	1129	-1	0
+3500 3384 0	The Hollows	1129	-1	0
+3446 3385 0	Mort Myre Swamp	1129	-1	1
+1155 3391 0	The Stranglewood	1129	-1	1
+1928 3397 0	Pilgrims' Passage	1129	-1	1
+2540 3398 0	River Dougne	1129	-1	0
+2770 3399 0	Keep Le Faye	1129	-1	0
+2599 3401 0	Fishing Guild	1129	-1	0
+3569 3408 0	Graveyard	1129	-1	0
+2199 3409 0	Gwenith	1129	-1	1
+2713 3410 0	Sorcerer's Tower	1129	-1	0
+2823 3410 0	Catherby Bay	1129	-1	1
+2988 3412 0	Kingdom of Asgarnia	1129	-1	2
+1272 3414 0	Custodia Mountains	1129	-1	1
+3063 3416 0	Barbarian Village	1129	-1	1
+3365 3419 0	Digsite	1129	-1	0
+1130 3420 0	Ritual Site	1129	-1	0
+1760 3424 0	Crabclaw Isle	1129	-1	0
+2154 3425 0	Mynydd	1129	-1	0
+2284 3426 0	Gorlah	1129	-1	0
+2634 3426 0	Hemenster	1129	-1	1
+1687 3427 0	Crabclaw Bay	1129	-1	1
+1175 3430 0	Temple	1129	-1	0
+3681 3430 0	Alloviz Estuary	1129	-1	0
+3552 3432 0	Morytania	1129	-1	2
+1510 3434 0	Land's End	1129	-1	0
+1884 3435 0	Chinchompa Island	1129	-1	0
+2676 3436 0	Ranging Guild	1129	-1	0
+3137 3437 0	Cooks' Guild	1129	-1	0
+3403 3437 0	River Salve	1129	-1	0
+3016 3441 0	Dwarven Mine	1129	-1	0
+2610 3444 0	Lake Hemenster	1129	-1	0
+3755 3446 0	Gravewater Bay	1129	-1	1
+3211 3450 0	Varrock	1129	-1	1
+2433 3454 0	Tree Gnome Stronghold	1129	-1	1
+1553 3456 0	Kourend Woodland	1129	-1	1
+2836 3457 0	Catherby	1129	-1	1
+2379 3458 0	River Crannmor	1129	-1	0
+2900 3458 0	Taverley	1129	-1	1
+2515 3462 0	Baxtorian Falls	1129	-1	0
+1381 3470 0	Lacerta Falls	1129	-1	0
+1718 3470 0	Charcoal Burners	1129	-1	0
+2925 3473 0	Druids' Circle	1129	-1	0
+2218 3476 0	Ynysdail	1129	-1	0
+3052 3477 0	Monastery	1129	-1	0
+3168 3477 0	Grand Exchange	1129	-1	0
+2647 3480 0	McGrubor's Wood	1129	-1	0
+2163 3483 0	Porth Gwenith	1129	-1	1
+3213 3483 0	Palace	1129	-1	0
+3362 3485 0	Silvarea	1129	-1	0
+2337 3486 0	Eagles' Peak	1129	-1	1
+2401 3487 0	Gnomeball Field	1129	-1	0
+3009 3487 0	Ice Mountain	1129	-1	1
+3491 3487 0	Canifis	1129	-1	1
+3673 3487 0	Port Phasmatys	1129	-1	1
+3098 3488 0	Edgeville	1129	-1	1
+3580 3488 0	Haunted Woods	1129	-1	1
+1173 3489 0	Talon's Grasp	1129	-1	0
+2502 3489 0	Otto's Grotto	1129	-1	0
+2692 3489 0	Seers' Village	1129	-1	1
+3414 3489 0	Paterdomus Temple	1129	-1	0
+1613 3490 0	Woodcutting Guild	1129	-1	0
+2600 3491 0	Coal Trucks	1129	-1	0
+2849 3492 0	White Wolf Mountain	1129	-1	1
+2894 3501 0	Heroes' Guild	1129	-1	0
+2963 3502 0	Goblin Village	1129	-1	0
+2469 3504 0	Grand Tree	1129	-1	0
+2763 3505 0	Camelot Castle	1129	-1	0
+1806 3507 0	Tithe Farm	1129	-1	0
+3308 3507 0	Lumber Yard	1129	-1	0
+1449 3514 0	Ruins of Morra	1129	-1	0
+1702 3520 0	Saltpetre	1129	-1	0
+3659 3520 0	Ectofuntus	1129	-1	0
+3018 3522 0	Black Knights' Fortress	1129	-1	0
+2934 3526 0	Chaos Temple	1129	-1	0
+2710 3527 0	Seers' Eye	1129	-1	0
+1580 3530 0	Xeric's Look out	1129	-1	0
+1395 3539 0	Shayziens' Wall	1129	-1	0
+2145 3547 0	Drumstick Isle	1129	-1	0
+1308 3548 0	Lizardman Settlement	1129	-1	0
+2895 3549 0	Burthorpe	1129	-1	1
+3551 3551 0	Fenkenstrain's Castle	1129	-1	0
+1248 3552 0	Mount Quidamortem	1129	-1	1
+1536 3552 0	Shayzien	1129	-1	1
+1106 3553 0	Grieving Bight	1129	-1	1
+2779 3553 0	Merwick Lake	1129	-1	0
+3429 3555 0	Slayer Tower	1129	-1	0
+2606 3557 0	Vesmjos	1129	-1	0
+2542 3558 0	Barbarian Outpost	1129	-1	0
+3902 3559 0	Dragon's Maw	1129	-1	1
+1808 3560 0	Vinery	1129	-1	0
+3808 3560 0	Dragontooth Island	1129	-1	0
+1495 3561 0	Graveyard of Heroes	1129	-1	0
+2854 3564 0	Warriors' Guild	1129	-1	0
+3502 3572 0	Mausoleum	1129	-1	0
+2741 3574 0	Sinclair Mansion	1129	-1	0
+1675 3575 0	Forthos Ruin	1129	-1	0
+3642 3578 0	Haunted Coast	1129	-1	1
+2525 3581 0	Barbarian Assault	1129	-1	0
+2455 3591 0	Grandroot Bay	1129	-1	1
+2865 3592 0	Death Plateau	1129	-1	0
+1615 3594 0	River Hos	1129	-1	0
+1917 3597 0	Hosidian Sea	1129	-1	1
+1583 3602 0	Shayzia Ruin	1129	-1	0
+2272 3602 0	Kraken Cove	1129	-1	0
+2331 3604 0	Piscatoris	1129	-1	1
+1750 3607 0	Hosidius	1129	-1	1
+2765 3608 0	Golden Apple Tree	1129	-1	0
+3238 3610 0	Chaos Temple	1129	-1	0
+1445 3615 0	Giant Pit	1129	-1	0
+1509 3617 0	Infirmary	1129	-1	0
+2563 3617 0	Rower's Arm	1129	-1	0
+1311 3618 0	Xeric's Shrine	1129	-1	0
+3349 3618 0	Pyre Cove	1129	-1	0
+1255 3622 0	Kebos Swamp	1129	-1	1
+3129 3623 0	Clan Wars	1129	-1	0
+3141 3623 0	Bounty Hunter	1129	-1	0
+1640 3626 0	Mess	1129	-1	0
+2080 3626 0	Vagabonds Rest	1129	-1	1
+1836 3627 0	The Dibber	1129	-1	0
+1546 3633 0	Combat Ring	1129	-1	0
+3030 3633 0	Dark Warriors' Fortress	1129	-1	0
+3151 3635 0	Ferox Enclave	1129	-1	1
+1488 3636 0	War Tent	1129	-1	0
+3429 3641 0	Bleakwater Bay	1129	-1	1
+3142 3644 0	Last Man Standing	1129	-1	0
+2679 3646 0	Fremennik Province	1129	-1	2
+1265 3649 0	Kebos Lowlands	1129	-1	2
+1374 3650 0	Lake Molch	1129	-1	0
+3279 3659 0	Larran's Chest	1129	-1	0
+1510 3664 0	Shayzien Encampment	1129	-1	1
+1312 3670 0	Molch	1129	-1	1
+2784 3670 0	Mountain Camp	1129	-1	0
+1260 3672 0	River Molch	1129	-1	0
+3167 3673 0	Graveyard of Shadows	1129	-1	0
+1668 3675 0	Kingstown	1129	-1	1
+3116 3675 0	Hunter's End	1129	-1	0
+1626 3676 0	Kourend Castle	1129	-1	0
+2892 3678 0	Trollheim	1129	-1	0
+1445 3679 0	Chasm of Fire	1129	-1	0
+2231 3679 0	Piscatoris Sea	1129	-1	1
+2080 3681 0	Buccaneers' Haven	1129	-1	0
+2672 3681 0	Rellekka	1129	-1	1
+3181 3682 0	Skeletal Tomb	1129	-1	0
+2844 3684 0	Troll Stronghold	1129	-1	1
+3036 3689 0	Bandit Camp	1129	-1	0
+2345 3693 0	Piscatoris Fishing Colony	1129	-1	0
+3723 3694 0	Echoing Rift	1129	-1	1
+2966 3697 0	Ruins	1129	-1	0
+1600 3700 0	Kingdom of Great Kourend	1129	-1	2
+1824 3704 0	Port Piscarilius	1129	-1	1
+1503 3707 0	Lizardman Canyon	1129	-1	0
+1435 3710 0	Shamans	1129	-1	0
+2728 3715 0	Keldagrim Entrance	1129	-1	0
+1368 3718 0	Battlefront	1129	-1	0
+2593 3724 0	Fremensund	1129	-1	1
+1163 3734 0	Kebos Shore	1129	-1	1
+3164 3735 0	Ruins	1129	-1	0
+2846 3736 0	Troll Country	1129	-1	2
+1249 3739 0	Farming Guild	1129	-1	0
+3184 3743 0	Web Chasm	1129	-1	0
+2912 3744 0	God Wars Dungeon	1129	-1	0
+3246 3746 0	Bone Yard	1129	-1	0
+2349 3747 0	Fremennik Strait	1129	-1	1
+1842 3748 0	Foodhall	1129	-1	0
+1678 3752 0	Arceuus	1129	-1	1
+2977 3753 0	The Forgotten Cemetery	1129	-1	0
+2522 3756 0	Waterbirth Island	1129	-1	0
+1910 3757 0	Gulf of Kourend	1129	-1	1
+1483 3758 0	Lovakengj Assembly	1129	-1	0
+2745 3763 0	Dvergfjord	1129	-1	0
+3546 3776 0	Wyvern's Wake	1129	-1	1
+3144 3781 0	Wilderness	1129	-1	2
+3680 3781 0	Tar Swamp	1129	-1	0
+3721 3781 0	Fossil Island	1129	-1	2
+3780 3781 0	Volcano	1129	-1	0
+3223 3786 0	Vet'ion's Rest	1129	-1	0
+3321 3793 0	Silk Chasm	1129	-1	0
+3925 3796 0	The Precipice	1129	-1	1
+1503 3798 0	Lovakengj	1129	-1	1
+1311 3808 0	Mount Karuulm	1129	-1	1
+2857 3809 0	Ice path	1129	-1	0
+2105 3814 0	Moonshadow	1129	-1	1
+2206 3815 0	Pirates' Cove	1129	-1	0
+2477 3815 0	V's Belt	1129	-1	1
+2320 3821 0	Neitiznot	1129	-1	1
+3730 3821 0	Museum Camp	1129	-1	0
+1573 3822 0	Tower of Magic	1129	-1	0
+2392 3822 0	Jatizso	1129	-1	1
+3199 3824 0	Lava Dragon Isle	1129	-1	0
+1624 3826 0	Library	1129	-1	0
+1385 3830 0	The Forsaken Tower	1129	-1	0
+1428 3840 0	Lovakite Mine	1129	-1	0
+1496 3846 0	Blast Mine	1129	-1	0
+3079 3848 0	Lava Maze	1129	-1	0
+3293 3848 0	Callisto's Den	1129	-1	0
+2662 3855 0	Idestia Strait	1129	-1	1
+3690 3861 0	Mushroom Forest	1129	-1	0
+2782 3863 0	Trollweiss Mountain	1129	-1	1
+3780 3871 0	House on the Hill	1129	-1	0
+2609 3874 0	Etceteria	1129	-1	1
+1354 3876 0	Sulphur Cove	1129	-1	1
+2141 3877 0	Lunar Isle	1129	-1	2
+2367 3879 0	Fremennik Isles	1129	-1	2
+2545 3879 0	Miscellania	1129	-1	1
+1696 3880 0	Dark Altar	1129	-1	0
+3293 3884 0	Demonic Ruins	1129	-1	0
+1446 3885 0	Sulphur Mine	1129	-1	0
+1558 3892 0	Settlement Ruins	1129	-1	0
+1842 3892 0	River of Souls	1129	-1	0
+3379 3893 0	Fountain of Rune	1129	-1	0
+2183 3904 0	Lunar Bay	1129	-1	1
+3575 3911 0	Untamed Ocean	1129	-1	2
+2972 3919 0	Frozen Waste Plateau	1129	-1	0
+3443 3923 0	The Cinderwaters	1129	-1	1
+1630 3930 0	Northern Tundras	1129	-1	1
+3286 3931 0	Rogues' Castle	1129	-1	0
+3107 3933 0	Mage Arena	1129	-1	0
+1696 3936 0	Fishing Hamlet	1129	-1	0
+3187 3936 0	Resource Area	1129	-1	0
+3365 3937 0	Blighted Volcano	1129	-1	0
+1570 3940 0	Unmarked Grave	1129	-1	0
+2878 3940 0	Weiss	1129	-1	1
+2777 3941 0	Weissmere	1129	-1	1
+3149 3941 0	Deserted Keep	1129	-1	0
+1141 3942 0	Dagger's Edge	1129	-1	1
+3236 3945 0	Scorpion Pit	1129	-1	0
+2395 3947 0	Kannski Tides	1129	-1	1
+3043 3948 0	Pirates' Hideout	1129	-1	0
+1969 3959 0	Winter's Edge	1129	-1	1
+3019 3959 0	Larran's Chest	1129	-1	0
+1503 3960 0	The White Cliffs of Lova	1129	-1	0
+1630 3968 0	Doors of Dinh	1129	-1	0
+3852 3985 0	The Eastern Doldrums	1129	-1	1
+2622 3988 0	Here be penguins	1129	-1	0
+1251 3991 0	Forgotten Ocean	1129	-1	2
+1447 3994 0	Lovkengj's Shroud	1129	-1	1
+2784 3999 0	The Graveyard	1129	-1	0
+3308 4002 0	Fiend's Passage	1129	-1	1
+3567 4003 0	Lithkren	1129	-1	0
+1630 4011 0	The Wintertodt	1129	-1	0
+2467 4011 0	Island of Stone	1129	-1	0
+2553 4014 0	Stoneheart Sea	1129	-1	1
+3642 4019 0	Ancient Reef	1129	-1	1
+2952 4031 0	Wiess Melt	1129	-1	1
+3473 4036 0	Tower of Bounty	1129	-1	0
+2681 4048 0	Iceberg	1129	-1	1
+3382 4053 0	Huntsman's Wood	1129	-1	0
+2272 4066 0	Ungael	1129	-1	0
+3161 4067 0	The Searing Sea	1129	-1	1
+1276 4070 0	The Endless Sea	1129	-1	1
+2124 4070 0	Lunar Sea	1129	-1	1
+1948 4071 0	Brittle Isle	1129	-1	0
+2913 4075 0	Grimstone	1129	-1	0
+2477 4085 0	Northern Ocean	1129	-1	2
+3424 4088 0	Daimon's Crater	1129	-1	1
+1792 4095 0	Everwinter Sea	1129	-1	1
+2750 4103 0	Shiverwake Expanse	1129	-1	1
+1556 4113 0	Frostgrave Depths	1129	-1	1
+3424 4121 0	Frozen Temple	1129	-1	0
+1888 4352 0	Sub-level 5	1129	-1	1
+2888 4360 0	Sub-level 6	1129	-1	1
+1950 4362 0	Rock lobsters	1129	-1	0
+1895 4368 0	Dagannoth	1129	-1	0
+2422 4375 0	Beware of the mushrooms	1129	-1	0
+2383 4380 0	Tanglefeet	1129	-1	0
+2888 4384 0	Dagannoth Kings	1129	-1	0
+1898 4400 0	Rock lobsters	1129	-1	0
+2386 4427 0	Otherworldly beings	1129	-1	0
+2447 4429 0	Throne room	1129	-1	0
+2428 4446 0	Puro-puro	1129	-1	0
+2482 4452 0	Market	1129	-1	0
+2452 4478 0	Shrine	1129	-1	0
+3184 4544 0	Lower level	1129	-1	1
+3166 4547 0	Exit	1129	-1	0
+3150 4650 0	Terror dogs	1129	-1	0
+2533 4704 0	Mage Arena bank	1129	-1	0
+2272 4705 0	King Black Dragon	1129	-1	0
+3110 4793 0	Sire	1129	-1	0
+2970 4794 0	Sire	1129	-1	0
+2980 4857 0	Sire	1129	-1	0
+3105 4858 0	Sire	1129	-1	0
+2149 5081 0	Dead people	1129	-1	0
+2400 5092 0	Fight Cave	1129	-1	0
+2152 5102 0	Distillery	1129	-1	0
+2496 5140 0	Mor Ul Rek	1129	-1	1
+2398 5160 0	Fight Pit	1129	-1	0
+2159 5170 0	Nothing interesting happens here	1129	-1	1
+1888 5184 0	War	1129	-1	1
+2016 5184 0	Famine	1129	-1	1
+2336 5184 0	Death	1129	-1	1
+1760 5188 0	Here be a big mole	1129	-1	1
+2344 5216 0	Cradle of Life	1129	-1	0
+2875 5216 0	Ancient Prison	1129	-1	1
+2022 5221 0	Grain of Plenty	1129	-1	0
+1907 5227 0	Gift of Peace	1129	-1	0
+2144 5248 0	Pestilence	1129	-1	1
+2720 5248 0	Agility course	1129	-1	0
+3122 5258 0	Confusion	1129	-1	0
+3087 5263 0	Hopelessness	1129	-1	0
+2715 5270 0	Wire machine	1129	-1	0
+2908 5270 0	Saradomin's Encampment	1129	-1	1
+2144 5283 0	Box of Health	1129	-1	0
+3087 5293 0	Anger	1129	-1	0
+3122 5298 0	Fear	1129	-1	0
+2692 5304 0	Ur-meg	1129	-1	0
+2697 5319 0	Bone collector	1129	-1	0
+2719 5322 0	Market	1129	-1	0
+2723 5331 0	Ur-vass	1129	-1	0
+1773 5332 0	Brutal green dragons	1129	-1	0
+2272 5337 0	The Inferno	1129	-1	0
+2746 5342 0	Tegdak	1129	-1	0
+2716 5344 0	Ur-zek & Ur-taal	1129	-1	0
+1738 5356 0	Waterfiends	1129	-1	0
+2704 5368 0	Oldak's teleportation laboratory	1129	-1	0
+1743 5375 0	Lower level	1129	-1	1
+2720 5375 0	Lower level	1129	-1	1
+3018 5578 0	Lizards & Zamorak fighters	1129	-1	0
+3060 5578 0	Altar	1129	-1	0
+3744 5695 0	Lower level	1129	-1	1
+3463 5767 0	Rocky Outcrop	1129	-1	0
+2937 5773 0	Offering Altar	1129	-1	1
+3476 5791 0	Moser Settlement	1129	-1	0
+3010 5798 0	Golem Workshop	1129	-1	1
+3406 5804 0	Debtor Hideout	1129	-1	0
+2956 5806 0	Ramarno	1129	-1	0
+2924 5814 0	Camdozaal Mines	1129	-1	1
+2971 5823 0	Camdozaal Vault	1129	-1	1
+3456 5824 0	Desert Island	1129	-1	2
+3431 5845 0	The Mountain	1129	-1	0
+3500 5873 0	Trinity Outpost	1129	-1	0
+3220 6009 0	Iorwerth Camp	1129	-1	0
+3264 6016 0	Tirannwn	1129	-1	2
+3363 6047 0	Arandar	1129	-1	1
+3035 6051 0	Zalcano	1129	-1	0
+3567 6054 0	Stone Circle	1129	-1	0
+3598 6067 0	Court of Chaos	1129	-1	0
+3496 6072 0	Hut	1129	-1	0
+3264 6080 0	Prifddinas	1129	-1	1
+1696 6104 0	Tutorial Island	1129	-1	1
+3552 6107 0	Town Center	1129	-1	0
+3594 6113 0	Blank Tower	1129	-1	0
+3497 6118 0	Old Manor	1129	-1	0
+3552 6120 0	Wild Varrock	1129	-1	2
+3552 6160 0	Dark Warrior's Palace	1129	-1	1
+3223 6161 0	Gwenith	1129	-1	1
+3598 6164 0	Pillars of Sacrifice	1129	-1	0
+3500 6169 0	Trading Post	1129	-1	0
+2623 6207 0	Lower level	1129	-1	1
+2592 6369 0	Science District	1129	-1	0
+2656 6372 0	Sunken Cathedral	1129	-1	0
+2657 6427 0	Residential District	1129	-1	0
+2584 6441 0	Palace	1129	-1	0
+3232 8865 0	Gryphons	1129	-1	0
+3107 8868 0	Gryphons	1129	-1	0
+3179 8876 0	Three-headed Gryphon	1129	-1	0
+2154 9296 0	Iron dragons	1129	-1	0
+2522 9299 0	Chinchompas	1129	-1	0
+2127 9306 0	Blue dragons	1129	-1	0
+1360 9316 0	Moonrise Brewery and Winery	1129	-1	0
+1394 9327 0	Alchemical Society	1129	-1	0
+1451 9329 0	Villa Lucens	1129	-1	0
+2121 9330 0	Fire giants	1129	-1	0
+2158 9336 0	Greater demons	1129	-1	0
+3775 9407 0	Cave horrors & albino bats	1129	-1	0
+2408 9438 0	Smoke devils	1129	-1	0
+2656 9440 0	Bronze, iron & steel dragons	1129	-1	0
+2721 9446 0	Iron & steel dragons	1129	-1	0
+2362 9456 0	Thermonuclear Smoke Devil	1129	-1	0
+2712 9485 0	Black demons	1129	-1	0
+3278 9485 0	Guardians	1129	-1	0
+3330 9486 0	Soldiers	1129	-1	0
+2586 9489 0	Wizards' Guild	1129	-1	0
+2664 9495 0	Fire giants	1129	-1	0
+2736 9497 0	Bronze dragons	1129	-1	0
+1247 9503 0	Dragon Nest	1129	-1	0
+3298 9503 0	Kalphite Cave	1129	-1	1
+2848 9504 0	Jogres	1129	-1	0
+3488 9504 0	Queen's Chamber	1129	-1	0
+1825 9509 0	Fortis Colosseum	1129	-1	0
+1685 9516 0	Crypt	1129	-1	0
+2710 9521 0	Red dragons	1129	-1	0
+2666 9523 0	Dogs	1129	-1	0
+2614 9524 0	Salarin the Twisted	1129	-1	0
+3308 9530 0	Soldiers	1129	-1	0
+3488 9535 0	Kalphite Lair	1129	-1	1
+3230 9546 0	Giant frogs	1129	-1	0
+3057 9547 0	Skeletal wyverns	1129	-1	0
+2834 9561 0	Lesser demons	1129	-1	0
+3102 9561 0	Wizards' Tower	1129	-1	0
+2965 9565 0	Ice giants	1129	-1	0
+1366 9568 0	Ancient Prison	1129	-1	0
+2576 9568 0	Poison spiders	1129	-1	0
+2784 9568 0	Agility Arena	1129	-1	0
+2663 9570 0	Moss giants	1129	-1	0
+2994 9571 0	Muggers	1129	-1	0
+2857 9572 0	Skeletons	1129	-1	0
+1641 9576 0	Barracks	1129	-1	0
+2990 9576 0	Pirates	1129	-1	0
+3051 9577 0	Ice warriors & giants	1129	-1	0
+1514 9583 0	Ancient Shrine	1129	-1	0
+2834 9586 0	Red Spiders	1129	-1	0
+3019 9587 0	Hobgoblins	1129	-1	0
+2586 9608 0	Ogres	1129	-1	0
+2836 9610 0	Lesser demons	1129	-1	0
+3220 9620 0	Lumbridge Castle cellar	1129	-1	0
+3264 9630 0	Goblin Maze	1129	-1	0
+2976 9632 0	Rat Pits	1129	-1	0
+3327 9632 0	Mine	1129	-1	0
+1393 9635 0	The Blood Moon	1129	-1	0
+1489 9635 0	The Eclipse Moon	1129	-1	0
+2659 9635 0	Rat Pits	1129	-1	0
+3167 9635 0	H.A.M. Cult	1129	-1	0
+2606 9638 0	Spiders	1129	-1	0
+2856 9638 0	Elvarg	1129	-1	0
+2930 9644 0	Melzar's Maze	1129	-1	0
+2836 9653 0	Skeletons	1129	-1	0
+3104 9655 0	Draynor Sewers	1129	-1	0
+2583 9659 0	Dungeon rats	1129	-1	0
+2675 9682 0	Zombies & rocks	1129	-1	0
+1441 9683 0	The Blue Moon	1129	-1	0
+2699 9688 0	Hobgoblins	1129	-1	0
+2908 9689 0	Black Knights' Base	1129	-1	1
+3168 9696 0	Sourhog Cave	1129	-1	0
+3488 9696 0	Shades	1129	-1	0
+1377 9700 0	Earthbound Cavern	1129	-1	0
+1505 9700 0	Streambound Cavern	1129	-1	0
+2644 9702 0	Ardougne Sewers	1129	-1	0
+3240 9704 0	Watermill cellar	1129	-1	0
+3034 9736 0	Mining Guild	1129	-1	0
+2861 9737 0	Dramen Tree	1129	-1	0
+2585 9738 0	Ogres	1129	-1	0
+2966 9738 0	Crypt	1129	-1	0
+2719 9744 0	Pit scorpions	1129	-1	0
+2851 9752 0	Greater demons	1129	-1	0
+2569 9753 0	Bats	1129	-1	0
+2935 9754 0	Poisonous scorpions	1129	-1	0
+3168 9758 0	Champions' Challenge	1129	-1	0
+3072 9763 0	Draynor Manor basement	1129	-1	0
+2842 9766 0	Zombies	1129	-1	0
+2920 9770 0	Chaos dwarves	1129	-1	0
+3245 9773 0	VTAM Corporation	1129	-1	0
+2700 9774 0	Shadow warriors	1129	-1	0
+1286 9775 0	Stalker Den	1129	-1	0
+3058 9776 0	Access to Falador	1129	-1	0
+2401 9779 0	Fire giants	1129	-1	0
+2863 9780 0	Black demons	1129	-1	0
+2962 9784 0	Animated axes	1129	-1	0
+2457 9788 0	Aberrant Spectres	1129	-1	0
+2938 9790 0	Lesser demons	1129	-1	0
+2424 9793 0	Hellhounds	1129	-1	0
+2479 9806 0	Ankou	1129	-1	0
+2857 9806 0	Poison spiders	1129	-1	0
+2985 9806 0	Boot	1129	-1	0
+2908 9807 0	Blue dragons	1129	-1	0
+3052 9809 0	Beware of the scorpions	1129	-1	0
+3632 9815 0	Araxxor	1129	-1	0
+2969 9819 0	Hammerspike's hangout	1129	-1	0
+3196 9822 0	Bank vault	1129	-1	0
+1683 9823 0	Crabclaw Caves	1129	-1	0
+2594 9823 0	Here be goblins	1129	-1	0
+3667 9824 0	Here be spiders	1129	-1	0
+2401 9827 0	Brimstail	1129	-1	0
+2839 9829 0	Black dragons	1129	-1	0
+2459 9832 0	Bloodvelds	1129	-1	0
+2895 9833 0	Cauldron of Thunder	1129	-1	0
+2812 9836 0	Fire Obelisk	1129	-1	0
+3110 9838 0	Hill giants	1129	-1	0
+2861 9845 0	Hellhounds	1129	-1	0
+2934 9852 0	Chaos druids	1129	-1	0
+3123 9865 0	Hobgoblins	1129	-1	0
+1457 9866 0	Moss giants	1129	-1	0
+3560 9866 0	Skullball	1129	-1	0
+1424 9867 0	Moss giants	1129	-1	0
+3300 9869 0	Scurrius The Rat King	1129	-1	0
+2853 9872 0	Mountain dwarves	1129	-1	0
+2908 9872 0	Nora T. Hagg's cellar	1129	-1	0
+3239 9872 0	Rats	1129	-1	0
+3423 9877 0	Mausoleum	1129	-1	0
+3179 9884 0	Red Spiders	1129	-1	0
+1435 9886 0	Hill giants	1129	-1	0
+3680 9888 0	Ectofuntus	1129	-1	0
+2918 9889 0	Fountain of Heroes	1129	-1	0
+3537 9889 0	Obstacle course	1129	-1	0
+1565 9891 0	Ents	1129	-1	0
+3080 9892 0	Dave's Basement of Doom	1129	-1	0
+3121 9899 0	Skeletons & zombies	1129	-1	0
+1844 9902 0	Sarachnis	1129	-1	0
+3263 9904 0	Here be dead stuff	1129	-1	0
+1457 9907 0	Fire giants	1129	-1	0
+3086 9932 0	Chronozon	1129	-1	0
+3112 9932 0	Chaos druids	1129	-1	0
+3130 9935 0	Thugs	1129	-1	0
+1822 9936 0	Red dragons	1129	-1	0
+1801 9939 0	Undead druids	1129	-1	0
+1850 9939 0	Undead druids	1129	-1	0
+3109 9942 0	Skeletons	1129	-1	0
+2860 9948 0	Ice Queen's Lair	1129	-1	0
+1801 9950 0	Altar	1129	-1	0
+1811 9951 0	Bone Burner	1129	-1	0
+3088 9951 0	Poison spiders	1129	-1	0
+3134 9955 0	Red Spiders	1129	-1	0
+1842 9960 0	Temple Spiders	1129	-1	0
+3519 9960 0	Here be odd stuff	1129	-1	0
+3680 9960 0	Brewery	1129	-1	0
+1308 9963 0	Lizardman Caves	1129	-1	0
+3092 9965 0	Black demons	1129	-1	0
+1811 9968 0	Undead druids	1129	-1	0
+2920 9972 0	Cyclopes	1129	-1	0
+2718 9984 0	Lower level	1129	-1	1
+1615 9994 0	Banshees	1129	-1	0
+1642 9994 0	Ankou	1129	-1	0
+3119 9996 0	Earth warriors	1129	-1	0
+1664 9997 0	Dagannoth	1129	-1	0
+1714 9997 0	Sand crabs	1129	-1	0
+1688 9999 0	Jellies	1129	-1	0
+2701 10001 0	Kurask	1129	-1	0
+2792 10001 0	Cave crawlers	1129	-1	0
+2744 10004 0	Basilisks	1129	-1	0
+1660 10008 0	Moss giants	1129	-1	0
+1613 10010 0	Spectres	1129	-1	0
+2716 10011 0	Turoth	1129	-1	0
+1635 10012 0	Hill giants	1129	-1	0
+2761 10012 0	Pyrefiends	1129	-1	0
+1691 10017 0	Bloodvelds	1129	-1	0
+1650 10018 0	Cyclopes & Axes	1129	-1	0
+2796 10019 0	Rock slugs	1129	-1	0
+1664 10025 0	Ghosts	1129	-1	0
+1715 10025 0	Dust devils	1129	-1	0
+1626 10028 0	Bloodvelds	1129	-1	0
+2705 10032 0	Jellies	1129	-1	0
+1640 10033 0	Animated axes	1129	-1	0
+1653 10037 0	Hill giants	1129	-1	0
+2792 10037 0	Cockatrice	1129	-1	0
+1603 10044 0	Shades	1129	-1	0
+1686 10044 0	Moss giants	1129	-1	0
+1639 10048 0	Skeletons	1129	-1	0
+1664 10048 0	Altar	1129	-1	0
+1724 10054 0	Jellies	1129	-1	0
+3341 10058 0	Ice giants	1129	-1	0
+1602 10059 0	Steel dragons	1129	-1	0
+1694 10064 0	Ghosts	1129	-1	0
+1650 10065 0	Hellhounds	1129	-1	0
+1438 10066 0	Black demons	1129	-1	0
+1634 10068 0	Fire giants	1129	-1	0
+1719 10068 0	Lesser demons	1129	-1	0
+1681 10073 0	Bloodvelds	1129	-1	0
+3414 10073 0	Green dragons	1129	-1	0
+1663 10075 0	Hill giants	1129	-1	0
+2826 10076 0	Jail	1129	-1	0
+3359 10080 0	Ankou	1129	-1	0
+1700 10083 0	Nechryael	1129	-1	0
+1440 10084 0	Voice of Yama	1129	-1	0
+1504 10084 0	Yama	1129	-1	0
+1622 10084 0	Brutal black, blue & red dragons	1129	-1	0
+2856 10084 0	Goutweed store	1129	-1	0
+3444 10085 0	Hellhounds	1129	-1	0
+1722 10087 0	Black demons	1129	-1	0
+1248 10089 0	Hespori	1129	-1	0
+1670 10091 0	Abyssal demons	1129	-1	0
+1648 10095 0	Bronze & iron dragons	1129	-1	0
+1701 10102 0	Greater demons	1129	-1	0
+3431 10105 0	Jellies	1129	-1	0
+3336 10106 0	Greater nechryael	1129	-1	0
+1440 10111 0	Lower level	1129	-1	1
+2496 10112 0	Sub-level 1	1129	-1	1
+3808 10112 0	Lower level	1129	-1	1
+3361 10121 0	Black demons	1129	-1	0
+2522 10122 0	Dagannoth	1129	-1	0
+3441 10124 0	Dust devils	1129	-1	0
+3402 10127 0	Green dragons	1129	-1	0
+2790 10132 0	Trolls	1129	-1	0
+3337 10136 0	Lesser demons	1129	-1	0
+3046 10138 0	God Wars Dungeon	1129	-1	0
+2842 10141 0	River Kelda	1129	-1	0
+1770 10143 0	The Warrens	1129	-1	0
+2506 10145 0	Wallasalki	1129	-1	0
+2467 10147 0	Dagannoth	1129	-1	0
+3430 10151 0	Greater demons	1129	-1	0
+3787 10156 0	A	1129	-1	0
+3830 10157 0	C	1129	-1	0
+1263 10158 0	Wyrms	1129	-1	0
+3364 10161 0	Black dragons	1129	-1	0
+3341 10164 0	Abyssal demons	1129	-1	0
+2523 10165 0	Giant rock crabs	1129	-1	0
+2836 10166 0	Dondakan's rock	1129	-1	0
+2928 10170 0	Minecarts	1129	-1	0
+3815 10172 0	B	1129	-1	0
+2914 10188 0	Brewery	1129	-1	0
+1273 10189 0	Wyrms	1129	-1	0
+2930 10194 0	Blast Furnace	1129	-1	0
+2879 10201 0	Palace	1129	-1	0
+1312 10207 0	Tasakaal	1129	-1	0
+3616 10208 0	Wyverns	1129	-1	0
+2827 10213 0	Black Guard H.Q.	1129	-1	0
+2862 10225 0	Library	1129	-1	0
+1311 10241 0	Hydras	1129	-1	0
+3022 10248 0	Greater demons	1129	-1	0
+2518 10258 0	Miscellania Expansion	1129	-1	0
+3070 10261 0	Poison spiders	1129	-1	0
+1310 10269 0	Hydras	1129	-1	0
+1368 10270 0	Alchemical Hydra	1129	-1	0
+3048 10272 0	Black dragons	1129	-1	0
+3616 10272 0	Wyverns Task Only	1129	-1	0
+2600 10275 0	Sea snakes	1129	-1	0
+1312 10292 0	Lower level	1129	-1	1
+3029 10312 0	Chaos dwarves	1129	-1	0
+3046 10321 0	Hill giants	1129	-1	0
+3021 10328 0	Shadow spiders	1129	-1	0
+3359 10328 0	Callisto's Den	1129	-1	0
+2845 10343 0	Salt Mine	1129	-1	0
+3053 10346 0	Fire giants	1129	-1	0
+3235 10347 0	Beware of the scorpions	1129	-1	0
+2999 10350 0	Agility course spikes	1129	-1	0
+3022 10354 0	Wine of Zamorak	1129	-1	0
+2455 10388 0	Basilisk Knights	1129	-1	0
+2420 10390 0	Basilisk Knights	1129	-1	0
+2656 10400 0	Here be penguins	1129	-1	0
+2464 10402 0	Basilisks	1129	-1	0
+2479 10406 0	Basilisks	1129	-1	0
+2420 10422 0	Dagannoth	1129	-1	0
+2479 10439 0	Dagannoth	1129	-1	0
+2449 10441 0	Dagannoth	1129	-1	0
+3370 11487 0	Kovac	1129	-1	0
+3219 12369 0	Kurask	1129	-1	0
+3254 12384 0	Kurask	1129	-1	0
+3227 12397 0	Dark beasts	1129	-1	0
+3184 12405 0	Elves	1129	-1	0
+3251 12421 0	Bloodvelds	1129	-1	0
+3223 12422 0	Nechryael	1129	-1	0
+3165 12431 0	Dark beasts	1129	-1	0
+3238 12437 0	Bloodvelds	1129	-1	0
+3298 12453 0	Trahaearn Mine	1129	-1	0
+3183 12456 0	Waterfiends	1129	-1	0
+3228 12459 0	Nechryael	1129	-1	0
+3253 12468 0	Moss giants	1129	-1	0
+1888 4352 1	Sub-level 4	1129	-1	1
+1847 4360 1	Dagannoth	1129	-1	0
+1944 4376 1	Rock lobsters	1129	-1	0
+1802 4387 1	Wallasalki	1129	-1	0
+1849 4389 1	Dagannoth	1129	-1	0
+1870 4408 1	Dagannoth	1129	-1	0
+3168 4544 1	Middle level	1129	-1	1
+2696 5277 1	Station	1129	-1	0
+1751 5290 1	Ancient Forge	1129	-1	0
+2742 5337 1	Nursery	1129	-1	0
+1762 5338 1	Mithril dragons	1129	-1	0
+2733 5366 1	Ur-tag	1129	-1	0
+2718 5367 1	Council chamber	1129	-1	0
+1743 5375 1	Upper level	1129	-1	1
+2720 5375 1	Middle level	1129	-1	1
+3712 5648 1	Motherlode Mine	1129	-1	1
+3744 5695 1	Upper level	1129	-1	1
+3033 6115 1	The Gauntlet	1129	-1	0
+2623 6207 1	Middle level	1129	-1	1
+3298 8864 1	Coral Nurseries	1129	-1	0
+2011 8989 1	Ogresses	1129	-1	0
+1936 8992 1	Dragons	1129	-1	0
+1894 9003 1	Baby dragons	1129	-1	0
+2060 9006 1	Bank vault	1129	-1	0
+1966 9042 1	Ogresses	1129	-1	0
+1558 9459 1	Hunter Guild	1129	-1	0
+2848 9496 1	Jogres	1129	-1	0
+1481 9506 1	Wolf Den	1129	-1	0
+1440 9518 1	City Entrance	1129	-1	0
+2848 9535 1	Upper level	1129	-1	1
+1508 9542 1	Mine	1129	-1	0
+1440 9556 1	Market	1129	-1	0
+1440 9568 1	Cam Torum	1129	-1	1
+3042 9581 1	Upper level	1129	-1	1
+1414 9590 1	Highlord's Chamber	1129	-1	0
+1440 9600 1	Neypotzli Entrance	1129	-1	0
+1441 9633 1	Antechamber	1129	-1	0
+3808 9747 1	Shura	1129	-1	0
+3808 9762 1	The Nightmare	1129	-1	0
+3847 9762 1	Lesser demons	1129	-1	0
+3866 9775 1	Pyrefiends	1129	-1	0
+2930 9817 1	Blue dragons	1129	-1	0
+2800 9820 1	Black dragons	1129	-1	0
+3808 9831 1	Greater demons	1129	-1	0
+2900 9855 1	Upper level	1129	-1	1
+2708 9972 1	Kurask	1129	-1	0
+1504 9983 1	Lower level	1129	-1	1
+2718 9991 1	Upper level	1129	-1	1
+2848 10054 1	Burntmeat's Kitchen	1129	-1	0
+1312 10079 1	Lizardman Temple	1129	-1	0
+1440 10080 1	Greater demons	1129	-1	0
+1440 10111 1	Middle level	1129	-1	1
+1335 10185 1	Sulphur lizards	1129	-1	0
+3295 10202 1	Vet'ion's Rest	1129	-1	0
+1280 10208 1	Greater demons	1129	-1	0
+1348 10241 1	Drakes	1129	-1	0
+1312 10242 1	Drakes	1129	-1	0
+1318 10268 1	Middle level	1129	-1	1
+2400 10272 1	Trolls	1129	-1	0
+3772 10288 1	Underwater	1129	-1	1
+1888 4352 2	Sub-level 3	1129	-1	1
+1812 4367 2	Giant rock crabs	1129	-1	0
+1849 4382 2	Dagannoth	1129	-1	0
+1794 4383 2	Wallasalki	1129	-1	0
+2986 4386 2	Corporeal Beast	1129	-1	0
+1939 4390 2	Rock lobsters	1129	-1	0
+1816 4398 2	Dagannoth	1129	-1	0
+3152 4544 2	Upper level	1129	-1	1
+2837 5280 2	Armadyl's Eyrie	1129	-1	1
+2832 5344 2	Bandos's Stronghold	1129	-1	1
+2744 5351 2	Zanik's bedroom	1129	-1	0
+2909 5363 2	Zamorak's Fortress	1129	-1	1
+2720 5375 2	Upper level	1129	-1	1
+2623 6207 2	Upper level	1129	-1	1
+2991 6351 2	Refugee Camp	1129	-1	0
+2913 6371 2	Main Block	1129	-1	0
+2900 6433 2	Administration	1129	-1	0
+3474 9493 2	Soldiers	1129	-1	0
+3510 9498 2	Guardians	1129	-1	0
+2634 9499 2	Greater demons	1129	-1	0
+3230 9517 2	Chasm of Tears	1129	-1	0
+3260 9522 2	Tears of Guthix	1129	-1	0
+2634 9563 2	Fire giants	1129	-1	0
+2669 9578 2	Baby green dragons	1129	-1	0
+2659 9599 2	Upper level	1129	-1	1
+1504 9983 2	Middle level	1129	-1	1
+2829 10082 2	Troll generals	1129	-1	0
+1440 10088 2	Lesser demons	1129	-1	0
+1440 10111 2	Upper level	1129	-1	1
+1342 10201 2	Hellhounds	1129	-1	0
+3423 10203 2	Silk Chasm	1129	-1	0
+1282 10212 2	Fire giants	1129	-1	0
+1310 10228 2	Upper level	1129	-1	1
+2339 10337 2	Essence Mine	1129	-1	0
+1888 4352 3	Sub-level 2	1129	-1	1
+1826 4374 3	Dagannoth	1129	-1	0
+1972 4400 3	Rock lobsters	1129	-1	0
+1795 4403 3	Wallasalki	1129	-1	0
+1836 4410 3	Giant rock crabs	1129	-1	0
+3424 9924 3	Slayer Tower	1129	-1	0
+3395 9930 3	Bloodvelds	1129	-1	0
+3452 9935 3	Gargoyles	1129	-1	0
+3447 9970 3	Abyssal demons	1129	-1	0
+3397 9980 3	Nechryael	1129	-1	0
+1504 9983 3	Upper level	1129	-1	1
+3808 10144 3	Upper level	1129	-1	1
+3776 10176 3	Volcano Mine	1129	-1	1
