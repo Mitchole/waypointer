@@ -1,8 +1,6 @@
 package com.waypointer.ui;
 
 import java.awt.Dimension;
-import java.awt.Insets;
-import java.awt.LayoutManager;
 import javax.swing.JComponent;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
