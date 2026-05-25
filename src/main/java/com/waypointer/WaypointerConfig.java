@@ -17,6 +17,16 @@ public interface WaypointerConfig extends Config
     default boolean tileRightClickEnabled() { return false; }
 
     @ConfigItem(
+        keyName = "showNearestLandmarkBar",
+        name = "Show 'nearest landmark' bar",
+        description = "Adds a row of one-click shortcuts in the sidebar to path to the closest "
+            + "bank, altar, spirit tree, fairy ring, or slayer master (others behind the overflow). "
+            + "Off hides the row entirely.",
+        position = 15
+    )
+    default boolean showNearestLandmarkBar() { return true; }
+
+    @ConfigItem(
         keyName = "showPathingBanner",
         name = "Show 'Pathing to' banner",
         description = "Show a status strip at the top of the panel while a path is active.",
