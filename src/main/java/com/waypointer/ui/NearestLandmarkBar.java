@@ -12,8 +12,10 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -54,8 +56,7 @@ public final class NearestLandmarkBar extends JPanel
         LandmarkType.TANNER,
         LandmarkType.CHARTER_SHIP);
 
-    // Sprite IDs picked during manual verification (Task 11). Until then the buttons render
-    // text-fallback initials so the layout is still verifiable.
+    // Sprite IDs per landmark type. See spriteIds() below for the picks and their reasoning.
     private static final Map<LandmarkType, Integer> SPRITE_IDS = spriteIds();
 
     private final BboxIndex bbox;
@@ -94,6 +95,7 @@ public final class NearestLandmarkBar extends JPanel
         {
             JButton b = makeButton(type.displayName());
             b.addActionListener(e -> onPick(type));
+            applySprite(b, type);
             primaryButtons.put(type, b);
             iconRow.add(b);
         }
@@ -150,9 +152,27 @@ public final class NearestLandmarkBar extends JPanel
         {
             JMenuItem item = new JMenuItem(type.displayName());
             item.addActionListener(e -> onPick(type));
+            applySprite(item, type);
             menu.add(item);
         }
         return menu;
+    }
+
+    // Asynchronously fetches the sprite for this landmark type and installs it on the
+    // button as an ImageIcon. No-op when SpriteManager is null (the case in unit tests
+    // with mocked dependencies that never resolve the async callback).
+    private void applySprite(AbstractButton b, LandmarkType type)
+    {
+        Integer id = SPRITE_IDS.get(type);
+        if (id == null || spriteManager == null) return;
+        spriteManager.getSpriteAsync(id, 0, img -> {
+            if (img == null) return;
+            SwingUtilities.invokeLater(() -> {
+                b.setIcon(new ImageIcon(img));
+                b.revalidate();
+                b.repaint();
+            });
+        });
     }
 
     void onPick(LandmarkType type)
@@ -188,9 +208,22 @@ public final class NearestLandmarkBar extends JPanel
 
     private static Map<LandmarkType, Integer> spriteIds()
     {
+        // IDs correspond to net.runelite.api.SpriteID constants. RuneLite has no
+        // dedicated SpriteID for fairy rings, spirit trees, or charter ships -- the
+        // stock WorldMapPlugin uses bundled PNGs for those. We substitute the closest
+        // visual match from the MAP_ICON_* sprite set instead.
         EnumMap<LandmarkType, Integer> m = new EnumMap<>(LandmarkType.class);
-        // Sprite IDs picked during manual verification (Task 11). See plan section 11.
-        // Buttons render text-fallback initials until populated.
+        m.put(LandmarkType.BANK,           1453);  // MAP_ICON_BANK
+        m.put(LandmarkType.ALTAR,          1467);  // MAP_ICON_ALTAR
+        m.put(LandmarkType.ANVIL,          1458);  // MAP_ICON_ANVIL
+        m.put(LandmarkType.FURNACE,        1457);  // MAP_ICON_FURNACE
+        m.put(LandmarkType.LOOM,           1507);  // MAP_ICON_LOOM
+        m.put(LandmarkType.SPINNING_WHEEL, 1483);  // MAP_ICON_SPINNING_WHEEL
+        m.put(LandmarkType.TANNER,         1481);  // MAP_ICON_TANNERY
+        m.put(LandmarkType.SPIRIT_TREE,    1482);  // MAP_ICON_RARE_TREES (tree silhouette)
+        m.put(LandmarkType.CHARTER_SHIP,   7290);  // MINIMAP_BOAT_SLOOP
+        m.put(LandmarkType.FAIRY_RING,     1504);  // MAP_ICON_TRANSPORTATION
+        m.put(LandmarkType.SLAYER_MASTER,  1499);  // MAP_ICON_SLAYER_MASTER
         return m;
     }
 }
