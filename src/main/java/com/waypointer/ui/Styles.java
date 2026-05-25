@@ -91,6 +91,34 @@ final class Styles
         };
     }
 
+    // Returns s with characters that are illegal in filenames on Windows / macOS removed
+    // (/ \ : * ? " < > |), plus leading/trailing dots and whitespace trimmed. Falls back to
+    // "untitled" when the input is null, empty, or reduces to nothing.
+    static String sanitizeFilenameSegment(String s)
+    {
+        if (s == null) return "untitled";
+        StringBuilder b = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++)
+        {
+            char ch = s.charAt(i);
+            switch (ch)
+            {
+                case '/': case '\\': case ':': case '*': case '?':
+                case '"': case '<': case '>': case '|':
+                    continue;
+                default:
+                    b.append(ch);
+            }
+        }
+        String trimmed = b.toString().trim();
+        // Strip leading/trailing dots so the basename never starts or ends with '.'
+        int start = 0, end = trimmed.length();
+        while (start < end && trimmed.charAt(start) == '.') start++;
+        while (end > start && trimmed.charAt(end - 1) == '.') end--;
+        String result = trimmed.substring(start, end).trim();
+        return result.isEmpty() ? "untitled" : result;
+    }
+
     // Escapes s for embedding in HTML. Handles <, >, &, ", and '. Returns "" when s is null.
     static String escapeHtml(String s)
     {
