@@ -22,7 +22,6 @@ import java.util.UUID;
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -146,17 +145,15 @@ public class InlineEditPanel extends JPanel
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         footer.setOpaque(false);
         JLabel recapture = makeLink("Recapture", () -> {
-            int ok = JOptionPane.showConfirmDialog(this,
-                "Replace this waypoint's tile with your current location?",
-                "Recapture waypoint", JOptionPane.OK_CANCEL_OPTION);
-            if (ok != JOptionPane.OK_OPTION) return;
             // Flush any in-flight name/notes edits before swapping the tile under us.
             flushPending();
             capture.readCurrentLocation(packed -> {
-                if (packed != WorldPointPacker.UNDEFINED)
-                {
-                    store.updateWaypointPoint(waypointId, packed);
-                }
+                if (packed == WorldPointPacker.UNDEFINED) return;
+                Waypoint cur = store.getWaypointById(waypointId);
+                if (cur == null) return;
+                String name = cur.getName();
+                store.updateWaypointPoint(waypointId, packed);
+                toasts.show("Recaptured '" + name + "'", "Undo", store::undoLast);
             });
         });
         JLabel setIcon = makeLink("Set icon", () -> {
