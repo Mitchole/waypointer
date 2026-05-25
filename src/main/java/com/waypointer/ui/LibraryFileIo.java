@@ -55,10 +55,15 @@ final class LibraryFileIo
 
     void exportToFile()
     {
+        String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+        exportLibraryToFile(store.getLibrary(), "waypointer-library-" + stamp + ".json");
+    }
+
+    void exportLibraryToFile(Library lib, String suggestedFileName)
+    {
         JFileChooser fc = new JFileChooser();
         fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Waypointer JSON", "json"));
-        String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
-        fc.setSelectedFile(new File("waypointer-library-" + stamp + ".json"));
+        fc.setSelectedFile(new File(suggestedFileName));
         if (fc.showSaveDialog(parent) != JFileChooser.APPROVE_OPTION) return;
         File target = fc.getSelectedFile();
         if (target.exists())
@@ -70,7 +75,7 @@ final class LibraryFileIo
         }
         try
         {
-            String json = codec.encode(store.getLibrary());
+            String json = codec.encode(lib);
             Files.write(target.toPath(), json.getBytes(StandardCharsets.UTF_8));
             JOptionPane.showMessageDialog(parent,
                 "Exported to " + target.getAbsolutePath(),
