@@ -27,6 +27,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     private final JLabel message = new JLabel();
     private final JLabel actionLabel = new JLabel();
     private javax.swing.Timer autoHideTimer;
+    private int entryAnimationCount;
 
     public ToastOverlay(JComponent content)
     {
@@ -75,6 +76,15 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         card.setBounds(MARGIN_PX, restingY, cardWidth, pref.height);
     }
 
+    private void presentEntry()
+    {
+        if (!card.isVisible())
+        {
+            entryAnimationCount++;
+        }
+        // Animation start lands in Task 10.
+    }
+
     private void restartAutoHide(int durationMs)
     {
         if (autoHideTimer != null && autoHideTimer.isRunning()) autoHideTimer.stop();
@@ -89,6 +99,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         message.setText("<html>" + Styles.escapeHtml(text) + "</html>");
         actionLabel.setVisible(false);
         positionCard();
+        presentEntry();
         card.setVisible(true);
         restartAutoHide(DEFAULT_DURATION_MS);
     }
@@ -117,6 +128,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         });
 
         positionCard();
+        presentEntry();
         card.setVisible(true);
         restartAutoHide(ACTION_DURATION_MS);
     }
@@ -125,4 +137,5 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     String cardLabelTextForTest() { return message.getText(); }
     javax.swing.Timer autoHideTimerForTest() { return autoHideTimer; }
     JLabel actionLabelForTest() { return actionLabel; }
+    int entryAnimationCountForTest() { return entryAnimationCount; }
 }

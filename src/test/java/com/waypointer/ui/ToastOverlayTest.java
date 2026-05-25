@@ -110,4 +110,22 @@ public class ToastOverlayTest
 
         org.junit.Assert.assertEquals(6000, overlay.autoHideTimerForTest().getDelay());
     }
+
+    @Test
+    public void rapidShowReusesSameEntryAndDoesNotIncrementAnimationCount()
+    {
+        ToastOverlay overlay = new ToastOverlay(new JLabel("inner"));
+        overlay.setSize(200, 300);
+
+        overlay.show("first");
+        int afterFirst = overlay.entryAnimationCountForTest();
+        overlay.show("second");
+        int afterSecond = overlay.entryAnimationCountForTest();
+
+        org.junit.Assert.assertEquals(
+            "second show() should reuse visible card, entry animation count must not increment",
+            afterFirst, afterSecond);
+        org.junit.Assert.assertTrue("expected second show() text to be reflected",
+            overlay.cardLabelTextForTest().contains("second"));
+    }
 }
