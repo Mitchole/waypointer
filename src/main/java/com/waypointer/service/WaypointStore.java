@@ -44,6 +44,14 @@ public class WaypointStore
     private Map<UUID, Category> categoryIndex;
     private Map<UUID, Waypoint> waypointIndex;
 
+    /**
+     * Single-slot undo buffer. Holds the inverse of the most recent destructive op
+     * ({@link #deleteWaypoint(UUID)}, {@link #updateWaypointPoint(UUID, int)},
+     * {@link #deleteCategory(UUID, boolean)}). Any other public mutation method clears
+     * the slot. Survives toast hide; does not survive plugin disable/enable.
+     */
+    private Runnable lastUndo;
+
     private void invalidateIndexes()
     {
         categoryIndex = null;
@@ -64,6 +72,7 @@ public class WaypointStore
     /** Initializes the store with a library, ensuring the Uncategorized sentinel is present. */
     public void bootstrap(Library lib)
     {
+        lastUndo = null;
         this.library = lib;
         ensureUncategorized();
         // Notify so any listener attached before bootstrap (e.g. the panel built by Guice
@@ -150,6 +159,7 @@ public class WaypointStore
 
     public Category createCategory(String name)
     {
+        lastUndo = null;
         if (getCategoryByName(name) != null)
         {
             throw new IllegalArgumentException("Category name already exists: " + name);
@@ -164,6 +174,7 @@ public class WaypointStore
 
     public void renameCategory(UUID id, String newName)
     {
+        lastUndo = null;
         Category c = getCategoryById(id);
         if (c == null) return;
         if (c.isUncategorized())
@@ -207,6 +218,7 @@ public class WaypointStore
 
     public void setCategoryIcon(UUID categoryId, Integer iconId)
     {
+        lastUndo = null;
         Category c = getCategoryById(categoryId);
         if (c == null) return;
         c.setIconId(iconId);
@@ -215,6 +227,7 @@ public class WaypointStore
 
     public void reorderCategories(List<UUID> idsInNewOrder)
     {
+        lastUndo = null;
         Map<UUID, Integer> rank = new HashMap<>();
         for (int i = 0; i < idsInNewOrder.size(); i++) rank.put(idsInNewOrder.get(i), i);
         for (Category c : library.getCategories())
@@ -227,6 +240,7 @@ public class WaypointStore
 
     public Waypoint createWaypoint(int packed, String name, UUID categoryId)
     {
+        lastUndo = null;
         Waypoint w = new Waypoint(
             UUID.randomUUID(),
             name,
@@ -243,6 +257,7 @@ public class WaypointStore
 
     public void renameWaypoint(UUID id, String newName)
     {
+        lastUndo = null;
         Waypoint w = getWaypointById(id);
         if (w == null) return;
         w.setName(newName);
@@ -251,6 +266,7 @@ public class WaypointStore
 
     public void updateWaypointIcon(UUID id, Integer iconId)
     {
+        lastUndo = null;
         Waypoint w = getWaypointById(id);
         if (w == null) return;
         w.setIconId(iconId);
@@ -259,6 +275,7 @@ public class WaypointStore
 
     public void updateWaypointNotes(UUID id, String notes)
     {
+        lastUndo = null;
         Waypoint w = getWaypointById(id);
         if (w == null) return;
         w.setNotes(notes == null ? "" : notes);
@@ -281,6 +298,7 @@ public class WaypointStore
 
     public void moveWaypointToCategory(UUID waypointId, UUID newCategoryId)
     {
+        lastUndo = null;
         Waypoint w = getWaypointById(waypointId);
         if (w == null) return;
         if (getCategoryById(newCategoryId) == null) return;
@@ -291,6 +309,7 @@ public class WaypointStore
 
     public void reorderWithinCategory(UUID categoryId, List<UUID> waypointIdsInOrder)
     {
+        lastUndo = null;
         Map<UUID, Integer> rank = new HashMap<>();
         for (int i = 0; i < waypointIdsInOrder.size(); i++) rank.put(waypointIdsInOrder.get(i), i);
         for (Waypoint w : library.getWaypoints())
@@ -305,6 +324,7 @@ public class WaypointStore
     /** Merge another library into this one. Dedupe by id; rebind incoming categoryIds by name. */
     public ImportResult importMerge(Library incoming)
     {
+        lastUndo = null;
         ImportResult result = new ImportResult();
         Map<UUID, UUID> categoryIdRemap = new HashMap<>();
 
@@ -377,6 +397,23 @@ public class WaypointStore
     }
 
     public Listeners.Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
+
+    public boolean hasUndoable() { return lastUndo != null; }
+
+    /**
+     * Run the inverse of the most recent destructive op, if any. Clears the slot before
+     * running so the runnable's direct-to-library writes don't re-clear it themselves.
+     */
+    public void undoLast()
+    {
+        Runnable u = lastUndo;
+        lastUndo = null;
+        if (u != null) u.run();
+    }
+
+    // Package-private test seam: arm the slot with an arbitrary runnable so tests can
+    // verify that non-undoable mutations clear it. Production code never calls this.
+    void testArmUndoSlot(Runnable r) { this.lastUndo = r; }
 
     // ---- Debounced persistence wiring ----
 

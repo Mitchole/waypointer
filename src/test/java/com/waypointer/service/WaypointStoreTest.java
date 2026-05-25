@@ -230,4 +230,55 @@ public class WaypointStoreTest
         store.deleteCategory(id, false);
         assertNull(store.getCategoryById(id));
     }
+
+    @Test
+    public void hasUndoableIsFalseAtConstruction()
+    {
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void undoLastIsNoOpWhenNothingArmed()
+    {
+        // Should not throw and should leave the store unchanged.
+        store.undoLast();
+        assertFalse(store.hasUndoable());
+        assertTrue(store.getLibrary().getWaypoints().isEmpty());
+    }
+
+    @Test
+    public void renameCategoryClearsUndoSlot()
+    {
+        store.testArmUndoSlot(() -> {}); // arm a no-op runnable via test seam
+        assertTrue(store.hasUndoable());
+        Category c = store.createCategory("X");
+        store.renameCategory(c.getId(), "Y");
+        assertFalse("renameCategory should clear the undo slot", store.hasUndoable());
+    }
+
+    @Test
+    public void createCategoryClearsUndoSlot()
+    {
+        store.testArmUndoSlot(() -> {});
+        store.createCategory("X");
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void createWaypointClearsUndoSlot()
+    {
+        store.testArmUndoSlot(() -> {});
+        store.createWaypoint(100, "X", store.getUncategorized().getId());
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void reorderWithinCategoryClearsUndoSlot()
+    {
+        Waypoint w = store.createWaypoint(100, "X", store.getUncategorized().getId());
+        store.testArmUndoSlot(() -> {});
+        store.reorderWithinCategory(store.getUncategorized().getId(),
+            java.util.Collections.singletonList(w.getId()));
+        assertFalse(store.hasUndoable());
+    }
 }
