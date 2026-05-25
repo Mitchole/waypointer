@@ -13,7 +13,9 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
@@ -83,6 +85,10 @@ public final class NearestLandmarkBar extends JPanel
 
         overflowBtn = makeButton("More");
         overflowBtn.setText("⋮"); // vertical ellipsis
+        overflowBtn.addActionListener(e -> {
+            JPopupMenu menu = buildOverflowMenu();
+            menu.show(overflowBtn, 0, overflowBtn.getHeight());
+        });
         add(overflowBtn);
 
         setButtonsEnabled(false);
@@ -110,6 +116,23 @@ public final class NearestLandmarkBar extends JPanel
             e.getValue().setToolTipText("Path to nearest " + e.getKey().displayName().toLowerCase() + suffix);
         }
         overflowBtn.setToolTipText("More" + suffix);
+    }
+
+    JPopupMenu buildOverflowMenu()
+    {
+        JPopupMenu menu = new JPopupMenu();
+        for (LandmarkType type : OVERFLOW)
+        {
+            JMenuItem item = new JMenuItem(type.displayName());
+            item.addActionListener(e -> onPick(type));
+            menu.add(item);
+        }
+        return menu;
+    }
+
+    // Click handler -- Task 8 wires this to BboxIndex + WaypointPathfinder. Stub for now.
+    void onPick(LandmarkType type)
+    {
     }
 
     private static Map<LandmarkType, Integer> spriteIds()
