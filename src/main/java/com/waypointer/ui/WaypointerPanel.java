@@ -84,6 +84,7 @@ public class WaypointerPanel extends PluginPanel
     private final ActivePathBanner banner;
     private final JPanel body = new JPanel();
     private JScrollBar bodyScrollBar;
+    private final ToastOverlay toastOverlay;
     private final JButton markBtn = new JButton("Mark current location");
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
@@ -203,6 +204,8 @@ public class WaypointerPanel extends PluginPanel
         vBar.setPreferredSize(new Dimension(7, 0));
         vBar.setUI((ScrollBarUI) RuneLiteScrollBarUI.createUI(vBar));
         this.bodyScrollBar = vBar;
+        this.toastOverlay = new ToastOverlay(bodyScroll);
+        nearestLandmarkBar.setToasts(toastOverlay);
 
         this.banner = new ActivePathBanner(pathfinder, config);
         banner.setAlignmentX(LEFT_ALIGNMENT);
@@ -216,7 +219,7 @@ public class WaypointerPanel extends PluginPanel
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         add(northStack, BorderLayout.NORTH);
-        add(bodyScroll, BorderLayout.CENTER);
+        add(toastOverlay, BorderLayout.CENTER);
 
         storeSub = store.subscribe(this::scheduleRebuild);
         pathSub = pathfinder.subscribe(() -> {
