@@ -173,7 +173,7 @@ public class InlineEditPanel extends JPanel
         footer.add(makeSeparator());
         JLabel delete = makeLink("Delete", () -> {
             flushPending();
-            WaypointerPanel.confirmAndDelete(this, store, store.getWaypointById(waypointId));
+            WaypointerPanel.softDeleteWithUndo(store, store.getWaypointById(waypointId), toasts);
         });
         delete.setForeground(new Color(220, 80, 80));
         footer.add(delete);

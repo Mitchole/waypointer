@@ -631,7 +631,7 @@ public class WaypointerPanel extends PluginPanel
                 pathfinder.requestPath(w.getPackedWorldPoint(), w.getName());
                 break;
             case DELETE:
-                confirmAndDelete(this, store, w);
+                softDeleteWithUndo(store, w, toastOverlay);
                 break;
             case EXPAND:
                 if (!expandedWaypoints.add(w.getId())) expandedWaypoints.remove(w.getId());
@@ -720,16 +720,15 @@ public class WaypointerPanel extends PluginPanel
     }
 
     /**
-     * Shared confirm-then-delete dialog. Used by {@link InlineEditPanel}'s Delete link and
-     * by {@link WaypointRow}'s right-click popup. Centralised so both entry points use the
-     * same wording and the same OK_CANCEL semantics.
+     * Shared soft-delete helper. Deletes the waypoint immediately and shows an undo toast
+     * (6-second window). Used by {@link InlineEditPanel}'s Delete link and by
+     * {@link WaypointRow}'s right-click popup so both surfaces share the same affordance.
      */
-    static void confirmAndDelete(Component anchor, WaypointStore store, Waypoint w)
+    static void softDeleteWithUndo(WaypointStore store, Waypoint w, Toasts toasts)
     {
         if (w == null) return;
-        int ok = JOptionPane.showConfirmDialog(anchor,
-            "Delete '" + w.getName() + "'?", "Delete waypoint",
-            JOptionPane.OK_CANCEL_OPTION);
-        if (ok == JOptionPane.OK_OPTION) store.deleteWaypoint(w.getId());
+        String name = w.getName();
+        store.deleteWaypoint(w.getId());
+        toasts.show("Deleted '" + name + "'", "Undo", store::undoLast);
     }
 }
