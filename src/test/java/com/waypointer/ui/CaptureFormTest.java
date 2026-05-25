@@ -168,4 +168,22 @@ public class CaptureFormTest
             1L, store.getCategoriesOrdered().stream()
                 .filter(c -> "Bosses".equals(c.getName())).count());
     }
+
+    @Test
+    public void showResetsNameAndClearsOpenSubRow()
+    {
+        int packed2 = WorldPointPacker.pack(2964, 3380, 0);
+        when(capture.defaultName(packed2)).thenReturn("Falador");
+
+        form.show(packed);
+        form.setNameText("scratch");
+        form.selectNewCategorySentinel();
+        form.setNewCategoryNameText("WIP");
+
+        form.show(packed2);
+
+        assertEquals("Falador", form.getNameText());
+        assertFalse("sub-row should be cleared on re-entry",
+            form.isNewCategoryRowVisible());
+    }
 }

@@ -158,10 +158,15 @@ class CaptureForm extends JPanel
     void show(int packed)
     {
         this.packedPoint = packed;
+        newCategoryRow.setVisible(false);
+        newCategoryName.setText("");
+        errorLabel.setVisible(false);
+        errorLabel.setText(" ");
         rebuildCategoryCombo(store.getUncategorized().getId());
         nameField.setText(capture.defaultName(packed));
         nameField.selectAll();
         setVisible(true);
+        nameField.requestFocusInWindow();
         revalidate();
         repaint();
     }
