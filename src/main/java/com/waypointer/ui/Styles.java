@@ -110,12 +110,19 @@ final class Styles
                     b.append(ch);
             }
         }
-        String trimmed = b.toString().trim();
-        // Strip leading/trailing dots so the basename never starts or ends with '.'
-        int start = 0, end = trimmed.length();
-        while (start < end && trimmed.charAt(start) == '.') start++;
-        while (end > start && trimmed.charAt(end - 1) == '.') end--;
-        String result = trimmed.substring(start, end).trim();
+        // Strip outer whitespace and dots, alternating until stable. A single pass misses
+        // inputs like ". .name. ." where dots and spaces interleave at the boundary.
+        String result = b.toString();
+        String prev;
+        do
+        {
+            prev = result;
+            result = result.trim();
+            int start = 0, end = result.length();
+            while (start < end && result.charAt(start) == '.') start++;
+            while (end > start && result.charAt(end - 1) == '.') end--;
+            result = result.substring(start, end);
+        } while (!result.equals(prev));
         return result.isEmpty() ? "untitled" : result;
     }
 

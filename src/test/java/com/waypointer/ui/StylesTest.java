@@ -28,6 +28,8 @@ public class StylesTest
     {
         assertEquals("name", Styles.sanitizeFilenameSegment("  name  "));
         assertEquals("name", Styles.sanitizeFilenameSegment("...name..."));
+        assertEquals("name", Styles.sanitizeFilenameSegment(". .name. ."));
+        assertEquals("name", Styles.sanitizeFilenameSegment("  ...  name  ...  "));
     }
 
     @Test
