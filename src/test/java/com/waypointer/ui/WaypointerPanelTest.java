@@ -2,6 +2,7 @@ package com.waypointer.ui;
 
 import com.google.gson.Gson;
 import com.waypointer.WaypointerConfig;
+import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.BboxIndex;
@@ -72,6 +73,7 @@ public class WaypointerPanelTest
             mock(SpriteManager.class),
             null,
             null,
-            nearestLandmarkBar);
+            nearestLandmarkBar,
+            new LibraryJsonCodec(new Gson()));
     }
 }

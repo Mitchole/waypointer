@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import com.waypointer.WaypointerConfig;
+import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
@@ -79,6 +80,7 @@ public class WaypointerPanel extends PluginPanel
     private final IconCatalog iconCatalog;
     private final OverflowMenu overflowMenu;
     private final NearestLandmarkBar nearestLandmarkBar;
+    private final LibraryJsonCodec libraryCodec;
     private final ActivePathBanner banner;
     private final JPanel body = new JPanel();
     private JScrollBar bodyScrollBar;
@@ -106,7 +108,7 @@ public class WaypointerPanel extends PluginPanel
         WaypointerNavigator navigator, WaypointShareCodec shareCodec,
         WaypointStorePersistence persistence, SpriteManager spriteManager,
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
-        NearestLandmarkBar nearestLandmarkBar)
+        NearestLandmarkBar nearestLandmarkBar, LibraryJsonCodec libraryCodec)
     {
         super(false);
         this.store = store;
@@ -121,6 +123,7 @@ public class WaypointerPanel extends PluginPanel
         this.iconCatalog = iconCatalog;
         this.overflowMenu = overflowMenu;
         this.nearestLandmarkBar = nearestLandmarkBar;
+        this.libraryCodec = libraryCodec;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
 
         // Build the waypoints-tab inner header (Mark current + Category + overflow buttons,
