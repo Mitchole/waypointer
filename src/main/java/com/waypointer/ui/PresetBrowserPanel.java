@@ -38,7 +38,8 @@ class PresetBrowserPanel extends PluginPanel
     private final WaypointStore store;
     private final SpriteManager spriteManager;
     private final JPanel body = new JPanel();
-    private final ToastBar toast = new ToastBar();
+    private final ToastOverlay toastOverlay;
+    private String lastToastTextForTest;
 
     PresetBrowserPanel(PresetCatalog catalog, WaypointStore store, SpriteManager spriteManager,
         Runnable onBack)
@@ -57,7 +58,6 @@ class PresetBrowserPanel extends PluginPanel
         JPanel header = buildHeader(onBack);
         header.setAlignmentX(LEFT_ALIGNMENT);
         northStack.add(header);
-        northStack.add(toast);
         add(northStack, BorderLayout.NORTH);
 
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
@@ -71,7 +71,8 @@ class PresetBrowserPanel extends PluginPanel
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
         scroll.setBorder(BorderFactory.createEmptyBorder());
-        add(scroll, BorderLayout.CENTER);
+        toastOverlay = new ToastOverlay(scroll);
+        add(toastOverlay, BorderLayout.CENTER);
 
         rebuild();
     }
@@ -171,7 +172,9 @@ class PresetBrowserPanel extends PluginPanel
         Waypoint w = findWaypointById(store.getLibrary(), id);
         String name = w != null ? w.getName() : "waypoint";
         store.deleteWaypoint(id);
-        toast.show("Removed " + name);
+        String msg = "Removed " + name;
+        lastToastTextForTest = msg;
+        toastOverlay.show(msg);
     }
 
     private static UUID findIdByPacked(Library library, int packed)
@@ -192,8 +195,8 @@ class PresetBrowserPanel extends PluginPanel
         return null;
     }
 
-    ToastBar getToastForTest()
+    String lastToastTextForTest()
     {
-        return toast;
+        return lastToastTextForTest;
     }
 }

@@ -31,10 +31,11 @@ public class PresetBrowserPanelTest
     }
 
     @Test
-    public void toastHiddenAfterConstruction()
+    public void noToastTextAfterConstruction()
     {
         PresetBrowserPanel panel = buildPanel();
-        assertFalse(panel.getToastForTest().isVisible());
+        org.junit.Assert.assertNull("no toast text expected at construction",
+            panel.lastToastTextForTest());
     }
 
     @Test
@@ -46,7 +47,8 @@ public class PresetBrowserPanelTest
 
         UUID newId = panel.addWaypoint(preset, preset.getWaypoints().get(0));
         assertNotNull("addWaypoint should return the new UUID", newId);
-        assertFalse("toast should stay hidden after add", panel.getToastForTest().isVisible());
+        org.junit.Assert.assertNull("add path should not call toast",
+            panel.lastToastTextForTest());
     }
 
     @Test
@@ -59,10 +61,10 @@ public class PresetBrowserPanelTest
         UUID newId = panel.addWaypoint(preset, preset.getWaypoints().get(0));
         panel.removeWaypoint(newId);
 
-        ToastBar toast = panel.getToastForTest();
-        assertTrue(toast.isVisible());
-        assertTrue("expected toast to mention the waypoint, got: " + toast.getMessageText(),
-            toast.getMessageText().contains("Varrock"));
+        String last = panel.lastToastTextForTest();
+        assertNotNull("remove should fire a toast", last);
+        assertTrue("expected toast to mention the waypoint, got: " + last,
+            last.contains("Varrock"));
     }
 
     private static PresetBrowserPanel buildPanel()
