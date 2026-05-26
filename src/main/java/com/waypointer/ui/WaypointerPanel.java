@@ -85,6 +85,7 @@ public class WaypointerPanel extends PluginPanel
     private final LibraryJsonCodec libraryCodec;
     private final Client client;
     private final ClientThread clientThread;
+    private final WildernessConfirmGate wildernessGate;
     private final ActivePathBanner banner;
     private final CaptureForm captureForm;
     private final JPanel body = new JPanel();
@@ -93,6 +94,11 @@ public class WaypointerPanel extends PluginPanel
     private final JButton markBtn = new JButton("Mark current location");
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
+
+    // Sentinel UUID used as the key into collapsedByCategory for the synthetic Pinned section.
+    // Real categories use UUID.randomUUID(); collision probability is 1 in 2^122.
+    private static final UUID PINNED_COLLAPSE_KEY =
+        UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final PlaceholderTextField searchField = new PlaceholderTextField("Search waypoints...");
     private final JLabel clearButton = new JLabel("✕"); // U+2715 (multiplication X)
@@ -115,7 +121,7 @@ public class WaypointerPanel extends PluginPanel
         WaypointStorePersistence persistence, SpriteManager spriteManager,
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
         NearestLandmarkBar nearestLandmarkBar, LibraryJsonCodec libraryCodec,
-        Client client, ClientThread clientThread)
+        Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate)
     {
         super(false);
         this.store = store;
@@ -133,6 +139,7 @@ public class WaypointerPanel extends PluginPanel
         this.libraryCodec = libraryCodec;
         this.client = client;
         this.clientThread = clientThread;
+        this.wildernessGate = wildernessGate;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
 
         // Build the panel header: Mark current location with the overflow trigger pinned
@@ -484,6 +491,11 @@ public class WaypointerPanel extends PluginPanel
                 repaint();
             });
         }
+        if ("showWildernessGlyph".equals(e.getKey())
+            || "newestPinAtTop".equals(e.getKey()))
+        {
+            SwingUtilities.invokeLater(this::rebuild);
+        }
     }
 
     private void onFilterChanged()
@@ -516,9 +528,55 @@ public class WaypointerPanel extends PluginPanel
         {
             body.add(buildResetBanner());
         }
+
+        // Synthetic Pinned section: render before normal categories. Honors the active filter
+        // (pinned waypoints not matching the filter hide here, same as in their real category).
+        boolean rendered = false;
+        List<Waypoint> allPinned = store.getPinnedWaypoints(config.newestPinAtTop());
+        List<Waypoint> visiblePinned;
+        if (loweredFilter.isEmpty())
+        {
+            visiblePinned = allPinned;
+        }
+        else
+        {
+            visiblePinned = new ArrayList<>();
+            for (Waypoint w : allPinned)
+            {
+                Category origin = store.getCategoryById(w.getCategoryId());
+                if (origin == null) continue;
+                if (com.waypointer.service.WaypointFilter.matchesLowered(w, origin, loweredFilter))
+                {
+                    visiblePinned.add(w);
+                }
+            }
+        }
+        if (!visiblePinned.isEmpty())
+        {
+            boolean pinnedCollapsed = isFiltering ? false
+                : collapsedByCategory.getOrDefault(PINNED_COLLAPSE_KEY, false);
+            PinnedSection pinnedSec = new PinnedSection(
+                visiblePinned,
+                pathfinder.getActiveTarget(),
+                pinnedCollapsed,
+                isCollapsed -> {
+                    collapsedByCategory.put(PINNED_COLLAPSE_KEY, isCollapsed);
+                    config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
+                },
+                this::handleRowAction,
+                w -> expandedWaypoints.contains(w.getId())
+                    ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
+                        () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
+                        () -> focusWorldMap(w.getPackedWorldPoint()))
+                    : null,
+                spriteManager,
+                w -> store.getCategoryById(w.getCategoryId()));
+            body.add(pinnedSec);
+            rendered = true;
+        }
+
         List<Category> cats = store.getCategoriesOrdered();
         long totalWaypoints = snap.getWaypoints().size();
-        boolean rendered = false;
         if (totalWaypoints == 0 && cats.size() <= 1)
         {
             if (!isFiltering) renderEmpty();
@@ -642,6 +700,7 @@ public class WaypointerPanel extends PluginPanel
                         "Waypointer", JOptionPane.INFORMATION_MESSAGE);
                     return;
                 }
+                if (!WildernessConfirmGuard.shouldProceed(w, config, wildernessGate, this, store)) return;
                 pathfinder.requestPath(w.getPackedWorldPoint(), w.getName());
                 break;
             case DELETE:
@@ -679,6 +738,15 @@ public class WaypointerPanel extends PluginPanel
                 String suggested = "waypointer-waypoint-"
                     + Styles.sanitizeFilenameSegment(w.getName()) + "-" + stamp + ".json";
                 new LibraryFileIo(store, libraryCodec, this, toastOverlay).exportLibraryToFile(subset, suggested);
+                break;
+            }
+            case TOGGLE_PIN:
+            {
+                boolean nowPinned = !w.isPinned();
+                store.setWaypointPinned(w.getId(), nowPinned);
+                toastOverlay.show(
+                    (nowPinned ? "Pinned '" : "Unpinned '") + w.getName() + "'",
+                    null, null);
                 break;
             }
         }

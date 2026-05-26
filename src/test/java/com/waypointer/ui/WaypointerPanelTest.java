@@ -76,6 +76,7 @@ public class WaypointerPanelTest
             nearestLandmarkBar,
             new LibraryJsonCodec(new Gson()),
             mock(Client.class),
-            mock(ClientThread.class));
+            mock(ClientThread.class),
+            mock(WildernessConfirmGate.class));
     }
 }
