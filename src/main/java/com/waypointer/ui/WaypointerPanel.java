@@ -545,7 +545,8 @@ public class WaypointerPanel extends PluginPanel
             {
                 Category origin = store.getCategoryById(w.getCategoryId());
                 if (origin == null) continue;
-                if (com.waypointer.service.WaypointFilter.matchesLowered(w, origin, loweredFilter))
+                if (WaypointFilter.categoryNameMatchesLowered(origin, loweredFilter)
+                    || WaypointFilter.matchesLowered(w, origin, loweredFilter))
                 {
                     visiblePinned.add(w);
                 }
