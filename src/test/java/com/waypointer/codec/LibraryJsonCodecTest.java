@@ -54,7 +54,7 @@ public class LibraryJsonCodecTest
         lib.getCategories().add(new Category(catId, "Bossing", 0, false, null, false));
         lib.getWaypoints().add(new Waypoint(
             UUID.randomUUID(), "Vorkath", 42, catId, 8059, "best icon",
-            Instant.parse("2026-05-02T12:00:00Z"), 0));
+            Instant.parse("2026-05-02T12:00:00Z"), 0, false, null, false));
 
         Library back = codec.decode(codec.encode(lib));
         assertEquals(1, back.getCategories().size());

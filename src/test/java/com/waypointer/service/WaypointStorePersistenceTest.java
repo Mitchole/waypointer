@@ -66,7 +66,7 @@ public class WaypointStorePersistenceTest
         lib.getCategories().add(new Category(c, "Banks", 0, false, null, false));
         lib.getWaypoints().add(new Waypoint(
             UUID.randomUUID(), "GE", 42, c, null, "",
-            Instant.parse("2026-05-02T00:00:00Z"), 0));
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false));
 
         persistence.saveBlocking(lib);
         Library back = persistence.loadOrEmpty();

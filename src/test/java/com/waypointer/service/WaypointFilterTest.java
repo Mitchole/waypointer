@@ -17,7 +17,7 @@ public class WaypointFilterTest
     private static Waypoint wp(String name, String notes, UUID catId)
     {
         return new Waypoint(UUID.randomUUID(), name, 0, catId, null,
-            notes == null ? "" : notes, Instant.parse("2026-05-02T00:00:00Z"), 0);
+            notes == null ? "" : notes, Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false);
     }
 
     @Test
@@ -92,7 +92,7 @@ public class WaypointFilterTest
         Category c = cat("Bossing");
         // Use raw constructor to make name/notes null.
         Waypoint w = new Waypoint(UUID.randomUUID(), null, 0, c.getId(), null, null,
-            Instant.parse("2026-05-02T00:00:00Z"), 0);
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false);
         // Filter that matches category name still passes.
         assertTrue(WaypointFilter.matches(w, c, "boss"));
         // Filter that matches nothing returns false without NPE.

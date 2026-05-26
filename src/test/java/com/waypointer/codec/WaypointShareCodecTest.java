@@ -35,7 +35,7 @@ public class WaypointShareCodecTest
         UUID catId = UUID.randomUUID();
         Category c = new Category(catId, "Bossing", 0, false, null, false);
         Waypoint w = new Waypoint(UUID.randomUUID(), "Vorkath", 42, catId, null, "",
-            Instant.parse("2026-05-02T00:00:00Z"), 0);
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false);
 
         String code = codec.encodeSingle(w, c);
         assertTrue(code.startsWith("WP1:"));
@@ -53,7 +53,7 @@ public class WaypointShareCodecTest
         UUID c = UUID.randomUUID();
         lib.getCategories().add(new Category(c, "Banks", 0, false, null, false));
         lib.getWaypoints().add(new Waypoint(UUID.randomUUID(), "GE", 99, c, null, "",
-            Instant.parse("2026-05-02T00:00:00Z"), 0));
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false));
 
         String code = codec.encodeLibrary(lib);
         assertTrue(code.startsWith("WPL1:"));
@@ -97,7 +97,7 @@ public class WaypointShareCodecTest
         UUID c = UUID.randomUUID();
         lib.getCategories().add(new Category(c, "Bundled bosses", 0, false, 1234, true));
         lib.getWaypoints().add(new Waypoint(UUID.randomUUID(), "Vorkath", 7, c, 5678, "notes",
-            Instant.parse("2026-05-02T00:00:00Z"), 0));
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false));
 
         Library back = codec.decodeLibrary(codec.encodeLibrary(lib));
 
@@ -127,7 +127,7 @@ public class WaypointShareCodecTest
         Category c = new Category(catId, "Skilling", 0, false, 99, false);
         Instant ts = Instant.parse("2026-05-02T12:34:56Z");
         Waypoint w = new Waypoint(UUID.randomUUID(), "Yew tree", 100, catId, 42,
-            "100k/hr at 90 wc", ts, 3);
+            "100k/hr at 90 wc", ts, 3, false, null, false);
 
         WaypointShareCodec.SingleResult r = codec.decodeSingle(codec.encodeSingle(w, c));
         assertEquals(Integer.valueOf(42), r.waypoint.getIconId());
@@ -148,7 +148,7 @@ public class WaypointShareCodecTest
         for (int i = 0; i < 10; i++)
         {
             lib.getWaypoints().add(new Waypoint(UUID.randomUUID(), bigName.toString(), 1, c, null,
-                "", Instant.parse("2026-05-02T00:00:00Z"), i));
+                "", Instant.parse("2026-05-02T00:00:00Z"), i, false, null, false));
         }
         String code = codec.encodeLibrary(lib);
         codec.decodeLibrary(code);  // should throw on size cap

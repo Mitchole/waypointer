@@ -25,7 +25,7 @@ public class LibraryTest
 
         Waypoint w = new Waypoint(
             UUID.randomUUID(), "Vorkath",
-            42, c.getId(), null, "", Instant.parse("2026-05-02T00:00:00Z"), 0);
+            42, c.getId(), null, "", Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false);
         lib.getWaypoints().add(w);
 
         assertEquals(1, lib.getCategories().size());
@@ -40,5 +40,14 @@ public class LibraryTest
         Category bossing = new Category(UUID.randomUUID(), "Bossing", 1, false, null, false);
         assertTrue(uncat.isUncategorized());
         assertFalse(bossing.isUncategorized());
+    }
+
+    @Test
+    public void newFieldsDefaultToFalseAndNullViaNoArgsConstructor()
+    {
+        Waypoint w = new Waypoint();
+        assertFalse(w.isPinned());
+        assertNull(w.getPinnedAt());
+        assertFalse(w.isBypassWildernessConfirm());
     }
 }

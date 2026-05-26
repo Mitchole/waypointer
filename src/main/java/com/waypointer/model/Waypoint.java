@@ -26,6 +26,9 @@ public final class Waypoint
     private String notes;       // never null; "" when empty
     private Instant createdAt;
     private int sortOrder;
+    private boolean pinned;
+    private Instant pinnedAt;   // null when not pinned
+    private boolean bypassWildernessConfirm;
 
     @Override
     public boolean equals(Object o)

@@ -284,7 +284,10 @@ public class WaypointStore
             null,
             "",
             Instant.now(),
-            nextWaypointSortOrder(categoryId));
+            nextWaypointSortOrder(categoryId),
+            false,
+            null,
+            false);
         library.getWaypoints().add(w);
         notifyChanged();
         return w;
@@ -442,7 +445,10 @@ public class WaypointStore
                 w.getId(), w.getName(), w.getPackedWorldPoint(),
                 resolvedCat, w.getIconId(), w.getNotes() == null ? "" : w.getNotes(),
                 w.getCreatedAt() == null ? Instant.now() : w.getCreatedAt(),
-                sortOrder));
+                sortOrder,
+                false,
+                null,
+                false));
             result.waypointsAdded++;
         }
 

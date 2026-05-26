@@ -12,7 +12,7 @@ public class WaypointRowTest
     private static Waypoint wp(String name, String notes)
     {
         return new Waypoint(UUID.randomUUID(), name, 0, UUID.randomUUID(), null,
-            notes == null ? "" : notes, Instant.parse("2026-05-02T00:00:00Z"), 0);
+            notes == null ? "" : notes, Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false);
     }
 
     @Test

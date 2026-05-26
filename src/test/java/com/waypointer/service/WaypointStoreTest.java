@@ -168,7 +168,7 @@ public class WaypointStoreTest
         UUID newWpId = UUID.randomUUID();
         incoming.getWaypoints().add(new Waypoint(
             newWpId, "Vorkath", 42, incomingCatId, null, "",
-            Instant.parse("2026-05-02T00:00:00Z"), 0));
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false));
 
         WaypointStore.ImportResult r = store.importMerge(incoming);
         assertEquals(1, r.waypointsAdded);
@@ -189,7 +189,7 @@ public class WaypointStoreTest
             store.getUncategorized().getId(), "Uncategorized", 0, true, null, false));
         incoming.getWaypoints().add(new Waypoint(
             existing.getId(), "Different name", 99, store.getUncategorized().getId(), null, "",
-            Instant.parse("2026-05-02T00:00:00Z"), 0));
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false));
 
         WaypointStore.ImportResult r = store.importMerge(incoming);
         assertEquals(0, r.waypointsAdded);
@@ -211,7 +211,7 @@ public class WaypointStoreTest
         incoming.getCategories().add(new Category(newCatId, "Bossing", 0, false, null, false));
         incoming.getWaypoints().add(new Waypoint(
             newWpId, "Vorkath", 42, newCatId, null, "",
-            Instant.parse("2026-05-02T00:00:00Z"), 0));
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false));
 
         WaypointStore.ImportResult r = store.importMerge(incoming);
         assertEquals(1, r.categoriesAdded);

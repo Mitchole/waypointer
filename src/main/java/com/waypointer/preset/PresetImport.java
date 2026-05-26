@@ -33,7 +33,10 @@ public final class PresetImport
             null,
             wp.getDescription() == null ? "" : wp.getDescription(),
             Instant.now(),
-            0);
+            0,
+            false,
+            null,
+            false);
 
         Library lib = new Library();
         lib.getCategories().add(category);
