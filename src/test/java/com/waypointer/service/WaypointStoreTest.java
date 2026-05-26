@@ -479,4 +479,34 @@ public class WaypointStoreTest
         store.setWaypointPinned(w.getId(), true);
         assertEquals(1, calls.get());
     }
+
+    @Test
+    public void setBypassWildernessConfirmFlipsFlagAndFires()
+    {
+        AtomicInteger calls = new AtomicInteger();
+        Waypoint w = store.createWaypoint(1, "Wild", store.getUncategorized().getId());
+        assertFalse(w.isBypassWildernessConfirm());
+        store.subscribe(() -> calls.incrementAndGet());
+
+        store.setWaypointBypassWildernessConfirm(w.getId(), true);
+        assertTrue(store.getWaypointById(w.getId()).isBypassWildernessConfirm());
+        assertEquals(1, calls.get());
+
+        store.setWaypointBypassWildernessConfirm(w.getId(), false);
+        assertFalse(store.getWaypointById(w.getId()).isBypassWildernessConfirm());
+        assertEquals(2, calls.get());
+    }
+
+    @Test
+    public void setBypassWildernessConfirmDoesNotTouchPinnedState()
+    {
+        Waypoint w = store.createWaypoint(1, "W", store.getUncategorized().getId());
+        store.setWaypointPinned(w.getId(), true);
+        Instant pinnedAt = store.getWaypointById(w.getId()).getPinnedAt();
+
+        store.setWaypointBypassWildernessConfirm(w.getId(), true);
+        Waypoint after = store.getWaypointById(w.getId());
+        assertTrue(after.isPinned());
+        assertEquals(pinnedAt, after.getPinnedAt());
+    }
 }

@@ -322,6 +322,16 @@ public class WaypointStore
         notifyChanged();
     }
 
+    public void setWaypointBypassWildernessConfirm(UUID id, boolean bypass)
+    {
+        lastUndo = null;
+        Waypoint w = getWaypointById(id);
+        if (w == null) return;
+        if (bypass == w.isBypassWildernessConfirm()) return;
+        w.setBypassWildernessConfirm(bypass);
+        notifyChanged();
+    }
+
     /**
      * Derived view: all pinned waypoints sorted by {@code pinnedAt}.
      *
