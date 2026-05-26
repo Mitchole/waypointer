@@ -23,12 +23,14 @@ final class LibraryFileIo
     private final WaypointStore store;
     private final LibraryJsonCodec codec;
     private final Component parent;
+    private final Toasts toasts;
 
-    LibraryFileIo(WaypointStore store, LibraryJsonCodec codec, Component parent)
+    LibraryFileIo(WaypointStore store, LibraryJsonCodec codec, Component parent, Toasts toasts)
     {
         this.store = store;
         this.codec = codec;
         this.parent = parent;
+        this.toasts = toasts == null ? Toasts.NO_OP : toasts;
     }
 
     void importFromFile()
@@ -41,10 +43,8 @@ final class LibraryFileIo
             String json = new String(Files.readAllBytes(fc.getSelectedFile().toPath()), StandardCharsets.UTF_8);
             Library incoming = codec.decode(json);
             WaypointStore.ImportResult r = store.importMerge(incoming);
-            JOptionPane.showMessageDialog(parent,
-                String.format("Imported %d waypoints, %d categories. Skipped %d.",
-                    r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped),
-                "Waypointer", JOptionPane.INFORMATION_MESSAGE);
+            toasts.show(String.format("Imported %d waypoints, %d categories. Skipped %d.",
+                r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped));
         }
         catch (IOException | RuntimeException ex)
         {
@@ -77,9 +77,7 @@ final class LibraryFileIo
         {
             String json = codec.encode(lib);
             Files.write(target.toPath(), json.getBytes(StandardCharsets.UTF_8));
-            JOptionPane.showMessageDialog(parent,
-                "Exported to " + target.getAbsolutePath(),
-                "Waypointer", JOptionPane.INFORMATION_MESSAGE);
+            toasts.show("Exported to " + target.getName());
         }
         catch (IOException ex)
         {
@@ -92,8 +90,6 @@ final class LibraryFileIo
     {
         Toolkit.getDefaultToolkit().getSystemClipboard()
             .setContents(new StringSelection(code), null);
-        JOptionPane.showMessageDialog(parent,
-            String.format("Library code copied - %d waypoints.", waypointCount),
-            "Waypointer", JOptionPane.INFORMATION_MESSAGE);
+        toasts.show(String.format("Library code copied - %d waypoints.", waypointCount));
     }
 }

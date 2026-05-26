@@ -42,11 +42,14 @@ public class InlineEditPanel extends JPanel
 
     private final JTextField nameField;
     private final JTextArea notesArea;
+    private final JComboBox<CategoryComboItem> categoryCombo;
     private boolean nameDirty = false;
     private boolean notesDirty = false;
+    private boolean categoryDirty = false;
 
     public InlineEditPanel(Waypoint w, WaypointStore store, WaypointCapture capture,
-        SpriteManager spriteManager, IconCatalog iconCatalog)
+        SpriteManager spriteManager, IconCatalog iconCatalog, Runnable onClose,
+        Runnable onShowOnMap)
     {
         this.store = store;
         this.waypointId = w.getId();
@@ -56,7 +59,29 @@ public class InlineEditPanel extends JPanel
         GridBagConstraints g = new GridBagConstraints();
         g.fill = GridBagConstraints.HORIZONTAL;
         g.insets = new Insets(2, 2, 2, 2);
-        g.gridx = 0; g.gridy = 0; g.weightx = 0;
+
+        // Top-right close affordance. Spans both columns so the X anchors to the panel edge.
+        if (onClose != null)
+        {
+            g.gridx = 0; g.gridy = 0; g.gridwidth = 2; g.weightx = 1;
+            g.anchor = GridBagConstraints.EAST; g.fill = GridBagConstraints.NONE;
+            JLabel closeBtn = new JLabel("✕"); // U+2715 multiplication X
+            closeBtn.setForeground(Color.LIGHT_GRAY);
+            closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            closeBtn.setToolTipText("Close");
+            closeBtn.addMouseListener(new MouseAdapter()
+            {
+                @Override public void mouseClicked(MouseEvent e)
+                {
+                    flushPending();
+                    onClose.run();
+                }
+            });
+            add(closeBtn, g);
+            g.gridwidth = 1; g.anchor = GridBagConstraints.CENTER; g.fill = GridBagConstraints.HORIZONTAL;
+        }
+
+        g.gridx = 0; g.gridy = 1; g.weightx = 0;
         add(Styles.fieldLabel("Name"), g);
         nameField = new JTextField(w.getName());
         Styles.textField(nameField);
@@ -68,16 +93,20 @@ public class InlineEditPanel extends JPanel
         g.gridx = 1; g.weightx = 1; add(nameField, g);
 
         g.gridx = 0; g.gridy++; g.weightx = 0; add(Styles.fieldLabel("Category"), g);
-        JComboBox<CategoryComboItem> cats = new JComboBox<>();
-        Styles.combo(cats);
-        for (Category c : store.getCategoriesOrdered()) cats.addItem(new CategoryComboItem(c));
-        for (int i = 0; i < cats.getItemCount(); i++)
-            if (cats.getItemAt(i).id().equals(w.getCategoryId())) cats.setSelectedIndex(i);
-        cats.addActionListener(e -> {
-            CategoryComboItem sel = (CategoryComboItem) cats.getSelectedItem();
-            if (sel != null) store.moveWaypointToCategory(waypointId, sel.id());
+        categoryCombo = new JComboBox<>();
+        Styles.combo(categoryCombo);
+        for (Category c : store.getCategoriesOrdered()) categoryCombo.addItem(new CategoryComboItem(c));
+        for (int i = 0; i < categoryCombo.getItemCount(); i++)
+            if (categoryCombo.getItemAt(i).id().equals(w.getCategoryId())) categoryCombo.setSelectedIndex(i);
+        // Deferred commit: track changes here, apply on focus loss / detach. An immediate
+        // moveWaypointToCategory on every action would fire for any stray click or scroll-wheel
+        // tick over the combo, with no way to undo without manually moving the row back.
+        categoryCombo.addActionListener(e -> categoryDirty = true);
+        categoryCombo.addFocusListener(new FocusAdapter()
+        {
+            @Override public void focusLost(FocusEvent e) { flushCategory(); }
         });
-        g.gridx = 1; g.weightx = 1; add(cats, g);
+        g.gridx = 1; g.weightx = 1; add(categoryCombo, g);
 
         g.gridx = 0; g.gridy++; g.weightx = 0; add(Styles.fieldLabel("Notes"), g);
         notesArea = new JTextArea(w.getNotes(), 3, 12);
@@ -103,11 +132,9 @@ public class InlineEditPanel extends JPanel
         g.gridx = 1; g.weightx = 1; add(notesScroll, g);
 
         g.gridx = 0; g.gridy++; g.weightx = 0; add(Styles.fieldLabel("Tile"), g);
-        int p = w.getPackedWorldPoint();
-        JLabel coords = new JLabel(String.format("(%d, %d, %d)",
-            WorldPointPacker.getX(p), WorldPointPacker.getY(p), WorldPointPacker.getPlane(p)));
-        coords.setForeground(Color.LIGHT_GRAY);
-        g.gridx = 1; g.weightx = 1; add(coords, g);
+        JLabel showOnMap = makeLink("Show on world map",
+            onShowOnMap == null ? () -> {} : onShowOnMap);
+        g.gridx = 1; g.weightx = 1; add(showOnMap, g);
 
         // Footer: thin divider followed by a single FlowLayout row of links separated by ·
         g.gridx = 0; g.gridy++; g.gridwidth = 2; g.weightx = 1;
@@ -151,12 +178,13 @@ public class InlineEditPanel extends JPanel
         add(footer, g);
     }
 
-    // Commits in-flight name/notes edits. Called on focus loss, on detach, and before
-    // recapture so the swap doesn't drop the user's pending text.
+    // Commits in-flight edits. Called on focus loss, on detach, and before recapture so the
+    // swap doesn't drop the user's pending text.
     public void flushPending()
     {
         flushName();
         flushNotes();
+        flushCategory();
     }
 
     private void flushName()
@@ -171,6 +199,17 @@ public class InlineEditPanel extends JPanel
         if (!notesDirty) return;
         notesDirty = false;
         store.updateWaypointNotes(waypointId, notesArea.getText());
+    }
+
+    private void flushCategory()
+    {
+        if (!categoryDirty) return;
+        categoryDirty = false;
+        CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
+        if (sel == null) return;
+        Waypoint cur = store.getWaypointById(waypointId);
+        if (cur == null || sel.id().equals(cur.getCategoryId())) return;
+        store.moveWaypointToCategory(waypointId, sel.id());
     }
 
     // Safety net for parent rebuilds that fire before focus loss.

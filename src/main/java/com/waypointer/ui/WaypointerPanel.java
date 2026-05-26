@@ -55,6 +55,9 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.ScrollBarUI;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
+import net.runelite.api.worldmap.WorldMap;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.SpriteManager;
@@ -80,6 +83,8 @@ public class WaypointerPanel extends PluginPanel
     private final OverflowMenu overflowMenu;
     private final NearestLandmarkBar nearestLandmarkBar;
     private final LibraryJsonCodec libraryCodec;
+    private final Client client;
+    private final ClientThread clientThread;
     private final ActivePathBanner banner;
     private final CaptureForm captureForm;
     private final JPanel body = new JPanel();
@@ -109,7 +114,8 @@ public class WaypointerPanel extends PluginPanel
         WaypointerNavigator navigator, WaypointShareCodec shareCodec,
         WaypointStorePersistence persistence, SpriteManager spriteManager,
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
-        NearestLandmarkBar nearestLandmarkBar, LibraryJsonCodec libraryCodec)
+        NearestLandmarkBar nearestLandmarkBar, LibraryJsonCodec libraryCodec,
+        Client client, ClientThread clientThread)
     {
         super(false);
         this.store = store;
@@ -125,6 +131,8 @@ public class WaypointerPanel extends PluginPanel
         this.overflowMenu = overflowMenu;
         this.nearestLandmarkBar = nearestLandmarkBar;
         this.libraryCodec = libraryCodec;
+        this.client = client;
+        this.clientThread = clientThread;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
 
         // Build the panel header: Mark current location with the overflow trigger pinned
@@ -139,7 +147,6 @@ public class WaypointerPanel extends PluginPanel
         markRow.add(markBtn, BorderLayout.CENTER);
         JButton overflowBtn = new JButton("⋮"); // U+22EE vertical ellipsis
         overflowBtn.setToolTipText("More");
-        overflowBtn.addActionListener(e -> overflowMenu.show(overflowBtn, this));
         Styles.secondaryButton(overflowBtn);
         Dimension overflowSize = new Dimension(30, markBtn.getPreferredSize().height);
         overflowBtn.setPreferredSize(overflowSize);
@@ -206,6 +213,7 @@ public class WaypointerPanel extends PluginPanel
         this.bodyScrollBar = vBar;
         this.toastOverlay = new ToastOverlay(bodyScroll);
         nearestLandmarkBar.setToasts(toastOverlay);
+        overflowBtn.addActionListener(e -> overflowMenu.show(overflowBtn, this, toastOverlay));
 
         this.banner = new ActivePathBanner(pathfinder, config);
         banner.setAlignmentX(LEFT_ALIGNMENT);
@@ -344,11 +352,26 @@ public class WaypointerPanel extends PluginPanel
         return subset;
     }
 
+    // Scrolls an already-open world map to the given packed tile. setWorldMapPositionTarget
+    // hits the game-side WorldMap, so it must be invoked from the client thread. The map
+    // itself isn't opened programmatically (no public RuneLite API for that); if the user
+    // hasn't opened it, the call is a no-op until they do.
+    private void focusWorldMap(int packed)
+    {
+        if (packed == WorldPointPacker.UNDEFINED) return;
+        clientThread.invoke(() ->
+        {
+            WorldMap worldMap = client.getWorldMap();
+            if (worldMap == null) return;
+            worldMap.setWorldMapPositionTarget(WorldPointPacker.unpack(packed));
+        });
+    }
+
     private void exportCategory(Category c)
     {
         Library subset = categorySubset(c);
         String code = shareCodec.encodeLibrary(subset);
-        new LibraryFileIo(store, libraryCodec, this)
+        new LibraryFileIo(store, libraryCodec, this, toastOverlay)
             .copyShareCodeToClipboard(code, subset.getWaypoints().size());
     }
 
@@ -358,7 +381,7 @@ public class WaypointerPanel extends PluginPanel
         String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
         String suggested = "waypointer-category-"
             + Styles.sanitizeFilenameSegment(c.getName()) + "-" + stamp + ".json";
-        new LibraryFileIo(store, libraryCodec, this).exportLibraryToFile(subset, suggested);
+        new LibraryFileIo(store, libraryCodec, this, toastOverlay).exportLibraryToFile(subset, suggested);
     }
 
     private JComponent buildSearchBar()
@@ -512,7 +535,10 @@ public class WaypointerPanel extends PluginPanel
                     },
                     this::handleRowAction,
                     w -> expandedWaypoints.contains(w.getId())
-                        ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog) : null,
+                        ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog,
+                            () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
+                            () -> focusWorldMap(w.getPackedWorldPoint()))
+                        : null,
                     dnd,
                     new CategorySection.Actions(
                         () -> promptRenameCategory(c),
@@ -622,7 +648,7 @@ public class WaypointerPanel extends PluginPanel
                     return;
                 }
                 String code = shareCodec.encodeSingle(w, c);
-                new LibraryFileIo(store, libraryCodec, this).copyShareCodeToClipboard(code, 1);
+                new LibraryFileIo(store, libraryCodec, this, toastOverlay).copyShareCodeToClipboard(code, 1);
                 break;
             }
             case EXPORT_FILE:
@@ -638,7 +664,7 @@ public class WaypointerPanel extends PluginPanel
                 String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
                 String suggested = "waypointer-waypoint-"
                     + Styles.sanitizeFilenameSegment(w.getName()) + "-" + stamp + ".json";
-                new LibraryFileIo(store, libraryCodec, this).exportLibraryToFile(subset, suggested);
+                new LibraryFileIo(store, libraryCodec, this, toastOverlay).exportLibraryToFile(subset, suggested);
                 break;
             }
         }

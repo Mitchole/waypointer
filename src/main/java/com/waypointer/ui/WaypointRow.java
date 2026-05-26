@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -82,15 +83,50 @@ public class WaypointRow extends JPanel implements DropIndicatable
         name.addMouseListener(ma);
         add(name, BorderLayout.CENTER);
 
-        // EAST: icon-only Play button. Dark resting, orange on hover, orange-locked
-        // when this row is the pathfinder's current target.
+        // EAST: hover-revealed overflow trigger to the left of an icon-only Play button.
+        // Play styling mirrors the pathfinder state (orange-locked when this is the active
+        // target). The trigger's foreground is pinned to the row's resting background so it
+        // reserves layout space at all times but disappears against the row at rest; the
+        // hover listener below brightens it when the cursor is anywhere on the row.
         JButton play = new JButton("▶"); // U+25B6 black right-pointing triangle
         Styles.playIconButton(play, active);
         play.setToolTipText(active ? "Pathing here" : "Path to here");
         play.addActionListener(e -> onPlay.run());
-        add(play, BorderLayout.EAST);
+
+        JLabel menuTrigger = new JLabel("⋮"); // U+22EE vertical ellipsis
+        menuTrigger.setFont(menuTrigger.getFont().deriveFont(Font.BOLD));
+        menuTrigger.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+        menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        menuTrigger.setToolTipText("More");
+        menuTrigger.addMouseListener(new MouseAdapter()
+        {
+            @Override public void mouseClicked(MouseEvent e)
+            {
+                popup.show(menuTrigger, 0, menuTrigger.getHeight());
+            }
+        });
+
+        JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        eastPanel.setOpaque(false);
+        eastPanel.add(menuTrigger);
+        eastPanel.add(play);
+        add(eastPanel, BorderLayout.EAST);
 
         this.restingBackground = getBackground();
+        // Pin the trigger's resting foreground to the row background so it's invisible until
+        // the row is hovered; the listener swaps in LIGHT_GRAY to reveal it.
+        menuTrigger.setForeground(restingBackground);
+        addMouseListener(new MouseAdapter()
+        {
+            @Override public void mouseEntered(MouseEvent e)
+            {
+                menuTrigger.setForeground(Color.LIGHT_GRAY);
+            }
+            @Override public void mouseExited(MouseEvent e)
+            {
+                menuTrigger.setForeground(restingBackground);
+            }
+        });
     }
 
     public Waypoint getWaypoint() { return waypoint; }

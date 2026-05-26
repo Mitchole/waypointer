@@ -42,10 +42,10 @@ final class OverflowMenu
     }
 
     /** Show the popup anchored just below {@code near}; uses {@code panel} as JOption parent. */
-    void show(Component near, Component panel)
+    void show(Component near, Component panel, Toasts toasts)
     {
         Component anchor = panel;
-        LibraryFileIo fileIo = new LibraryFileIo(store, libraryCodec, anchor);
+        LibraryFileIo fileIo = new LibraryFileIo(store, libraryCodec, anchor, toasts);
         JPopupMenu menu = new JPopupMenu();
 
         JMenuItem newCategory = new JMenuItem("New category...");
