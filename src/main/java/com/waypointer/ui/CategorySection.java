@@ -7,6 +7,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -24,6 +25,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.border.Border;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 
 // Collapsible section: chevron header + body of WaypointRows. Header is a BorderLayout with
 // up to three children: optional 16x16 icon on the left, title label in the center (click
@@ -69,7 +71,16 @@ public class CategorySection extends JPanel
         headerLabel.addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) { toggleCollapse(); }
         });
-        headerRow.add(headerLabel, BorderLayout.CENTER);
+
+        JLabel countLabel = new JLabel("(" + waypoints.size() + ")");
+        countLabel.setForeground(Color.LIGHT_GRAY);
+        countLabel.setFont(FontManager.getRunescapeSmallFont());
+
+        JPanel centerWrap = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        centerWrap.setOpaque(false);
+        centerWrap.add(headerLabel);
+        centerWrap.add(countLabel);
+        headerRow.add(centerWrap, BorderLayout.CENTER);
 
         // Drag must come from the label only; on headerRow, a click on the menu trigger
         // would accidentally start a drag.
