@@ -63,6 +63,11 @@ public class CategorySection extends JPanel
         final Border restingHeaderBorder = headerRow.getBorder();
         final Color restingHeaderBg = headerRow.getBackground();
 
+        headerRow.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        headerRow.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { toggleCollapse(); }
+        });
+
         headerLabel = new JLabel(headerText());
         headerLabel.setForeground(Color.WHITE);
         headerLabel.setFont(headerLabel.getFont().deriveFont(Font.BOLD));
