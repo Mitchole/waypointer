@@ -33,8 +33,12 @@ public class WaypointRow extends JPanel implements DropIndicatable
     private final java.awt.Color restingBackground;
     private Border prevBorder;
 
-    public WaypointRow(Waypoint waypoint, boolean active, Runnable onPlay, Runnable onClickBody,
-        Runnable onDelete, Runnable onExport, Runnable onExportFile, SpriteManager spriteManager)
+    public WaypointRow(Waypoint waypoint, boolean active,
+        boolean isPinned, boolean isWilderness, boolean dragDisabled,
+        Runnable onPlay, Runnable onClickBody, Runnable onTogglePin,
+        Runnable onDelete, Runnable onExport, Runnable onExportFile,
+        SpriteManager spriteManager,
+        String originCategoryName)
     {
         this.waypoint = waypoint;
         setLayout(new BorderLayout(8, 0));
@@ -44,15 +48,19 @@ public class WaypointRow extends JPanel implements DropIndicatable
         // Hover-clickable surface: body clicks expand the row.
         MouseAdapter ma = Cards.clickable(this, onClickBody);
 
-        // Right-click anywhere on the row body opens a popup with export and delete items.
+        // Right-click anywhere on the row body opens a popup with pin/export/delete items.
         // Cross-platform popup-trigger handling is provided automatically by setComponentPopupMenu.
         JPopupMenu popup = new JPopupMenu();
+        JMenuItem pinItem = new JMenuItem(isPinned ? "Unpin" : "Pin to top");
+        pinItem.addActionListener(e -> onTogglePin.run());
         JMenuItem exportItem = new JMenuItem("Export waypoint");
         exportItem.addActionListener(e -> onExport.run());
         JMenuItem exportFileItem = new JMenuItem("Export waypoint to file...");
         exportFileItem.addActionListener(e -> onExportFile.run());
         JMenuItem deleteItem = new JMenuItem("Delete");
         deleteItem.addActionListener(e -> onDelete.run());
+        popup.add(pinItem);
+        popup.addSeparator();
         popup.add(exportItem);
         popup.add(exportFileItem);
         popup.addSeparator();
@@ -61,19 +69,30 @@ public class WaypointRow extends JPanel implements DropIndicatable
 
         // WEST: drag handle. Cursor MOVE_CURSOR; NOT attached to ma so dragging from the
         // grip doesn't fire expand. DragAndDropHandler wires the drag externally.
-        dragHandle = new JLabel("⠿"); // U+283F braille pattern dots-123456
-        dragHandle.setForeground(new Color(120, 120, 120));
-        dragHandle.setOpaque(false);
-        dragHandle.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
-        dragHandle.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
-        dragHandle.setToolTipText("Drag to reorder");
-        add(dragHandle, BorderLayout.WEST);
+        // Pinned section disables drag (rows are sorted by pin order, not user-arrangeable
+        // by hand), so the handle is omitted.
+        if (!dragDisabled)
+        {
+            dragHandle = new JLabel("⠿"); // U+283F braille pattern dots-123456
+            dragHandle.setForeground(new Color(120, 120, 120));
+            dragHandle.setOpaque(false);
+            dragHandle.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
+            dragHandle.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+            dragHandle.setToolTipText("Drag to reorder");
+            add(dragHandle, BorderLayout.WEST);
+        }
+        else
+        {
+            dragHandle = null;
+        }
 
         // CENTER: bold name label, optionally prefixed with a 16x16 custom sprite. JLabel's
         // default vertical alignment is CENTER, so text/icon align with the Play button text.
-        JLabel name = new JLabel(waypoint.getName());
-        name.setToolTipText(buildHoverTooltip(waypoint));
-        name.setForeground(Color.WHITE);
+        // Wilderness waypoints get a skull prefix and muted red foreground.
+        String displayName = (isWilderness ? "☠ " : "") + waypoint.getName();
+        JLabel name = new JLabel(displayName);
+        name.setToolTipText(buildHoverTooltip(waypoint, originCategoryName));
+        name.setForeground(isWilderness ? new Color(220, 130, 130) : Color.WHITE);
         name.setFont(name.getFont().deriveFont(Font.BOLD));
         if (waypoint.getIconId() != null && spriteManager != null)
         {
@@ -171,6 +190,33 @@ public class WaypointRow extends JPanel implements DropIndicatable
         if (firstLine.isEmpty()) return name;
         return "<html>" + Styles.escapeHtml(name) + "<br><span style='color:#bbb'>"
             + Styles.escapeHtml(firstLine) + "</span></html>";
+    }
+
+    /** Extended tooltip with optional origin-category line. Null origin = same as the one-arg form. */
+    static String buildHoverTooltip(Waypoint w, String originCategoryName)
+    {
+        if (originCategoryName == null || originCategoryName.isEmpty())
+        {
+            return buildHoverTooltip(w);
+        }
+        String name = w.getName() == null ? "" : w.getName();
+        String notes = w.getNotes();
+        StringBuilder html = new StringBuilder("<html>").append(Styles.escapeHtml(name));
+        if (notes != null && !notes.isEmpty())
+        {
+            int nl = notes.indexOf('\n');
+            String firstLine = (nl < 0 ? notes : notes.substring(0, nl)).trim();
+            if (!firstLine.isEmpty())
+            {
+                html.append("<br><span style='color:#bbb'>")
+                    .append(Styles.escapeHtml(firstLine))
+                    .append("</span>");
+            }
+        }
+        html.append("<br><span style='color:#bbb'><i>in ")
+            .append(Styles.escapeHtml(originCategoryName))
+            .append("</i></span></html>");
+        return html.toString();
     }
 
     @Override public Dimension getMaximumSize()

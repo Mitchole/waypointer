@@ -59,4 +59,22 @@ public class WaypointRowTest
         assertTrue(tip.contains("&lt;script&gt;"));
         assertTrue(tip.contains("&lt;evil&gt;"));
     }
+
+    @Test
+    public void originCategoryAppendedAsThirdTooltipLine()
+    {
+        Waypoint w = wp("Home", "");
+        String tip = WaypointRow.buildHoverTooltip(w, "Houses");
+        assertTrue("expected html, got: " + tip, tip.startsWith("<html>"));
+        assertTrue(tip.contains("Home"));
+        assertTrue(tip.contains("Houses"));
+        assertTrue("origin tag should appear", tip.contains("in Houses"));
+    }
+
+    @Test
+    public void nullOriginCategoryFallsBackToOriginalTooltip()
+    {
+        Waypoint w = wp("Home", "Personal");
+        assertEquals(WaypointRow.buildHoverTooltip(w), WaypointRow.buildHoverTooltip(w, null));
+    }
 }

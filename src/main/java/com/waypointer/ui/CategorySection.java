@@ -178,12 +178,17 @@ public class CategorySection extends JPanel
             WaypointRow row = new WaypointRow(
                 w,
                 active,
+                w.isPinned(),
+                com.waypointer.service.Wilderness.isInWilderness(w.getPackedWorldPoint()),
+                /* dragDisabled */ false,
                 () -> onRowAction.accept(w, RowAction.PLAY),
                 () -> onRowAction.accept(w, RowAction.EXPAND),
+                () -> onRowAction.accept(w, RowAction.TOGGLE_PIN),
                 () -> onRowAction.accept(w, RowAction.DELETE),
                 () -> onRowAction.accept(w, RowAction.EXPORT),
                 () -> onRowAction.accept(w, RowAction.EXPORT_FILE),
-                spriteManager);
+                spriteManager,
+                /* originCategoryName */ null);
             row.setAlignmentX(LEFT_ALIGNMENT);
             body.add(row);
             if (dnd != null) dnd.attachWaypointRow(row, row.getDragHandle(),
@@ -241,7 +246,8 @@ public class CategorySection extends JPanel
         onCollapseChange.accept(collapsed);
     }
 
-    public enum RowAction { PLAY, EXPAND, DELETE, EXPORT, EXPORT_FILE }
+    /** Row-level user actions plumbed up from {@link WaypointRow} to the panel. */
+    public enum RowAction { PLAY, EXPAND, DELETE, EXPORT, EXPORT_FILE, TOGGLE_PIN }
 
     /** The category-level menu actions, bundled so the constructor stays readable. */
     public static final class Actions
