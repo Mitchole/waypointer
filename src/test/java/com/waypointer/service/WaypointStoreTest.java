@@ -395,4 +395,88 @@ public class WaypointStoreTest
         assertEquals(1, store.getLibrary().getWaypoints().size());
         assertFalse(store.hasUndoable());
     }
+
+    @Test
+    public void setWaypointPinnedFlipsFlagAndStampsPinnedAt()
+    {
+        Waypoint w = store.createWaypoint(1, "Home", store.getUncategorized().getId());
+        assertFalse(w.isPinned());
+        assertNull(w.getPinnedAt());
+
+        Instant before = Instant.now();
+        store.setWaypointPinned(w.getId(), true);
+        Waypoint after = store.getWaypointById(w.getId());
+        assertTrue(after.isPinned());
+        assertNotNull(after.getPinnedAt());
+        assertFalse(after.getPinnedAt().isBefore(before));
+    }
+
+    @Test
+    public void setWaypointPinnedFalseClearsPinnedAt()
+    {
+        Waypoint w = store.createWaypoint(1, "Home", store.getUncategorized().getId());
+        store.setWaypointPinned(w.getId(), true);
+        assertNotNull(store.getWaypointById(w.getId()).getPinnedAt());
+        store.setWaypointPinned(w.getId(), false);
+        Waypoint after = store.getWaypointById(w.getId());
+        assertFalse(after.isPinned());
+        assertNull(after.getPinnedAt());
+    }
+
+    @Test
+    public void getPinnedWaypointsAscendingByPinnedAt() throws InterruptedException
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        Waypoint b = store.createWaypoint(2, "B", uId);
+        Waypoint c = store.createWaypoint(3, "C", uId);
+        store.setWaypointPinned(a.getId(), true);
+        Thread.sleep(5);
+        store.setWaypointPinned(b.getId(), true);
+        Thread.sleep(5);
+        store.setWaypointPinned(c.getId(), true);
+
+        List<Waypoint> asc = store.getPinnedWaypoints(false);
+        assertEquals("A", asc.get(0).getName());
+        assertEquals("B", asc.get(1).getName());
+        assertEquals("C", asc.get(2).getName());
+    }
+
+    @Test
+    public void getPinnedWaypointsDescendingByPinnedAt() throws InterruptedException
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        Waypoint b = store.createWaypoint(2, "B", uId);
+        store.setWaypointPinned(a.getId(), true);
+        Thread.sleep(5);
+        store.setWaypointPinned(b.getId(), true);
+
+        List<Waypoint> desc = store.getPinnedWaypoints(true);
+        assertEquals("B", desc.get(0).getName());
+        assertEquals("A", desc.get(1).getName());
+    }
+
+    @Test
+    public void getPinnedWaypointsExcludesUnpinned()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "Pinned", uId);
+        store.createWaypoint(2, "Loose", uId);
+        store.setWaypointPinned(a.getId(), true);
+
+        List<Waypoint> pinned = store.getPinnedWaypoints(false);
+        assertEquals(1, pinned.size());
+        assertEquals("Pinned", pinned.get(0).getName());
+    }
+
+    @Test
+    public void setWaypointPinnedFiresListeners()
+    {
+        AtomicInteger calls = new AtomicInteger();
+        Waypoint w = store.createWaypoint(1, "W", store.getUncategorized().getId());
+        store.subscribe(() -> calls.incrementAndGet());
+        store.setWaypointPinned(w.getId(), true);
+        assertEquals(1, calls.get());
+    }
 }

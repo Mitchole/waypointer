@@ -311,6 +311,37 @@ public class WaypointStore
         notifyChanged();
     }
 
+    public void setWaypointPinned(UUID id, boolean pinned)
+    {
+        lastUndo = null;
+        Waypoint w = getWaypointById(id);
+        if (w == null) return;
+        if (pinned == w.isPinned()) return;
+        w.setPinned(pinned);
+        w.setPinnedAt(pinned ? Instant.now() : null);
+        notifyChanged();
+    }
+
+    /**
+     * Derived view: all pinned waypoints sorted by {@code pinnedAt}.
+     *
+     * @param newestAtTop true = descending (most recently pinned first);
+     *                    false = ascending (most recently pinned last).
+     *                    Waypoints with null pinnedAt sort as Instant.EPOCH.
+     */
+    public List<Waypoint> getPinnedWaypoints(boolean newestAtTop)
+    {
+        List<Waypoint> pinned = new ArrayList<>();
+        for (Waypoint w : library.getWaypoints())
+        {
+            if (w.isPinned()) pinned.add(w);
+        }
+        Comparator<Waypoint> byPinnedAt = Comparator.comparing(
+            w -> w.getPinnedAt() == null ? Instant.EPOCH : w.getPinnedAt());
+        pinned.sort(newestAtTop ? byPinnedAt.reversed() : byPinnedAt);
+        return Collections.unmodifiableList(pinned);
+    }
+
     public void updateWaypointNotes(UUID id, String notes)
     {
         lastUndo = null;
