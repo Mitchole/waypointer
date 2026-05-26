@@ -103,9 +103,15 @@ public class DragAndDropHandler
             }
         });
         clearActions.add(() -> indicatable.setDropIndicator(DropIndicatorMode.NONE));
-        DragGestureListener gesture = new DragGestureListener(row);
-        dragHandle.addMouseListener(gesture);
-        dragHandle.addMouseMotionListener(gesture);
+        // dragHandle is null when the row was constructed with dragDisabled (e.g. inside the
+        // synthetic Pinned section, where rows can't be drag-reordered). Skip the drag-source
+        // setup but leave the row's drop-target behavior intact.
+        if (dragHandle != null)
+        {
+            DragGestureListener gesture = new DragGestureListener(row);
+            dragHandle.addMouseListener(gesture);
+            dragHandle.addMouseMotionListener(gesture);
+        }
     }
 
     public void attachCategoryHeader(JComponent dragTarget, DropIndicatable indicatable, UUID categoryId)
