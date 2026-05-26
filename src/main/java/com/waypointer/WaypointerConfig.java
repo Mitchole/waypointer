@@ -34,6 +34,30 @@ public interface WaypointerConfig extends Config
     )
     default boolean showPathingBanner() { return true; }
 
+    @ConfigItem(
+        keyName = "confirmBeforeWildernessPlay",
+        name = "Confirm before pathing into Wilderness",
+        description = "Show a confirm dialog when the destination tile is inside the Wilderness.",
+        position = 25
+    )
+    default boolean confirmBeforeWildernessPlay() { return true; }
+
+    @ConfigItem(
+        keyName = "showWildernessGlyph",
+        name = "Show wilderness skull on row",
+        description = "Prefix waypoint rows with a skull when the destination is in the Wilderness.",
+        position = 26
+    )
+    default boolean showWildernessGlyph() { return true; }
+
+    @ConfigItem(
+        keyName = "newestPinAtTop",
+        name = "Newest pin at top",
+        description = "Order pinned waypoints with the most recently pinned at the top. Off puts newest at the bottom.",
+        position = 30
+    )
+    default boolean newestPinAtTop() { return true; }
+
     // Hidden:JSON-encoded map of categoryId -> collapsed boolean. Empty = all expanded.
     @ConfigItem(
         keyName = "categoryCollapsedJson",
