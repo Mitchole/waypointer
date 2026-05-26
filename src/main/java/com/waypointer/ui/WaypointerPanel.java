@@ -506,7 +506,7 @@ public class WaypointerPanel extends PluginPanel
                 boolean collapsed = isFiltering ? false
                     : collapsedByCategory.getOrDefault(c.getId(), false);
                 CategorySection section = new CategorySection(
-                    c, ws, collapsed,
+                    c, ws, pathfinder.getActiveTarget(), collapsed,
                     isCollapsed -> {
                         collapsedByCategory.put(c.getId(), isCollapsed);
                         config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));

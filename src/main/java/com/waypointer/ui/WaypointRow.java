@@ -20,9 +20,10 @@ import net.runelite.client.ui.ColorScheme;
 
 /**
  * A single waypoint row, rendered as a clickable card. Click body -> expand inline edit.
- * Drag handle on the left initiates drag (not part of click hit region). Single primary
- * "Play" button on the right. Custom sprite icons (when set) attach to the name label so
- * icon + text share JLabel's built-in vertical centering and align with the Play button.
+ * Drag handle on the left initiates drag (not part of click hit region). Icon-only Play
+ * button on the right (dark at rest, brand orange on hover or when this row is the active
+ * path target). Custom sprite icons (when set) attach to the name label so icon + text
+ * share JLabel's built-in vertical centering and align with the Play button.
  */
 public class WaypointRow extends JPanel implements DropIndicatable
 {
@@ -31,7 +32,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
     private final java.awt.Color restingBackground;
     private Border prevBorder;
 
-    public WaypointRow(Waypoint waypoint, Runnable onPlay, Runnable onClickBody,
+    public WaypointRow(Waypoint waypoint, boolean active, Runnable onPlay, Runnable onClickBody,
         Runnable onDelete, Runnable onExport, Runnable onExportFile, SpriteManager spriteManager)
     {
         this.waypoint = waypoint;
@@ -81,9 +82,11 @@ public class WaypointRow extends JPanel implements DropIndicatable
         name.addMouseListener(ma);
         add(name, BorderLayout.CENTER);
 
-        // EAST: primary Play button. Consumes its own clicks - no body-click bleed.
-        JButton play = new JButton("Play");
-        Styles.primaryButton(play);
+        // EAST: icon-only Play button. Dark resting, orange on hover, orange-locked
+        // when this row is the pathfinder's current target.
+        JButton play = new JButton("▶"); // U+25B6 black right-pointing triangle
+        Styles.playIconButton(play, active);
+        play.setToolTipText(active ? "Pathing here" : "Path to here");
         play.addActionListener(e -> onPlay.run());
         add(play, BorderLayout.EAST);
 

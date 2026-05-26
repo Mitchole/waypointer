@@ -2,6 +2,7 @@ package com.waypointer.ui;
 
 import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
+import com.waypointer.model.WorldPointPacker;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -39,7 +40,8 @@ public class CategorySection extends JPanel
     private boolean collapsed;
     private final Consumer<Boolean> onCollapseChange;
 
-    public CategorySection(Category category, List<Waypoint> waypoints, boolean collapsed,
+    public CategorySection(Category category, List<Waypoint> waypoints, int activePathTarget,
+        boolean collapsed,
         Consumer<Boolean> onCollapseChange,
         BiConsumer<Waypoint, RowAction> onRowAction,
         Function<Waypoint, Component> inlineProvider,
@@ -171,8 +173,11 @@ public class CategorySection extends JPanel
         body.setAlignmentX(LEFT_ALIGNMENT);
         for (Waypoint w : waypoints)
         {
+            boolean active = activePathTarget != WorldPointPacker.UNDEFINED
+                && w.getPackedWorldPoint() == activePathTarget;
             WaypointRow row = new WaypointRow(
                 w,
+                active,
                 () -> onRowAction.accept(w, RowAction.PLAY),
                 () -> onRowAction.accept(w, RowAction.EXPAND),
                 () -> onRowAction.accept(w, RowAction.DELETE),
