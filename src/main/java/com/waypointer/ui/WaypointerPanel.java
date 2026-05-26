@@ -47,7 +47,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -90,7 +89,7 @@ public class WaypointerPanel extends PluginPanel
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
 
-    private final JTextField searchField = new JTextField();
+    private final PlaceholderTextField searchField = new PlaceholderTextField("Search waypoints...");
     private final JLabel clearButton = new JLabel("✕"); // U+2715 (multiplication X)
     private String currentFilter = "";
 
