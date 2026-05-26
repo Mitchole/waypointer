@@ -63,19 +63,19 @@ public class CategorySection extends JPanel
         final Border restingHeaderBorder = headerRow.getBorder();
         final Color restingHeaderBg = headerRow.getBackground();
 
-        headerRow.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        headerRow.addMouseListener(new MouseAdapter() {
+        MouseAdapter collapseOnClick = new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) { toggleCollapse(); }
-        });
+        };
+
+        headerRow.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        headerRow.addMouseListener(collapseOnClick);
 
         headerLabel = new JLabel(headerText());
         headerLabel.setForeground(Color.WHITE);
         headerLabel.setFont(headerLabel.getFont().deriveFont(Font.BOLD));
         headerLabel.setOpaque(false);
         headerLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        headerLabel.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) { toggleCollapse(); }
-        });
+        headerLabel.addMouseListener(collapseOnClick);
 
         JLabel countLabel = new JLabel("(" + waypoints.size() + ")");
         countLabel.setForeground(Color.LIGHT_GRAY);
@@ -83,6 +83,8 @@ public class CategorySection extends JPanel
 
         JPanel centerWrap = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         centerWrap.setOpaque(false);
+        centerWrap.addMouseListener(collapseOnClick);
+        countLabel.addMouseListener(collapseOnClick);
         centerWrap.add(headerLabel);
         centerWrap.add(countLabel);
         headerRow.add(centerWrap, BorderLayout.CENTER);
