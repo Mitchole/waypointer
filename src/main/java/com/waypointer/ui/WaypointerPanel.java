@@ -510,6 +510,13 @@ public class WaypointerPanel extends PluginPanel
         }
     }
 
+    // Package-private test seam: lets WaypointerPanelNearbyTest set the filter directly
+    // without going through the debounced search-field path.
+    void setFilterForTest(String filter)
+    {
+        this.currentFilter = filter == null ? "" : filter;
+    }
+
     private void onFilterChanged()
     {
         String txt = searchField.getText();
@@ -586,6 +593,36 @@ public class WaypointerPanel extends PluginPanel
                 w -> store.getCategoryById(w.getCategoryId()));
             body.add(pinnedSec);
             rendered = true;
+        }
+
+        // Synthetic Nearby section: render between Pinned and real categories.
+        // Hidden while filtering — Nearby is for ambient discovery, not search results.
+        if (loweredFilter.isEmpty())
+        {
+            List<Waypoint> nearby = nearbyComputer.getCurrent();
+            if (!nearby.isEmpty())
+            {
+                boolean nearbyCollapsed =
+                    collapsedByCategory.getOrDefault(NEARBY_COLLAPSE_KEY, false);
+                NearbySection nearbySec = new NearbySection(
+                    nearby,
+                    pathfinder.getActiveTarget(),
+                    nearbyCollapsed,
+                    isCollapsed -> {
+                        collapsedByCategory.put(NEARBY_COLLAPSE_KEY, isCollapsed);
+                        config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
+                    },
+                    this::handleRowAction,
+                    w -> expandedWaypoints.contains(w.getId())
+                        ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
+                            () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
+                            () -> focusWorldMap(w.getPackedWorldPoint()))
+                        : null,
+                    spriteManager,
+                    w -> store.getCategoryById(w.getCategoryId()));
+                body.add(nearbySec);
+                rendered = true;
+            }
         }
 
         List<Category> cats = store.getCategoriesOrdered();
