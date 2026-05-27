@@ -6,6 +6,7 @@ import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.BboxIndex;
+import com.waypointer.service.NearbyComputer;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
@@ -61,6 +62,10 @@ public class WaypointerPanelTest
             mock(ClientThread.class),
             mock(SpriteManager.class));
 
+        NearbyComputer nearbyComputer = mock(NearbyComputer.class);
+        when(nearbyComputer.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        when(nearbyComputer.getCurrent()).thenReturn(java.util.Collections.emptyList());
+
         return new WaypointerPanel(
             store,
             mock(WaypointCapture.class),
@@ -77,6 +82,7 @@ public class WaypointerPanelTest
             new LibraryJsonCodec(new Gson()),
             mock(Client.class),
             mock(ClientThread.class),
-            mock(WildernessConfirmGate.class));
+            mock(WildernessConfirmGate.class),
+            nearbyComputer);
     }
 }

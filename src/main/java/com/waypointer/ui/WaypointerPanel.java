@@ -8,6 +8,7 @@ import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.IconCatalog;
+import com.waypointer.service.NearbyComputer;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointFilter;
 import com.waypointer.service.WaypointPathfinder;
@@ -86,6 +87,7 @@ public class WaypointerPanel extends PluginPanel
     private final Client client;
     private final ClientThread clientThread;
     private final WildernessConfirmGate wildernessGate;
+    private final NearbyComputer nearbyComputer;
     private final ActivePathBanner banner;
     private final CaptureForm captureForm;
     private final JPanel body = new JPanel();
@@ -100,6 +102,11 @@ public class WaypointerPanel extends PluginPanel
     private static final UUID PINNED_COLLAPSE_KEY =
         UUID.fromString("00000000-0000-0000-0000-000000000001");
 
+    // Sentinel UUID used as the key into collapsedByCategory for the synthetic Nearby section.
+    // Same collision argument as PINNED_COLLAPSE_KEY.
+    private static final UUID NEARBY_COLLAPSE_KEY =
+        UUID.fromString("00000000-0000-0000-0000-000000000002");
+
     private final PlaceholderTextField searchField = new PlaceholderTextField("Search waypoints...");
     private final JLabel clearButton = new JLabel("✕"); // U+2715 (multiplication X)
     private String currentFilter = "";
@@ -108,6 +115,7 @@ public class WaypointerPanel extends PluginPanel
     // a Singleton today, in case shutdown ordering changes or the panel ever gets re-created.
     private Listeners.Subscription storeSub;
     private Listeners.Subscription pathSub;
+    private Listeners.Subscription nearbySub;
 
     // Coalesce back-to-back rebuild requests within one EDT cycle into a single call.
     private volatile boolean rebuildPending = false;
@@ -121,7 +129,8 @@ public class WaypointerPanel extends PluginPanel
         WaypointStorePersistence persistence, SpriteManager spriteManager,
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
         NearestLandmarkBar nearestLandmarkBar, LibraryJsonCodec libraryCodec,
-        Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate)
+        Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate,
+        NearbyComputer nearbyComputer)
     {
         super(false);
         this.store = store;
@@ -140,6 +149,7 @@ public class WaypointerPanel extends PluginPanel
         this.client = client;
         this.clientThread = clientThread;
         this.wildernessGate = wildernessGate;
+        this.nearbyComputer = nearbyComputer;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
 
         // Build the panel header: Mark current location with the overflow trigger pinned
@@ -245,6 +255,7 @@ public class WaypointerPanel extends PluginPanel
             scheduleRebuild();
             refreshBannerOnEdt();
         });
+        nearbySub = nearbyComputer.subscribe(this::scheduleRebuild);
         rebuild();
         banner.refresh();
     }
@@ -259,6 +270,7 @@ public class WaypointerPanel extends PluginPanel
     {
         if (storeSub != null) { storeSub.close(); storeSub = null; }
         if (pathSub != null) { pathSub.close(); pathSub = null; }
+        if (nearbySub != null) { nearbySub.close(); nearbySub = null; }
     }
 
     // Re-derive the body scrollbar's UI delegate now that RuneLiteLAF is the active LAF.
