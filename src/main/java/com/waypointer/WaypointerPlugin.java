@@ -1,6 +1,7 @@
 package com.waypointer;
 
 import com.google.inject.Provides;
+import com.waypointer.service.NearbyComputer;
 import com.waypointer.service.WaypointMenuHandler;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
@@ -38,6 +39,7 @@ public class WaypointerPlugin extends Plugin
     @Inject private EventBus eventBus;
     @Inject private WaypointMenuHandler menuHandler;
     @Inject private WaypointPathfinder pathfinderService;
+    @Inject private NearbyComputer nearbyComputer;
     @Inject private WaypointerNavigator navigator;
 
     private NavigationButton navButton;
@@ -71,6 +73,7 @@ public class WaypointerPlugin extends Plugin
         clientToolbar.addNavigation(navButton);
         eventBus.register(menuHandler);
         eventBus.register(pathfinderService);
+        eventBus.register(nearbyComputer);
         eventBus.register(panel);
 
         // Pick up RuneLiteLAF's scrollbar colors now that the LAF is installed (the panel
@@ -94,6 +97,8 @@ public class WaypointerPlugin extends Plugin
 
         eventBus.unregister(menuHandler);
         eventBus.unregister(pathfinderService);
+        eventBus.unregister(nearbyComputer);
+        nearbyComputer.dispose();
         eventBus.unregister(panel);
 
         clientToolbar.removeNavigation(navButton);
