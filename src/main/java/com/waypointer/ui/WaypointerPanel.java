@@ -584,11 +584,7 @@ public class WaypointerPanel extends PluginPanel
                     config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
                 },
                 this::handleRowAction,
-                w -> expandedWaypoints.contains(w.getId())
-                    ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
-                        () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
-                        () -> focusWorldMap(w.getPackedWorldPoint()))
-                    : null,
+                this::inlineProviderFor,
                 spriteManager,
                 w -> store.getCategoryById(w.getCategoryId()));
             body.add(pinnedSec);
@@ -613,11 +609,7 @@ public class WaypointerPanel extends PluginPanel
                         config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
                     },
                     this::handleRowAction,
-                    w -> expandedWaypoints.contains(w.getId())
-                        ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
-                            () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
-                            () -> focusWorldMap(w.getPackedWorldPoint()))
-                        : null,
+                    this::inlineProviderFor,
                     spriteManager,
                     w -> store.getCategoryById(w.getCategoryId()));
                 body.add(nearbySec);
@@ -656,11 +648,7 @@ public class WaypointerPanel extends PluginPanel
                         config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
                     },
                     this::handleRowAction,
-                    w -> expandedWaypoints.contains(w.getId())
-                        ? new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
-                            () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
-                            () -> focusWorldMap(w.getPackedWorldPoint()))
-                        : null,
+                    this::inlineProviderFor,
                     dnd,
                     new CategorySection.Actions(
                         () -> promptRenameCategory(c),
@@ -736,6 +724,17 @@ public class WaypointerPanel extends PluginPanel
                 return new Dimension(Integer.MAX_VALUE, pref.height);
             }
         };
+    }
+
+    // Shared inline-edit provider used by Pinned, Nearby, and real-category sections.
+    // Returns the inline editor for a waypoint if the user has it expanded, else null.
+    // Single source of truth for InlineEditPanel construction across all three section types.
+    private Component inlineProviderFor(Waypoint w)
+    {
+        if (!expandedWaypoints.contains(w.getId())) return null;
+        return new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
+            () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
+            () -> focusWorldMap(w.getPackedWorldPoint()));
     }
 
     private void handleRowAction(Waypoint w, CategorySection.RowAction action)
