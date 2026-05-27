@@ -28,8 +28,5 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Bundled assets
 ================================================================================
 
-src/main/resources/com/waypointer/pin.png
-  Source: Google Noto Emoji (https://github.com/googlefonts/noto-emoji), file
-  png/128/emoji_u1f4cd.png — round pushpin (U+1F4CD).
-  License: Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
-  No modifications.
+src/main/resources/com/waypointer/icon.png
+  Logo Art by Matilda W.

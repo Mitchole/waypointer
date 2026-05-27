@@ -6,7 +6,7 @@ import com.waypointer.service.WaypointMenuHandler;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
-import com.waypointer.ui.PinIcon;
+import com.waypointer.ui.Icon;
 import com.waypointer.ui.WaypointerNavigator;
 import com.waypointer.ui.WaypointerPanel;
 import java.awt.image.BufferedImage;
@@ -63,7 +63,7 @@ public class WaypointerPlugin extends Plugin
         MultiplexingPluginPanel muxer = new MultiplexingPluginPanel(panel);
         navigator.attach(muxer);
 
-        BufferedImage icon = PinIcon.getSize32();
+        BufferedImage icon = Icon.getSize32();
         navButton = NavigationButton.builder()
             .tooltip("Waypointer")
             .icon(icon)

@@ -4,19 +4,19 @@ import java.awt.image.BufferedImage;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.util.ImageUtil;
 
-// Eagerly loads pin.png and exposes pre-scaled BufferedImages at the sizes the plugin uses.
+// Eagerly loads icon.png and exposes pre-scaled BufferedImages at the sizes the plugin uses.
 // Used as the default waypoint-row icon and the sidebar nav button. Resource load failures
-// throw at class init (fail-fast). Asset license: Apache 2.0 (Google Noto Emoji); see LICENSE.
+// throw at class init (fail-fast).
 @Slf4j
-public final class PinIcon
+public final class Icon
 {
     private static final BufferedImage NATIVE =
-        ImageUtil.loadImageResource(PinIcon.class, "/com/waypointer/pin.png");
+        ImageUtil.loadImageResource(Icon.class, "/com/waypointer/icon.png");
 
     private static final BufferedImage SIZE_16 = ImageUtil.resizeImage(NATIVE, 16, 16);
     private static final BufferedImage SIZE_32 = ImageUtil.resizeImage(NATIVE, 32, 32);
 
-    private PinIcon() {}
+    private Icon() {}
 
     public static BufferedImage getNative() { return NATIVE; }
     public static BufferedImage getSize16() { return SIZE_16; }
