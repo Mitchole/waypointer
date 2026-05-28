@@ -4,8 +4,6 @@ import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkType;
 import com.waypointer.service.WaypointPathfinder;
 import javax.swing.JButton;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
 import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
@@ -62,36 +60,18 @@ public class NearestLandmarkBarTest
     }
 
     @Test
-    public void barHasFivePrimaryButtonsAndOverflow()
+    public void barHasFourDefaultButtonsPlusOverflow()
     {
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
-        // Buttons live inside the icon row (first child panel), not directly on bar.
         java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
         int buttonCount = 0;
         for (java.awt.Component c : iconRow.getComponents())
         {
             if (c instanceof JButton) buttonCount++;
         }
-        // 5 primary type buttons + 1 overflow button == 6.
-        assertEquals(6, buttonCount);
-    }
-
-    @Test
-    public void overflowMenuContainsSixLongTailTypes()
-    {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
-
-        JPopupMenu menu = bar.buildOverflowMenu();
-        assertEquals(6, menu.getComponentCount());
-
-        // Order matches OVERFLOW: Anvil, Furnace, Loom, Spinning wheel, Tanner, Charter ship.
-        assertEquals("Anvil",          ((JMenuItem) menu.getComponent(0)).getText());
-        assertEquals("Furnace",        ((JMenuItem) menu.getComponent(1)).getText());
-        assertEquals("Loom",           ((JMenuItem) menu.getComponent(2)).getText());
-        assertEquals("Spinning wheel", ((JMenuItem) menu.getComponent(3)).getText());
-        assertEquals("Tanner",         ((JMenuItem) menu.getComponent(4)).getText());
-        assertEquals("Charter ship",   ((JMenuItem) menu.getComponent(5)).getText());
+        // 4 default-selected type buttons + 1 overflow button.
+        assertEquals(5, buttonCount);
     }
 
     @Test
@@ -147,37 +127,42 @@ public class NearestLandmarkBarTest
     }
 
     @Test
-    public void setLoggedInTogglesButtonEnabledState()
+    public void setLoggedInTogglesLandmarkButtonEnabledState()
     {
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
-        // Default is disabled (constructor calls setButtonsEnabled(false)).
-        for (java.awt.Component c : findAllButtons(bar))
+        // Bar contents: 4 landmark buttons then the customize (▾) button. ▾ is always enabled.
+        java.util.List<JButton> allButtons = findLandmarkButtons(bar);
+
+        for (JButton b : allButtons)
         {
-            org.junit.Assert.assertFalse("expected disabled at construction", c.isEnabled());
+            org.junit.Assert.assertFalse("expected disabled at construction", b.isEnabled());
         }
 
         bar.setLoggedIn(true);
-        for (java.awt.Component c : findAllButtons(bar))
+        for (JButton b : allButtons)
         {
-            org.junit.Assert.assertTrue("expected enabled after setLoggedIn(true)", c.isEnabled());
+            org.junit.Assert.assertTrue("expected enabled after setLoggedIn(true)", b.isEnabled());
         }
 
         bar.setLoggedIn(false);
-        for (java.awt.Component c : findAllButtons(bar))
+        for (JButton b : allButtons)
         {
-            org.junit.Assert.assertFalse("expected disabled after setLoggedIn(false)", c.isEnabled());
+            org.junit.Assert.assertFalse("expected disabled after setLoggedIn(false)", b.isEnabled());
         }
     }
 
-    private static java.util.List<java.awt.Component> findAllButtons(java.awt.Container root)
+    // Returns only the landmark buttons in the icon row (all buttons except the trailing overflow).
+    private static java.util.List<JButton> findLandmarkButtons(NearestLandmarkBar bar)
     {
-        java.util.List<java.awt.Component> out = new java.util.ArrayList<>();
-        for (java.awt.Component c : root.getComponents())
+        java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
+        java.util.List<JButton> all = new java.util.ArrayList<>();
+        for (java.awt.Component c : iconRow.getComponents())
         {
-            if (c instanceof JButton) out.add(c);
-            else if (c instanceof java.awt.Container) out.addAll(findAllButtons((java.awt.Container) c));
+            if (c instanceof JButton) all.add((JButton) c);
         }
-        return out;
+        // Drop trailing overflow button.
+        if (!all.isEmpty()) all.remove(all.size() - 1);
+        return all;
     }
 }
