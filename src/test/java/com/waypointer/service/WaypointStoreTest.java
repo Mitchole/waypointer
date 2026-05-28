@@ -509,4 +509,18 @@ public class WaypointStoreTest
         assertTrue(after.isPinned());
         assertEquals(pinnedAt, after.getPinnedAt());
     }
+
+    @Test
+    public void getWaypointsInCategory_manualMode_sortsBySortOrder()
+    {
+        UUID cat = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "Zebra", cat);
+        Waypoint b = store.createWaypoint(2, "Apple", cat);
+        Waypoint c = store.createWaypoint(3, "Mango", cat);
+        store.reorderWithinCategory(cat, java.util.Arrays.asList(c.getId(), a.getId(), b.getId()));
+        List<Waypoint> result = store.getWaypointsInCategory(cat);
+        assertEquals("Mango", result.get(0).getName());
+        assertEquals("Zebra", result.get(1).getName());
+        assertEquals("Apple", result.get(2).getName());
+    }
 }
