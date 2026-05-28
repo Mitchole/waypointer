@@ -170,6 +170,47 @@ public class DragAndDropHandler
         dragTarget.addMouseMotionListener(gesture);
     }
 
+    /**
+     * Wires a tail-drop hit zone for a category. Drops here move (or reorder-to-end-within)
+     * the dragged waypoint into {@code categoryId} via {@link WaypointStore#moveWaypointToCategory}
+     * which assigns {@code sortOrder = max+1}, naturally appending.
+     */
+    public void attachTailZone(JComponent tail, DropIndicatable indicatable, UUID categoryId)
+    {
+        tail.setTransferHandler(new TransferHandler()
+        {
+            @Override public int getSourceActions(JComponent c) { return NONE; }
+
+            @Override public boolean canImport(TransferSupport s)
+            {
+                if (!s.isDataFlavorSupported(STR)) return false;
+                String payload = readPayload(s.getTransferable());
+                if (!tailZoneAccepts(payload))
+                {
+                    if (activeIndicator == indicatable)
+                    {
+                        indicatable.setDropIndicator(DropIndicatorMode.NONE);
+                        activeIndicator = null;
+                    }
+                    return false;
+                }
+                onHoverEnter(indicatable, DropIndicatorMode.BORDER_AND_TINT);
+                return true;
+            }
+
+            @Override public boolean importData(TransferSupport s)
+            {
+                String payload = read(s);
+                if (!tailZoneAccepts(payload)) return false;
+                UUID dragged = UUID.fromString(payload.substring(WAYPOINT_PREFIX.length()));
+                store.moveWaypointToCategory(dragged, categoryId);
+                onChange.run();
+                return true;
+            }
+        });
+        clearActions.add(() -> indicatable.setDropIndicator(DropIndicatorMode.NONE));
+    }
+
     private final class DragGestureListener extends MouseAdapter
         implements MouseMotionListener
     {
@@ -300,6 +341,12 @@ public class DragAndDropHandler
         if (isCategory) return DropIndicatorMode.BORDER_AND_TINT;
         if (isWaypoint) return DropIndicatorMode.TINT;
         return DropIndicatorMode.NONE;
+    }
+
+    /** Pure rule: tail zone accepts only waypoint payloads. */
+    static boolean tailZoneAccepts(String payload)
+    {
+        return payload != null && payload.startsWith(WAYPOINT_PREFIX);
     }
 
     // Moves dragged to immediately before target. Returns null if either id is missing or

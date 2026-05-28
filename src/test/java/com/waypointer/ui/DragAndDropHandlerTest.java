@@ -114,4 +114,22 @@ public class DragAndDropHandlerTest
             DragAndDropHandler.decideMode("category:" + UUID.randomUUID(),
                 DragAndDropHandler.TargetKind.WAYPOINT_ROW));
     }
+
+    @Test
+    public void tailZoneAcceptsWaypointPayload()
+    {
+        assertTrue(DragAndDropHandler.tailZoneAccepts("waypoint:" + UUID.randomUUID()));
+    }
+
+    @Test
+    public void tailZoneRejectsCategoryPayload()
+    {
+        assertFalse(DragAndDropHandler.tailZoneAccepts("category:" + UUID.randomUUID()));
+    }
+
+    @Test
+    public void tailZoneRejectsNullPayload()
+    {
+        assertFalse(DragAndDropHandler.tailZoneAccepts(null));
+    }
 }
