@@ -152,6 +152,30 @@ public class NearestLandmarkBarTest
         }
     }
 
+    @Test
+    public void barWithEmptySelection_showsOnlyOverflowButton()
+    {
+        // Stub config to return a valid JSON with empty selection (all unchecked).
+        com.google.gson.Gson realGson = new com.google.gson.Gson();
+        LandmarkSelection empty = LandmarkSelection.canonicalDefault();
+        for (LandmarkType t : LandmarkType.values())
+        {
+            empty = empty.withSelected(t, false);
+        }
+        String emptyJson = empty.toJson(realGson);
+        when(config.landmarkSelectionJson()).thenReturn(emptyJson);
+        // Use the real Gson here so the constructor's parse(...) reconstructs the empty selection.
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, realGson);
+
+        java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
+        int buttonCount = 0;
+        for (java.awt.Component c : iconRow.getComponents())
+        {
+            if (c instanceof JButton) buttonCount++;
+        }
+        assertEquals("expected only the overflow button when nothing is selected", 1, buttonCount);
+    }
+
     // Returns only the landmark buttons in the icon row (all buttons except the trailing overflow).
     private static java.util.List<JButton> findLandmarkButtons(NearestLandmarkBar bar)
     {
