@@ -38,4 +38,33 @@ public class LandmarkSelectionTest
         assertFalse(s.isSelected(LandmarkType.SLAYER_MASTER));
         assertFalse(s.isSelected(LandmarkType.ANVIL));
     }
+
+    @Test
+    public void parse_emptyString_returnsCanonicalDefault()
+    {
+        LandmarkSelection s = LandmarkSelection.parse("", new com.google.gson.Gson());
+        assertEquals(LandmarkSelection.canonicalDefault().order(), s.order());
+        assertTrue(s.isSelected(LandmarkType.BANK));
+        assertFalse(s.isSelected(LandmarkType.ANVIL));
+    }
+
+    @Test
+    public void parse_null_returnsCanonicalDefault()
+    {
+        LandmarkSelection s = LandmarkSelection.parse(null, new com.google.gson.Gson());
+        assertEquals(LandmarkSelection.canonicalDefault().order(), s.order());
+    }
+
+    @Test
+    public void parse_validJson_preservesOrderAndSelection()
+    {
+        String json = "{\"order\":[\"ANVIL\",\"BANK\",\"ALTAR\",\"FURNACE\",\"LOOM\",\"SPINNING_WHEEL\",\"TANNER\",\"SPIRIT_TREE\",\"CHARTER_SHIP\",\"FAIRY_RING\",\"SLAYER_MASTER\"],"
+            + "\"selected\":[\"ANVIL\",\"BANK\"]}";
+        LandmarkSelection s = LandmarkSelection.parse(json, new com.google.gson.Gson());
+        assertEquals(LandmarkType.ANVIL, s.order().get(0));
+        assertEquals(LandmarkType.BANK, s.order().get(1));
+        assertTrue(s.isSelected(LandmarkType.ANVIL));
+        assertTrue(s.isSelected(LandmarkType.BANK));
+        assertFalse(s.isSelected(LandmarkType.ALTAR));
+    }
 }

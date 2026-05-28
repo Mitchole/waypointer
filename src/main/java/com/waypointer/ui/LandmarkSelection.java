@@ -1,5 +1,8 @@
 package com.waypointer.ui;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.waypointer.service.LandmarkType;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,4 +50,52 @@ public final class LandmarkSelection
     public List<LandmarkType> order() { return order; }
 
     public boolean isSelected(LandmarkType t) { return selected.contains(t); }
+
+    public static LandmarkSelection parse(String json, Gson gson)
+    {
+        if (json == null || json.isEmpty()) return canonicalDefault();
+
+        JsonObject root;
+        try
+        {
+            root = gson.fromJson(json, JsonObject.class);
+        }
+        catch (JsonSyntaxException e)
+        {
+            return canonicalDefault();
+        }
+        if (root == null) return canonicalDefault();
+
+        List<LandmarkType> order = new ArrayList<>();
+        if (root.has("order"))
+        {
+            for (com.google.gson.JsonElement el : root.getAsJsonArray("order"))
+            {
+                LandmarkType t = parseTypeOrNull(el.getAsString());
+                if (t != null && !order.contains(t)) order.add(t);
+            }
+        }
+        for (LandmarkType t : LandmarkType.values())
+        {
+            if (!order.contains(t)) order.add(t);
+        }
+
+        EnumSet<LandmarkType> selected = EnumSet.noneOf(LandmarkType.class);
+        if (root.has("selected"))
+        {
+            for (com.google.gson.JsonElement el : root.getAsJsonArray("selected"))
+            {
+                LandmarkType t = parseTypeOrNull(el.getAsString());
+                if (t != null) selected.add(t);
+            }
+        }
+
+        return new LandmarkSelection(order, selected);
+    }
+
+    private static LandmarkType parseTypeOrNull(String name)
+    {
+        try { return LandmarkType.valueOf(name); }
+        catch (IllegalArgumentException e) { return null; }
+    }
 }
