@@ -586,4 +586,55 @@ public class WaypointStoreTest
         assertEquals(older.getId(), result.get(0).getId());
         assertEquals(newer.getId(), result.get(1).getId());
     }
+
+    @Test
+    public void getWaypointsInCategory_dateAddedMode_newestFirst()
+    {
+        Category cat = store.createCategory("POIs");
+        Waypoint oldest = store.createWaypoint(1, "A", cat.getId());
+        Waypoint middle = store.createWaypoint(2, "B", cat.getId());
+        Waypoint newest = store.createWaypoint(3, "C", cat.getId());
+        oldest.setCreatedAt(java.time.Instant.parse("2026-01-01T00:00:00Z"));
+        middle.setCreatedAt(java.time.Instant.parse("2026-02-01T00:00:00Z"));
+        newest.setCreatedAt(java.time.Instant.parse("2026-03-01T00:00:00Z"));
+        store.setCategorySortMode(cat.getId(), com.waypointer.model.CategorySortMode.DATE_ADDED);
+
+        List<Waypoint> result = store.getWaypointsInCategory(cat.getId());
+        assertEquals(newest.getId(), result.get(0).getId());
+        assertEquals(middle.getId(), result.get(1).getId());
+        assertEquals(oldest.getId(), result.get(2).getId());
+    }
+
+    @Test
+    public void getWaypointsInCategory_nullSortMode_treatedAsManual()
+    {
+        Category cat = store.createCategory("Legacy");
+        assertNull(cat.getSortMode());
+        Waypoint z = store.createWaypoint(1, "Zebra", cat.getId());
+        Waypoint a = store.createWaypoint(2, "Apple", cat.getId());
+        List<Waypoint> result = store.getWaypointsInCategory(cat.getId());
+        assertEquals(z.getId(), result.get(0).getId());
+        assertEquals(a.getId(), result.get(1).getId());
+    }
+
+    @Test
+    public void setCategorySortMode_preservesManualSortOrderWhenFlippedBack()
+    {
+        Category cat = store.createCategory("X");
+        Waypoint a = store.createWaypoint(1, "Apple", cat.getId());
+        Waypoint b = store.createWaypoint(2, "Banana", cat.getId());
+        Waypoint c = store.createWaypoint(3, "Cherry", cat.getId());
+        store.reorderWithinCategory(cat.getId(),
+            java.util.Arrays.asList(c.getId(), a.getId(), b.getId()));
+
+        store.setCategorySortMode(cat.getId(), com.waypointer.model.CategorySortMode.NAME);
+        List<Waypoint> named = store.getWaypointsInCategory(cat.getId());
+        assertEquals("Apple", named.get(0).getName());
+
+        store.setCategorySortMode(cat.getId(), com.waypointer.model.CategorySortMode.MANUAL);
+        List<Waypoint> manual = store.getWaypointsInCategory(cat.getId());
+        assertEquals("Cherry", manual.get(0).getName());
+        assertEquals("Apple", manual.get(1).getName());
+        assertEquals("Banana", manual.get(2).getName());
+    }
 }
