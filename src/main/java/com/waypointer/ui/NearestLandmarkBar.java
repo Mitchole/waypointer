@@ -39,6 +39,8 @@ import net.runelite.client.ui.ColorScheme;
 public final class NearestLandmarkBar extends JPanel
 {
     private static final int BUTTON_SIZE = 34;
+    // Cap icon dimension so MINIMAP_BOAT_SLOOP and other oversized sprites match the
+    // MAP_ICON_* set, which tops out around 16x16. Smaller sprites render unscaled.
     private static final int MAX_ICON_PX = 18;
 
     private static final Map<LandmarkType, Integer> SPRITE_IDS = spriteIds();
@@ -103,15 +105,16 @@ public final class NearestLandmarkBar extends JPanel
 
         for (LandmarkType type : selection.selectedInBarOrder())
         {
-            JButton b = makeButton(type.displayName());
+            JButton b = makeButton();
             b.addActionListener(e -> onPick(type));
             applySprite(b, type);
             primaryButtons.put(type, b);
             iconRow.add(b);
         }
 
-        overflowBtn = makeButton("Customize landmarks");
+        overflowBtn = makeButton();
         overflowBtn.setText("▾"); // U+25BE BLACK DOWN-POINTING SMALL TRIANGLE
+        overflowBtn.setToolTipText("Customize landmarks");
         // ActionListener wired in a later task.
         iconRow.add(overflowBtn);
 
@@ -120,7 +123,7 @@ public final class NearestLandmarkBar extends JPanel
         iconRow.repaint();
     }
 
-    private JButton makeButton(String tooltip)
+    private JButton makeButton()
     {
         JButton b = new JButton();
         Styles.secondaryButton(b);
@@ -128,7 +131,6 @@ public final class NearestLandmarkBar extends JPanel
         b.setPreferredSize(d);
         b.setMinimumSize(d);
         b.setMaximumSize(d);
-        b.setToolTipText(tooltip.equals("Customize landmarks") ? tooltip : "Path to nearest " + tooltip.toLowerCase());
         return b;
     }
 
@@ -207,18 +209,22 @@ public final class NearestLandmarkBar extends JPanel
 
     private static Map<LandmarkType, Integer> spriteIds()
     {
+        // IDs correspond to net.runelite.api.SpriteID constants. RuneLite has no
+        // dedicated SpriteID for fairy rings, spirit trees, or charter ships -- the
+        // stock WorldMapPlugin uses bundled PNGs for those. We substitute the closest
+        // visual match from the MAP_ICON_* sprite set instead.
         EnumMap<LandmarkType, Integer> m = new EnumMap<>(LandmarkType.class);
-        m.put(LandmarkType.BANK,           1453);
-        m.put(LandmarkType.ALTAR,          1467);
-        m.put(LandmarkType.ANVIL,          1458);
-        m.put(LandmarkType.FURNACE,        1457);
-        m.put(LandmarkType.LOOM,           1507);
-        m.put(LandmarkType.SPINNING_WHEEL, 1483);
-        m.put(LandmarkType.TANNER,         1481);
-        m.put(LandmarkType.SPIRIT_TREE,    1482);
-        m.put(LandmarkType.CHARTER_SHIP,   7290);
-        m.put(LandmarkType.FAIRY_RING,     1504);
-        m.put(LandmarkType.SLAYER_MASTER,  1499);
+        m.put(LandmarkType.BANK,           1453);  // MAP_ICON_BANK
+        m.put(LandmarkType.ALTAR,          1467);  // MAP_ICON_ALTAR
+        m.put(LandmarkType.ANVIL,          1458);  // MAP_ICON_ANVIL
+        m.put(LandmarkType.FURNACE,        1457);  // MAP_ICON_FURNACE
+        m.put(LandmarkType.LOOM,           1507);  // MAP_ICON_LOOM
+        m.put(LandmarkType.SPINNING_WHEEL, 1483);  // MAP_ICON_SPINNING_WHEEL
+        m.put(LandmarkType.TANNER,         1481);  // MAP_ICON_TANNERY
+        m.put(LandmarkType.SPIRIT_TREE,    1482);  // MAP_ICON_RARE_TREES (tree silhouette)
+        m.put(LandmarkType.CHARTER_SHIP,   7290);  // MINIMAP_BOAT_SLOOP
+        m.put(LandmarkType.FAIRY_RING,     1504);  // MAP_ICON_TRANSPORTATION
+        m.put(LandmarkType.SLAYER_MASTER,  1499);  // MAP_ICON_SLAYER_MASTER
         return m;
     }
 }
