@@ -41,4 +41,23 @@ final class AutoExpandController
         }
         return reverted;
     }
+
+    DropResolution onDropAt(UUID destCategoryId)
+    {
+        UUID toConfirm = autoExpanded.contains(destCategoryId) ? destCategoryId : null;
+        Set<UUID> toRevert = new HashSet<>(autoExpanded);
+        if (toConfirm != null)
+        {
+            toRevert.remove(toConfirm);
+        }
+        autoExpanded.clear();
+        return new DropResolution(toConfirm, toRevert);
+    }
+
+    @lombok.Value
+    static class DropResolution
+    {
+        UUID toConfirm;
+        Set<UUID> toRevert;
+    }
 }
