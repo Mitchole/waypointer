@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * Ordered selection of landmark types for the in-panel landmark bar. Immutable; mutators
  * return new instances. {@link #order()} is the full 11-type picker-list order; the bar
- * shows the subset returned by {@link #selectedInBarOrder()}.
+ * shows the types for which {@link #isSelected(LandmarkType)} returns true, in {@link #order()} sequence.
  */
 public final class LandmarkSelection
 {
