@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.JComponent;
@@ -33,6 +34,12 @@ public class DragAndDropHandler
 
     // 5 px squared: how far the mouse must move before a press becomes a drag.
     private static final int DRAG_THRESHOLD_SQ = 25;
+
+    private static final int AUTO_EXPAND_DELAY_MS = 600;
+
+    private final AutoExpandController autoExpand = new AutoExpandController();
+    private javax.swing.Timer pendingExpandTimer;
+    private CategorySection pendingExpandTarget;
 
     private final WaypointStore store;
     private final Runnable onChange;
@@ -84,6 +91,8 @@ public class DragAndDropHandler
                     }
                     return false;
                 }
+                cancelPendingExpand();
+                revertSections(autoExpand.onHover(categoryId));
                 onHoverEnter(indicatable, decideMode(payload, TargetKind.WAYPOINT_ROW));
                 return true;
             }
@@ -103,6 +112,7 @@ public class DragAndDropHandler
                         store.moveWaypointToCategory(dragged, categoryId);
                     }
                     swapWithinCategory(categoryId, dragged, waypointId);
+                    resolveAutoExpandOnDrop(categoryId);
                     onChange.run();
                     return true;
                 }
@@ -145,8 +155,21 @@ public class DragAndDropHandler
                         indicatable.setDropIndicator(DropIndicatorMode.NONE);
                         activeIndicator = null;
                     }
+                    cancelPendingExpand();
                     return false;
                 }
+                // Spring-load: hover a collapsed header with a waypoint payload schedules an auto-expand.
+                boolean isWaypoint = payload != null && payload.startsWith(WAYPOINT_PREFIX);
+                if (isWaypoint && section != null && section.isCollapsed())
+                {
+                    scheduleAutoExpand(section);
+                }
+                else
+                {
+                    cancelPendingExpand();
+                }
+                // Revert auto-expanded sections we have drifted out of.
+                revertSections(autoExpand.onHover(categoryId));
                 onHoverEnter(indicatable, decideMode(payload, TargetKind.CATEGORY_HEADER));
                 return true;
             }
@@ -159,6 +182,7 @@ public class DragAndDropHandler
                 {
                     UUID dragged = UUID.fromString(payload.substring(WAYPOINT_PREFIX.length()));
                     store.moveWaypointToCategory(dragged, categoryId);
+                    resolveAutoExpandOnDrop(categoryId);
                     onChange.run();
                     return true;
                 }
@@ -167,6 +191,7 @@ public class DragAndDropHandler
                     UUID dragged = UUID.fromString(payload.substring(CATEGORY_PREFIX.length()));
                     if (dragged.equals(categoryId)) return false;
                     swapCategoryOrder(dragged, categoryId);
+                    revertSections(autoExpand.onDragEnd());
                     onChange.run();
                     return true;
                 }
@@ -203,6 +228,8 @@ public class DragAndDropHandler
                     }
                     return false;
                 }
+                cancelPendingExpand();
+                revertSections(autoExpand.onHover(categoryId));
                 onHoverEnter(indicatable, DropIndicatorMode.BORDER_AND_TINT);
                 return true;
             }
@@ -213,6 +240,7 @@ public class DragAndDropHandler
                 if (!tailZoneAccepts(payload)) return false;
                 UUID dragged = UUID.fromString(payload.substring(WAYPOINT_PREFIX.length()));
                 store.moveWaypointToCategory(dragged, categoryId);
+                resolveAutoExpandOnDrop(categoryId);
                 onChange.run();
                 return true;
             }
@@ -242,6 +270,8 @@ public class DragAndDropHandler
         {
             pressPoint = null;
             dragStarted = false;
+            cancelPendingExpand();
+            revertSections(autoExpand.onDragEnd());
             clearAllIndicators();
         }
 
@@ -294,6 +324,56 @@ public class DragAndDropHandler
     {
         for (Runnable r : clearActions) r.run();
         activeIndicator = null;
+    }
+
+    private void cancelPendingExpand()
+    {
+        if (pendingExpandTimer != null)
+        {
+            pendingExpandTimer.stop();
+            pendingExpandTimer = null;
+        }
+        pendingExpandTarget = null;
+    }
+
+    /**
+     * Schedule a transient expand of {@code section} after the spring-load delay,
+     * unless that section is already the pending target.
+     */
+    private void scheduleAutoExpand(CategorySection section)
+    {
+        if (pendingExpandTarget == section) return;
+        cancelPendingExpand();
+        pendingExpandTarget = section;
+        pendingExpandTimer = new javax.swing.Timer(AUTO_EXPAND_DELAY_MS, e ->
+        {
+            section.setExpandedTransient(true);
+            autoExpand.recordTransientExpand(section.getCategoryId());
+            pendingExpandTimer = null;
+            pendingExpandTarget = null;
+        });
+        pendingExpandTimer.setRepeats(false);
+        pendingExpandTimer.start();
+    }
+
+    private void revertSections(Set<UUID> ids)
+    {
+        for (UUID id : ids)
+        {
+            CategorySection s = sectionsByCategoryId.get(id);
+            if (s != null) s.setExpandedTransient(false);
+        }
+    }
+
+    private void resolveAutoExpandOnDrop(UUID destCategoryId)
+    {
+        AutoExpandController.DropResolution r = autoExpand.onDropAt(destCategoryId);
+        revertSections(r.getToRevert());
+        if (r.getToConfirm() != null)
+        {
+            CategorySection s = sectionsByCategoryId.get(r.getToConfirm());
+            if (s != null) s.confirmTransientExpand();
+        }
     }
 
     private static String readPayload(Transferable t)

@@ -273,6 +273,8 @@ public class CategorySection extends JPanel
         return category.getId();
     }
 
+    public boolean isCollapsed() { return collapsed; }
+
     /**
      * Flip collapsed state WITHOUT persisting (no {@code onCollapseChange} fired). Used by the
      * spring-loaded auto-expand during a drag; persistence happens only via
