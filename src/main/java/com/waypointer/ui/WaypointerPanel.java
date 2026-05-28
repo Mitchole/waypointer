@@ -588,7 +588,8 @@ public class WaypointerPanel extends PluginPanel
                         () -> promptDeleteCategory(c),
                         () -> promptSetCategoryIcon(c),
                         () -> exportCategory(c),
-                        () -> exportCategoryToFile(c)),
+                        () -> exportCategoryToFile(c),
+                        mode -> store.setCategorySortMode(c.getId(), mode)),
                     spriteManager);
                 body.add(section);
                 rendered = true;

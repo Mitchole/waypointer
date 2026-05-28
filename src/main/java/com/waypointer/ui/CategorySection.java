@@ -135,6 +135,17 @@ public class CategorySection extends JPanel
             rename.addActionListener(e -> actions.onRename.run());
             JMenuItem setIcon = new JMenuItem("Set icon...");
             setIcon.addActionListener(e -> { if (actions.onSetIcon != null) actions.onSetIcon.run(); });
+
+            javax.swing.JMenu sortBy = new javax.swing.JMenu("Sort by");
+            com.waypointer.model.CategorySortMode active =
+                category.getSortMode() == null ? com.waypointer.model.CategorySortMode.MANUAL : category.getSortMode();
+            sortBy.add(buildSortItem("Manual",
+                com.waypointer.model.CategorySortMode.MANUAL, active, actions));
+            sortBy.add(buildSortItem("Name (A-Z)",
+                com.waypointer.model.CategorySortMode.NAME, active, actions));
+            sortBy.add(buildSortItem("Date added (newest first)",
+                com.waypointer.model.CategorySortMode.DATE_ADDED, active, actions));
+
             JMenuItem exportCat = new JMenuItem("Export category");
             exportCat.addActionListener(e -> actions.onExport.run());
             JMenuItem exportFile = new JMenuItem("Export category to file...");
@@ -143,6 +154,7 @@ public class CategorySection extends JPanel
             delete.addActionListener(e -> actions.onDelete.run());
             menu.add(rename);
             menu.add(setIcon);
+            menu.add(sortBy);
             menu.addSeparator();
             menu.add(exportCat);
             menu.add(exportFile);
@@ -168,6 +180,9 @@ public class CategorySection extends JPanel
 
         add(headerRow, BorderLayout.NORTH);
 
+        boolean sortDisablesDrag = category.getSortMode() != null
+            && category.getSortMode() != com.waypointer.model.CategorySortMode.MANUAL;
+
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBackground(ColorScheme.DARK_GRAY_COLOR);
         body.setAlignmentX(LEFT_ALIGNMENT);
@@ -180,7 +195,7 @@ public class CategorySection extends JPanel
                 active,
                 w.isPinned(),
                 com.waypointer.service.Wilderness.isInWilderness(w.getPackedWorldPoint()),
-                /* dragDisabled */ false,
+                /* dragDisabled */ sortDisablesDrag,
                 () -> onRowAction.accept(w, RowAction.PLAY),
                 () -> onRowAction.accept(w, RowAction.EXPAND),
                 () -> onRowAction.accept(w, RowAction.TOGGLE_PIN),
@@ -246,6 +261,18 @@ public class CategorySection extends JPanel
         onCollapseChange.accept(collapsed);
     }
 
+    private static JMenuItem buildSortItem(String label,
+        com.waypointer.model.CategorySortMode mode,
+        com.waypointer.model.CategorySortMode active,
+        Actions actions)
+    {
+        javax.swing.JCheckBoxMenuItem item = new javax.swing.JCheckBoxMenuItem(label, mode == active);
+        item.addActionListener(e -> {
+            if (actions.onSetSortMode != null) actions.onSetSortMode.accept(mode);
+        });
+        return item;
+    }
+
     /** Row-level user actions plumbed up from {@link WaypointRow} to the panel. */
     public enum RowAction { PLAY, EXPAND, DELETE, EXPORT, EXPORT_FILE, TOGGLE_PIN }
 
@@ -257,15 +284,18 @@ public class CategorySection extends JPanel
         final Runnable onSetIcon;
         final Runnable onExport;
         final Runnable onExportFile;
+        final java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode;
 
         public Actions(Runnable onRename, Runnable onDelete, Runnable onSetIcon,
-            Runnable onExport, Runnable onExportFile)
+            Runnable onExport, Runnable onExportFile,
+            java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode)
         {
             this.onRename = onRename;
             this.onDelete = onDelete;
             this.onSetIcon = onSetIcon;
             this.onExport = onExport;
             this.onExportFile = onExportFile;
+            this.onSetSortMode = onSetSortMode;
         }
     }
 }
