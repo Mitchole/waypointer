@@ -1,5 +1,7 @@
 package com.waypointer.ui;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -22,5 +24,21 @@ final class AutoExpandController
     boolean isTransientlyExpanded(UUID id)
     {
         return autoExpanded.contains(id);
+    }
+
+    Set<UUID> onHover(UUID targetCategoryId)
+    {
+        Set<UUID> reverted = new HashSet<>();
+        Iterator<UUID> it = autoExpanded.iterator();
+        while (it.hasNext())
+        {
+            UUID id = it.next();
+            if (!id.equals(targetCategoryId))
+            {
+                reverted.add(id);
+                it.remove();
+            }
+        }
+        return reverted;
     }
 }
