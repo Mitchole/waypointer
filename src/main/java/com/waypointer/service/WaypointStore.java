@@ -147,14 +147,37 @@ public class WaypointStore
             {
                 grouped.computeIfAbsent(w.getCategoryId(), k -> new ArrayList<>()).add(w);
             }
-            for (List<Waypoint> bucket : grouped.values())
+            for (Map.Entry<UUID, List<Waypoint>> e : grouped.entrySet())
             {
-                bucket.sort(Comparator.comparingInt(Waypoint::getSortOrder));
+                Category cat = getCategoryById(e.getKey());
+                com.waypointer.model.CategorySortMode mode =
+                    cat == null ? null : cat.getSortMode();
+                e.getValue().sort(comparatorFor(mode));
             }
             cachedWaypointsByCategory = grouped;
         }
         List<Waypoint> bucket = cachedWaypointsByCategory.get(categoryId);
         return bucket == null ? Collections.emptyList() : Collections.unmodifiableList(bucket);
+    }
+
+    private static Comparator<Waypoint> comparatorFor(com.waypointer.model.CategorySortMode mode)
+    {
+        if (mode == null || mode == com.waypointer.model.CategorySortMode.MANUAL)
+        {
+            return Comparator.comparingInt(Waypoint::getSortOrder);
+        }
+        if (mode == com.waypointer.model.CategorySortMode.NAME)
+        {
+            return Comparator
+                .comparing((Waypoint w) -> w.getName() == null ? "" : w.getName().toLowerCase(java.util.Locale.ROOT))
+                .thenComparing(w -> w.getCreatedAt() == null ? Instant.EPOCH : w.getCreatedAt())
+                .thenComparing(Waypoint::getId);
+        }
+        return Comparator
+            .comparing((Waypoint w) -> w.getCreatedAt() == null ? Instant.EPOCH : w.getCreatedAt(),
+                Comparator.reverseOrder())
+            .thenComparing(w -> w.getName() == null ? "" : w.getName().toLowerCase(java.util.Locale.ROOT))
+            .thenComparing(Waypoint::getId);
     }
 
     public Category createCategory(String name)

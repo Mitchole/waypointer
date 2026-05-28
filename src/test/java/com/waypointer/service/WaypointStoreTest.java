@@ -556,4 +556,34 @@ public class WaypointStoreTest
     {
         store.setCategorySortMode(UUID.randomUUID(), com.waypointer.model.CategorySortMode.NAME);
     }
+
+    @Test
+    public void getWaypointsInCategory_nameMode_sortsCaseInsensitive()
+    {
+        Category cat = store.createCategory("POIs");
+        store.createWaypoint(1, "banana", cat.getId());
+        store.createWaypoint(2, "Apple", cat.getId());
+        store.createWaypoint(3, "cherry", cat.getId());
+        store.setCategorySortMode(cat.getId(), com.waypointer.model.CategorySortMode.NAME);
+
+        List<Waypoint> result = store.getWaypointsInCategory(cat.getId());
+        assertEquals("Apple", result.get(0).getName());
+        assertEquals("banana", result.get(1).getName());
+        assertEquals("cherry", result.get(2).getName());
+    }
+
+    @Test
+    public void getWaypointsInCategory_nameMode_tieBreaksByCreatedAt()
+    {
+        Category cat = store.createCategory("POIs");
+        Waypoint older = store.createWaypoint(1, "Twin", cat.getId());
+        Waypoint newer = store.createWaypoint(2, "Twin", cat.getId());
+        older.setCreatedAt(java.time.Instant.parse("2026-01-01T00:00:00Z"));
+        newer.setCreatedAt(java.time.Instant.parse("2026-02-01T00:00:00Z"));
+        store.setCategorySortMode(cat.getId(), com.waypointer.model.CategorySortMode.NAME);
+
+        List<Waypoint> result = store.getWaypointsInCategory(cat.getId());
+        assertEquals(older.getId(), result.get(0).getId());
+        assertEquals(newer.getId(), result.get(1).getId());
+    }
 }
