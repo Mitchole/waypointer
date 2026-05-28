@@ -191,6 +191,7 @@ public class DragAndDropHandler
                     UUID dragged = UUID.fromString(payload.substring(CATEGORY_PREFIX.length()));
                     if (dragged.equals(categoryId)) return false;
                     swapCategoryOrder(dragged, categoryId);
+                    cancelPendingExpand();
                     revertSections(autoExpand.onDragEnd());
                     onChange.run();
                     return true;
@@ -367,6 +368,7 @@ public class DragAndDropHandler
 
     private void resolveAutoExpandOnDrop(UUID destCategoryId)
     {
+        cancelPendingExpand();
         AutoExpandController.DropResolution r = autoExpand.onDropAt(destCategoryId);
         revertSections(r.getToRevert());
         if (r.getToConfirm() != null)
