@@ -96,4 +96,27 @@ public class AutoExpandControllerTest
         assertTrue(r.getToRevert().contains(a));
         assertTrue(r.getToRevert().contains(b));
     }
+
+    @Test
+    public void onDragEndReturnsAllAutoExpandedAndClears()
+    {
+        AutoExpandController c = new AutoExpandController();
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        c.recordTransientExpand(a);
+        c.recordTransientExpand(b);
+        Set<UUID> reverted = c.onDragEnd();
+        assertEquals(2, reverted.size());
+        assertTrue(reverted.contains(a));
+        assertTrue(reverted.contains(b));
+        assertFalse(c.isTransientlyExpanded(a));
+        assertFalse(c.isTransientlyExpanded(b));
+    }
+
+    @Test
+    public void onDragEndWithNothingExpandedReturnsEmpty()
+    {
+        AutoExpandController c = new AutoExpandController();
+        assertTrue(c.onDragEnd().isEmpty());
+    }
 }

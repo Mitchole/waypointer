@@ -54,6 +54,13 @@ final class AutoExpandController
         return new DropResolution(toConfirm, toRevert);
     }
 
+    Set<UUID> onDragEnd()
+    {
+        Set<UUID> reverted = new HashSet<>(autoExpanded);
+        autoExpanded.clear();
+        return reverted;
+    }
+
     @lombok.Value
     static class DropResolution
     {
