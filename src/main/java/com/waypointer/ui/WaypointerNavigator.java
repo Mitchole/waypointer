@@ -51,8 +51,7 @@ public class WaypointerNavigator
         {
             return;
         }
-        presetBrowser = new PresetBrowserPanel(
-            presetCatalog, store, spriteManager, this::closePresetBrowser);
+        presetBrowser = new PresetBrowserPanel(presetCatalog, store, spriteManager);
         muxer.pushState(presetBrowser);
     }
 

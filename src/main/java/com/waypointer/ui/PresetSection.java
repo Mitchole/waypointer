@@ -117,6 +117,11 @@ class PresetSection extends JPanel
     private void toggle()
     {
         expanded = !expanded;
+        applyExpandedState();
+    }
+
+    private void applyExpandedState()
+    {
         chevron.setText(expanded ? CHEVRON_EXPANDED : CHEVRON_COLLAPSED);
         if (expanded && rows.getComponentCount() == 0)
         {
@@ -125,6 +130,17 @@ class PresetSection extends JPanel
         rows.setVisible(expanded);
         revalidate();
         repaint();
+    }
+
+    String getPresetName() { return preset.getCategory(); }
+
+    boolean isExpanded() { return expanded; }
+
+    void setExpanded(boolean expand)
+    {
+        if (expand == expanded) return;
+        expanded = expand;
+        applyExpandedState();
     }
 
     private void buildRows()

@@ -15,6 +15,7 @@ public final class Listeners
 
     public void add(Runnable r) { listeners.add(r); }
     public void remove(Runnable r) { listeners.remove(r); }
+    public int size() { return listeners.size(); }
 
     // Registers r and returns a token whose close() removes it. Use with anonymous lambdas
     // so the caller doesn't need to keep a reference to the original.

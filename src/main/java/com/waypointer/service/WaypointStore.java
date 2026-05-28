@@ -522,6 +522,12 @@ public class WaypointStore
     // verify that non-undoable mutations clear it. Production code never calls this.
     void testArmUndoSlot(Runnable r) { this.lastUndo = r; }
 
+    /** Test seam: number of currently-subscribed listeners. */
+    public int listenerCountForTest()
+    {
+        return listeners.size();
+    }
+
     // ---- Debounced persistence wiring ----
 
     private WaypointStorePersistence persistence;
