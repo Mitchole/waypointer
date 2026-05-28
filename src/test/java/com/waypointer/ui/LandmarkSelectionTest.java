@@ -130,4 +130,48 @@ public class LandmarkSelectionTest
             assertEquals("selected[" + t + "]", original.isSelected(t), round.isSelected(t));
         }
     }
+
+    @Test
+    public void selectedInBarOrder_filtersOrderBySelection()
+    {
+        LandmarkSelection s = LandmarkSelection.canonicalDefault();
+        List<LandmarkType> bar = s.selectedInBarOrder();
+        assertEquals(4, bar.size());
+        assertEquals(LandmarkType.BANK, bar.get(0));
+        assertEquals(LandmarkType.ALTAR, bar.get(1));
+        assertEquals(LandmarkType.SPIRIT_TREE, bar.get(2));
+        assertEquals(LandmarkType.FAIRY_RING, bar.get(3));
+    }
+
+    @Test
+    public void withSelected_addingType_appearsInBarAtItsOrderPosition()
+    {
+        LandmarkSelection s = LandmarkSelection.canonicalDefault();
+        // SLAYER_MASTER is at index 4 in canonical default order (after the 4 defaults).
+        LandmarkSelection next = s.withSelected(LandmarkType.SLAYER_MASTER, true);
+        List<LandmarkType> bar = next.selectedInBarOrder();
+        assertEquals(5, bar.size());
+        assertEquals(LandmarkType.SLAYER_MASTER, bar.get(4));
+    }
+
+    @Test
+    public void withSelected_removingType_keepsOrderPosition()
+    {
+        LandmarkSelection s = LandmarkSelection.canonicalDefault();
+        LandmarkSelection next = s.withSelected(LandmarkType.ALTAR, false);
+        // Order is unchanged; ALTAR is still at index 1.
+        assertEquals(LandmarkType.ALTAR, next.order().get(1));
+        // Bar order drops ALTAR.
+        assertEquals(3, next.selectedInBarOrder().size());
+        assertFalse(next.selectedInBarOrder().contains(LandmarkType.ALTAR));
+    }
+
+    @Test
+    public void withSelected_returnsNewInstance_originalUnchanged()
+    {
+        LandmarkSelection s = LandmarkSelection.canonicalDefault();
+        LandmarkSelection next = s.withSelected(LandmarkType.ALTAR, false);
+        assertTrue("original still has ALTAR selected", s.isSelected(LandmarkType.ALTAR));
+        assertFalse("new instance does not", next.isSelected(LandmarkType.ALTAR));
+    }
 }

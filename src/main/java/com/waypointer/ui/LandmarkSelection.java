@@ -110,6 +110,21 @@ public final class LandmarkSelection
         return gson.toJson(root);
     }
 
+    public List<LandmarkType> selectedInBarOrder()
+    {
+        List<LandmarkType> out = new ArrayList<>();
+        for (LandmarkType t : order) if (selected.contains(t)) out.add(t);
+        return out;
+    }
+
+    public LandmarkSelection withSelected(LandmarkType t, boolean include)
+    {
+        EnumSet<LandmarkType> next = EnumSet.noneOf(LandmarkType.class);
+        next.addAll(selected);
+        if (include) next.add(t); else next.remove(t);
+        return new LandmarkSelection(order, next);
+    }
+
     private static LandmarkType parseTypeOrNull(String name)
     {
         try { return LandmarkType.valueOf(name); }
