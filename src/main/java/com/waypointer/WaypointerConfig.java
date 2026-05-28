@@ -81,4 +81,17 @@ public interface WaypointerConfig extends Config
 
     @ConfigItem(keyName = "shortestPathBannerDismissed", name = "", description = "")
     void setShortestPathBannerDismissed(boolean v);
+
+    // Hidden: JSON-encoded LandmarkSelection (order + selected subset).
+    // Empty seeds with the canonical default on first read.
+    @ConfigItem(
+        keyName = "landmarkSelectionJson",
+        name = "",
+        description = "",
+        hidden = true
+    )
+    default String landmarkSelectionJson() { return ""; }
+
+    @ConfigItem(keyName = "landmarkSelectionJson", name = "", description = "")
+    void setLandmarkSelectionJson(String v);
 }
