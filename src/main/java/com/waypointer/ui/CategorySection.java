@@ -13,6 +13,7 @@ import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -259,6 +260,36 @@ public class CategorySection extends JPanel
         revalidate();
         repaint();
         onCollapseChange.accept(collapsed);
+    }
+
+    public UUID getCategoryId()
+    {
+        return category.getId();
+    }
+
+    /**
+     * Flip collapsed state WITHOUT persisting (no {@code onCollapseChange} fired). Used by the
+     * spring-loaded auto-expand during a drag; persistence happens only via
+     * {@link #confirmTransientExpand()} when a drop confirms the expansion.
+     */
+    public void setExpandedTransient(boolean expanded)
+    {
+        if (collapsed == !expanded) return;
+        collapsed = !expanded;
+        body.setVisible(expanded);
+        headerLabel.setText(headerText());
+        revalidate();
+        repaint();
+    }
+
+    /**
+     * Promote a transient expansion to persistent: fire {@code onCollapseChange(false)} once
+     * so the panel's persisted collapse map (and config) reflects the new "user wants this open"
+     * state. No-op if the section is currently collapsed.
+     */
+    public void confirmTransientExpand()
+    {
+        if (!collapsed) onCollapseChange.accept(false);
     }
 
     private static JMenuItem buildSortItem(String label,
