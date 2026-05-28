@@ -116,7 +116,7 @@ public class CategorySection extends JPanel
             }
             headerRow.repaint();
         };
-        if (dnd != null) dnd.attachCategoryHeader(headerLabel, headerIndicator, category.getId());
+        if (dnd != null) dnd.attachCategoryHeader(headerLabel, headerIndicator, category.getId(), this);
 
         // Optional icon on the LEFT of the header row.
         if (category.getIconId() != null && spriteManager != null)

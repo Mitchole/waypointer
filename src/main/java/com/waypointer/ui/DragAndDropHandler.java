@@ -11,7 +11,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.JComponent;
@@ -43,6 +45,11 @@ public class DragAndDropHandler
     // The indicator that's currently visually active. Tracked so canImport on a new
     // target can clear the old one before lighting itself up.
     private DropIndicatable activeIndicator;
+
+    // Lookup from category id to its rendered section, populated when each category header
+    // is attached. Used by hover-driven auto-expand to mutate transient expanded state on
+    // the matching section. Naturally per-cycle: the handler is rebuilt per panel rebuild.
+    private final Map<UUID, CategorySection> sectionsByCategoryId = new HashMap<>();
 
     public DragAndDropHandler(WaypointStore store, Runnable onChange)
     {
@@ -114,8 +121,10 @@ public class DragAndDropHandler
         }
     }
 
-    public void attachCategoryHeader(JComponent dragTarget, DropIndicatable indicatable, UUID categoryId)
+    public void attachCategoryHeader(JComponent dragTarget, DropIndicatable indicatable,
+        UUID categoryId, CategorySection section)
     {
+        sectionsByCategoryId.put(categoryId, section);
         dragTarget.setTransferHandler(new TransferHandler()
         {
             @Override public int getSourceActions(JComponent c) { return MOVE; }
