@@ -1,0 +1,159 @@
+package com.waypointer.ui;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.google.gson.Gson;
+import com.waypointer.WaypointerConfig;
+import com.waypointer.codec.LibraryJsonCodec;
+import com.waypointer.codec.WaypointShareCodec;
+import com.waypointer.model.Library;
+import com.waypointer.preset.PresetCatalog;
+import com.waypointer.service.BboxIndex;
+import com.waypointer.service.NearbyComputer;
+import com.waypointer.service.WaypointCapture;
+import com.waypointer.service.WaypointPathfinder;
+import com.waypointer.service.WaypointStore;
+import com.waypointer.service.WaypointStorePersistence;
+import com.waypointer.util.Listeners;
+import java.util.Collections;
+import net.runelite.api.Client;
+import net.runelite.client.callback.ClientThread;
+import net.runelite.client.game.SpriteManager;
+import org.junit.Test;
+
+public class TabHostTest
+{
+    @Test
+    public void reportedHeightIsZero()
+    {
+        TabHost host = buildHost();
+        assertEquals(0, host.getPreferredSize().height);
+        assertEquals(0, host.getMinimumSize().height);
+    }
+
+    @Test
+    public void initialSelectionIsMyWaypoints()
+    {
+        TabHost host = buildHost();
+        assertEquals(TabStrip.Tab.MY_WAYPOINTS, host.getActiveTabForTest());
+        assertEquals("my", host.getVisibleCardNameForTest());
+    }
+
+    @Test
+    public void selectPresetsSwapsTheVisibleCard()
+    {
+        TabHost host = buildHost();
+        host.selectPresets();
+        assertEquals(TabStrip.Tab.PRESETS, host.getActiveTabForTest());
+        assertEquals("presets", host.getVisibleCardNameForTest());
+    }
+
+    @Test
+    public void selectMyWaypointsSwapsBack()
+    {
+        TabHost host = buildHost();
+        host.selectPresets();
+        host.selectMyWaypoints();
+        assertEquals(TabStrip.Tab.MY_WAYPOINTS, host.getActiveTabForTest());
+        assertEquals("my", host.getVisibleCardNameForTest());
+    }
+
+    @Test
+    public void disposeReleasesPathSubscription()
+    {
+        // Two separate Subscription mocks: the inner WaypointerPanel and the TabHost
+        // both subscribe to the same pathfinder. WaypointerPanel is constructed first
+        // (passed into TabHost), so its subscribe() call comes first. The test only
+        // verifies that TabHost's own subscription (the second one) is closed exactly
+        // once by host.dispose().
+        Listeners.Subscription panelSub = mock(Listeners.Subscription.class);
+        Listeners.Subscription hostSub = mock(Listeners.Subscription.class);
+        WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
+        when(pathfinder.subscribe(any())).thenReturn(panelSub).thenReturn(hostSub);
+
+        TabHost host = buildHostWithPathfinder(pathfinder);
+        verify(hostSub, never()).close();
+
+        host.dispose();
+        verify(hostSub, times(1)).close();
+    }
+
+    @Test
+    public void refreshScrollbarStylingFansOutToBothCards()
+    {
+        // The two cards both expose refreshScrollbarStyling(); TabHost calls both.
+        // Construct with real panels; we just assert no exception is thrown.
+        TabHost host = buildHost();
+        host.refreshScrollbarStyling();
+    }
+
+    private static TabHost buildHost()
+    {
+        WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
+        when(pathfinder.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        return buildHostWithPathfinder(pathfinder);
+    }
+
+    // Mocking WaypointerPanel directly is not viable: Mockito's subclass mock-maker
+    // produces a JPanel subclass whose Container fields are uninitialized, and adding
+    // such an instance to a real Container blows up inside Container.addImpl. So the
+    // test uses a real WaypointerPanel built from mocks (same pattern as
+    // WaypointerPanelTest.newPanel) — the inner panel's behaviour isn't under test
+    // here; TabHost's tab/card wiring and subscription lifecycle are.
+    private static TabHost buildHostWithPathfinder(WaypointPathfinder pathfinder)
+    {
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+
+        PresetCatalog catalog = mock(PresetCatalog.class);
+        when(catalog.getPresets()).thenReturn(Collections.emptyList());
+
+        WaypointerConfig config = mock(WaypointerConfig.class);
+        when(config.showPathingBanner()).thenReturn(true);
+        when(config.categoryCollapsedJson()).thenReturn("{}");
+        when(config.shortestPathBannerDismissed()).thenReturn(true);
+
+        WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
+        when(persistence.isRefusingSaves()).thenReturn(false);
+
+        NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
+            mock(BboxIndex.class),
+            pathfinder,
+            mock(Client.class),
+            mock(ClientThread.class),
+            mock(SpriteManager.class));
+
+        NearbyComputer nearbyComputer = mock(NearbyComputer.class);
+        when(nearbyComputer.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        when(nearbyComputer.getCurrent()).thenReturn(Collections.emptyList());
+
+        WaypointerPanel waypointerPanel = new WaypointerPanel(
+            store,
+            mock(WaypointCapture.class),
+            pathfinder,
+            config,
+            new CollapseStateCodec(new Gson()),
+            mock(WaypointerNavigator.class),
+            mock(WaypointShareCodec.class),
+            persistence,
+            mock(SpriteManager.class),
+            null,
+            null,
+            nearestLandmarkBar,
+            new LibraryJsonCodec(new Gson()),
+            mock(Client.class),
+            mock(ClientThread.class),
+            mock(WildernessConfirmGate.class),
+            nearbyComputer);
+        PresetBrowserPanel presetPanel =
+            new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
+
+        return new TabHost(waypointerPanel, presetPanel, pathfinder, config);
+    }
+}
