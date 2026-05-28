@@ -228,4 +228,16 @@ public class LandmarkSelectionTest
         assertEquals(s.order(), s.withOrderMove(-1, 0).order());
         assertEquals(s.order(), s.withOrderMove(0, 99).order());
     }
+
+    @Test
+    public void parse_nonPrimitiveArrayElements_areSkipped()
+    {
+        // Hand-corrupted JSON: objects and numbers inside the arrays.
+        String json = "{\"order\":[\"BANK\",{\"foo\":\"bar\"},\"ALTAR\",42],\"selected\":[\"BANK\",{\"x\":1}]}";
+        LandmarkSelection s = LandmarkSelection.parse(json, new com.google.gson.Gson());
+        assertEquals(LandmarkType.BANK, s.order().get(0));
+        assertEquals(LandmarkType.ALTAR, s.order().get(1));
+        assertEquals(LandmarkType.values().length, s.order().size());
+        assertTrue(s.isSelected(LandmarkType.BANK));
+    }
 }

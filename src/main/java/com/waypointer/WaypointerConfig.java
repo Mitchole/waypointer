@@ -19,8 +19,8 @@ public interface WaypointerConfig extends Config
     @ConfigItem(
         keyName = "showNearestLandmarkBar",
         name = "Show 'nearest landmark' bar",
-        description = "Adds a row of one-click shortcuts in the sidebar to path to the closest "
-            + "bank, altar, spirit tree, fairy ring, or slayer master (others behind the overflow). "
+        description = "Adds a row of one-click shortcuts in the sidebar to path to the nearest "
+            + "landmark. Click the customize button to choose which landmark types appear. "
             + "Off hides the row entirely.",
         position = 15
     )

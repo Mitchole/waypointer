@@ -73,6 +73,7 @@ public final class LandmarkSelection
         {
             for (JsonElement el : root.getAsJsonArray("order"))
             {
+                if (!el.isJsonPrimitive()) continue;
                 LandmarkType t = parseTypeOrNull(el.getAsString());
                 if (t != null && !order.contains(t)) order.add(t);
             }
@@ -87,6 +88,7 @@ public final class LandmarkSelection
         {
             for (JsonElement el : root.getAsJsonArray("selected"))
             {
+                if (!el.isJsonPrimitive()) continue;
                 LandmarkType t = parseTypeOrNull(el.getAsString());
                 if (t != null) selected.add(t);
             }
