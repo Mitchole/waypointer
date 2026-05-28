@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.waypointer.service.LandmarkType;
@@ -67,9 +68,9 @@ public final class LandmarkSelection
         if (root == null) return canonicalDefault();
 
         List<LandmarkType> order = new ArrayList<>();
-        if (root.has("order"))
+        if (root.has("order") && root.get("order").isJsonArray())
         {
-            for (com.google.gson.JsonElement el : root.getAsJsonArray("order"))
+            for (JsonElement el : root.getAsJsonArray("order"))
             {
                 LandmarkType t = parseTypeOrNull(el.getAsString());
                 if (t != null && !order.contains(t)) order.add(t);
@@ -81,9 +82,9 @@ public final class LandmarkSelection
         }
 
         EnumSet<LandmarkType> selected = EnumSet.noneOf(LandmarkType.class);
-        if (root.has("selected"))
+        if (root.has("selected") && root.get("selected").isJsonArray())
         {
-            for (com.google.gson.JsonElement el : root.getAsJsonArray("selected"))
+            for (JsonElement el : root.getAsJsonArray("selected"))
             {
                 LandmarkType t = parseTypeOrNull(el.getAsString());
                 if (t != null) selected.add(t);
