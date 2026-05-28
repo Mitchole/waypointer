@@ -58,33 +58,6 @@ public interface WaypointerConfig extends Config
     )
     default boolean newestPinAtTop() { return true; }
 
-    @ConfigItem(
-        keyName = "showNearbySection",
-        name = "Show 'Nearby' section",
-        description = "Show a synthetic top-of-panel section listing the closest waypoints "
-            + "to the player's current tile. Updates as the player moves.",
-        position = 35
-    )
-    default boolean showNearbySection() { return true; }
-
-    @ConfigItem(
-        keyName = "nearbyCount",
-        name = "Nearby waypoints count",
-        description = "How many waypoints to show in the Nearby section.",
-        position = 36
-    )
-    @net.runelite.client.config.Range(min = 3, max = 10)
-    default int nearbyCount() { return 4; }
-
-    @ConfigItem(
-        keyName = "nearbySamePlaneOnly",
-        name = "Nearby: restrict to same plane",
-        description = "Only consider waypoints on the same plane as the player. Off "
-            + "lets dungeon / upper-floor waypoints surface when the player is on those planes.",
-        position = 37
-    )
-    default boolean nearbySamePlaneOnly() { return true; }
-
     // Hidden:JSON-encoded map of categoryId -> collapsed boolean. Empty = all expanded.
     @ConfigItem(
         keyName = "categoryCollapsedJson",
