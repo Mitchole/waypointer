@@ -245,7 +245,12 @@ public class DragAndDropHandler
             {
                 dragStarted = true;
                 TransferHandler th = dragSource.getTransferHandler();
-                if (th != null) th.exportAsDrag(dragSource, e, TransferHandler.MOVE);
+                if (th != null)
+                {
+                    th.setDragImage(snapshotForDrag(dragSource));
+                    th.setDragImageOffset(new Point(pressPoint));
+                    th.exportAsDrag(dragSource, e, TransferHandler.MOVE);
+                }
             }
         }
 
@@ -362,5 +367,28 @@ public class DragAndDropHandler
         if (insertAt < 0) return null;
         out.add(insertAt, m);
         return out;
+    }
+
+    private static java.awt.image.BufferedImage snapshotForDrag(JComponent source)
+    {
+        // Category header drag source is the narrow JLabel; widen the snapshot to the
+        // enclosing row so the ghost shows the whole section sliver, not a tiny label.
+        JComponent paintTarget = source;
+        if (source instanceof javax.swing.JLabel
+            && source.getParent() instanceof JComponent
+            && source.getParent().getParent() instanceof JComponent)
+        {
+            // headerLabel is inside centerWrap which is inside headerRow.
+            paintTarget = (JComponent) source.getParent().getParent();
+        }
+        int w = Math.max(1, paintTarget.getWidth());
+        int h = Math.max(1, paintTarget.getHeight());
+        java.awt.image.BufferedImage img =
+            new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g = img.createGraphics();
+        g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.60f));
+        paintTarget.paint(g);
+        g.dispose();
+        return img;
     }
 }
