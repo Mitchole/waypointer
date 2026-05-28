@@ -11,6 +11,8 @@ import javax.inject.Singleton;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 
@@ -96,6 +98,16 @@ public class TabHost extends PluginPanel
     {
         waypointerPanel.refreshScrollbarStyling();
         presetBrowserPanel.refreshScrollbarStyling();
+    }
+
+    @Subscribe
+    public void onConfigChanged(ConfigChanged e)
+    {
+        if (!"waypointer".equals(e.getGroup())) return;
+        if ("showPathingBanner".equals(e.getKey()))
+        {
+            SwingUtilities.invokeLater(banner::refresh);
+        }
     }
 
     public void dispose()

@@ -71,6 +71,7 @@ public class WaypointerPlugin extends Plugin
         eventBus.register(pathfinderService);
         eventBus.register(nearbyComputer);
         eventBus.register(panel);
+        eventBus.register(tabHost);
 
         // Pick up RuneLiteLAF's scrollbar colors now that the LAF is installed (the panel
         // was constructed earlier, against Metal's UIDefaults).
@@ -96,6 +97,7 @@ public class WaypointerPlugin extends Plugin
         eventBus.unregister(nearbyComputer);
         nearbyComputer.dispose();
         eventBus.unregister(panel);
+        eventBus.unregister(tabHost);
 
         clientToolbar.removeNavigation(navButton);
         tabHost.dispose();

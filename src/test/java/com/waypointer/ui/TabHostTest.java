@@ -93,6 +93,36 @@ public class TabHostTest
         host.refreshScrollbarStyling();
     }
 
+    @Test
+    public void onConfigChangedShowPathingBannerForwardsToBanner()
+    {
+        TabHost host = buildHost();
+        net.runelite.client.events.ConfigChanged event = new net.runelite.client.events.ConfigChanged();
+        event.setGroup("waypointer");
+        event.setKey("showPathingBanner");
+        host.onConfigChanged(event); // should not throw; banner.refresh() is exercised
+    }
+
+    @Test
+    public void onConfigChangedUnrelatedKeyIsNoop()
+    {
+        TabHost host = buildHost();
+        net.runelite.client.events.ConfigChanged event = new net.runelite.client.events.ConfigChanged();
+        event.setGroup("waypointer");
+        event.setKey("someOtherKey");
+        host.onConfigChanged(event); // should not throw; should not call banner.refresh()
+    }
+
+    @Test
+    public void onConfigChangedUnrelatedGroupIsNoop()
+    {
+        TabHost host = buildHost();
+        net.runelite.client.events.ConfigChanged event = new net.runelite.client.events.ConfigChanged();
+        event.setGroup("someOtherPlugin");
+        event.setKey("showPathingBanner");
+        host.onConfigChanged(event); // should not throw; should not call banner.refresh()
+    }
+
     private static TabHost buildHost()
     {
         WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
