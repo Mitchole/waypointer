@@ -231,6 +231,12 @@ public class CategorySection extends JPanel
             empty.setAlignmentX(LEFT_ALIGNMENT);
             body.add(empty);
         }
+        else
+        {
+            TailDropZone tail = new TailDropZone();
+            body.add(tail);
+            // Wiring is deferred to Task 8 once DragAndDropHandler.attachTailZone exists.
+        }
         body.setVisible(!collapsed);
         add(body, BorderLayout.CENTER);
     }
@@ -327,6 +333,46 @@ public class CategorySection extends JPanel
             this.onExport = onExport;
             this.onExportFile = onExportFile;
             this.onSetSortMode = onSetSortMode;
+        }
+    }
+
+    /**
+     * Thin (~8 px) hit zone appended after the last waypoint row in an expanded section.
+     * Invisible at rest; paints a 2 px top border in {@link ColorScheme#BRAND_ORANGE}
+     * when {@link DropIndicatable#setDropIndicator} is called with
+     * {@link DropIndicatorMode#BORDER_AND_TINT}. Mirrors the existing indicator
+     * vocabulary from {@code DragAndDropHandler}.
+     */
+    static final class TailDropZone extends JPanel implements DropIndicatable
+    {
+        private static final int HEIGHT = 8;
+        private final javax.swing.border.Border resting;
+
+        TailDropZone()
+        {
+            setOpaque(false);
+            setAlignmentX(LEFT_ALIGNMENT);
+            setPreferredSize(new Dimension(0, HEIGHT));
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, HEIGHT));
+            resting = BorderFactory.createEmptyBorder();
+            setBorder(resting);
+        }
+
+        @Override
+        public void setDropIndicator(DropIndicatorMode mode)
+        {
+            switch (mode)
+            {
+                case BORDER_AND_TINT:
+                    setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, ColorScheme.BRAND_ORANGE));
+                    break;
+                case NONE:
+                case TINT:
+                default:
+                    setBorder(resting);
+                    break;
+            }
+            repaint();
         }
     }
 }
