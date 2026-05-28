@@ -235,6 +235,7 @@ public class CategorySection extends JPanel
         {
             TailDropZone tail = new TailDropZone();
             body.add(tail);
+            if (dnd != null) dnd.attachTailZone(tail, tail, category.getId());
         }
         body.setVisible(!collapsed);
         add(body, BorderLayout.CENTER);
