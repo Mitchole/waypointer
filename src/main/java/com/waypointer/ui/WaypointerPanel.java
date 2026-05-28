@@ -20,7 +20,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.LayoutManager;
 import java.awt.Window;
 import java.awt.event.KeyAdapter;
@@ -76,7 +75,6 @@ public class WaypointerPanel extends PluginPanel
     private final WaypointPathfinder pathfinder;
     private final WaypointerConfig config;
     private final CollapseStateCodec collapseCodec;
-    private final WaypointerNavigator navigator;
     private final WaypointShareCodec shareCodec;
     private final WaypointStorePersistence persistence;
     private final SpriteManager spriteManager;
@@ -88,7 +86,6 @@ public class WaypointerPanel extends PluginPanel
     private final ClientThread clientThread;
     private final WildernessConfirmGate wildernessGate;
     private final NearbyComputer nearbyComputer;
-    private final ActivePathBanner banner;
     private final CaptureForm captureForm;
     private final JPanel body = new JPanel();
     private JScrollBar bodyScrollBar;
@@ -125,7 +122,7 @@ public class WaypointerPanel extends PluginPanel
     @Inject
     public WaypointerPanel(WaypointStore store, WaypointCapture capture,
         WaypointPathfinder pathfinder, WaypointerConfig config, CollapseStateCodec collapseCodec,
-        WaypointerNavigator navigator, WaypointShareCodec shareCodec,
+        WaypointShareCodec shareCodec,
         WaypointStorePersistence persistence, SpriteManager spriteManager,
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
         NearestLandmarkBar nearestLandmarkBar, LibraryJsonCodec libraryCodec,
@@ -138,7 +135,6 @@ public class WaypointerPanel extends PluginPanel
         this.pathfinder = pathfinder;
         this.config = config;
         this.collapseCodec = collapseCodec;
-        this.navigator = navigator;
         this.shareCodec = shareCodec;
         this.persistence = persistence;
         this.spriteManager = spriteManager;
@@ -232,9 +228,6 @@ public class WaypointerPanel extends PluginPanel
         nearestLandmarkBar.setToasts(toastOverlay);
         overflowBtn.addActionListener(e -> overflowMenu.show(overflowBtn, this, toastOverlay));
 
-        this.banner = new ActivePathBanner(pathfinder, config);
-        banner.setAlignmentX(LEFT_ALIGNMENT);
-
         this.captureForm = new CaptureForm(store, capture);
         captureForm.setAlignmentX(LEFT_ALIGNMENT);
 
@@ -242,7 +235,6 @@ public class WaypointerPanel extends PluginPanel
         northStack.setLayout(new BoxLayout(northStack, BoxLayout.Y_AXIS));
         northStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
         northStack.add(topStack);
-        northStack.add(banner);
         northStack.add(captureForm);
 
         setLayout(new BorderLayout());
@@ -251,13 +243,9 @@ public class WaypointerPanel extends PluginPanel
         add(toastOverlay, BorderLayout.CENTER);
 
         storeSub = store.subscribe(this::scheduleRebuild);
-        pathSub = pathfinder.subscribe(() -> {
-            scheduleRebuild();
-            refreshBannerOnEdt();
-        });
+        pathSub = pathfinder.subscribe(this::scheduleRebuild);
         nearbySub = nearbyComputer.subscribe(this::scheduleRebuild);
         rebuild();
-        banner.refresh();
     }
 
     /**
@@ -474,11 +462,6 @@ public class WaypointerPanel extends PluginPanel
         });
     }
 
-    private void refreshBannerOnEdt()
-    {
-        SwingUtilities.invokeLater(banner::refresh);
-    }
-
     @Subscribe
     public void onGameStateChanged(net.runelite.api.events.GameStateChanged e)
     {
@@ -490,11 +473,6 @@ public class WaypointerPanel extends PluginPanel
     public void onConfigChanged(ConfigChanged e)
     {
         if (!"waypointer".equals(e.getGroup())) return;
-        if ("showPathingBanner".equals(e.getKey()))
-        {
-            SwingUtilities.invokeLater(banner::refresh);
-            return;
-        }
         if ("showNearestLandmarkBar".equals(e.getKey()))
         {
             SwingUtilities.invokeLater(() -> {
@@ -700,14 +678,6 @@ public class WaypointerPanel extends PluginPanel
             + "from a curated set.</div></html>", SwingConstants.CENTER);
         empty.setForeground(Color.LIGHT_GRAY);
         wrap.add(empty, BorderLayout.NORTH);
-
-        JButton browse = new JButton("Browse preset waypoints");
-        Styles.secondaryButton(browse);
-        browse.addActionListener(e -> navigator.openPresetBrowser());
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 4));
-        btnRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        btnRow.add(browse);
-        wrap.add(btnRow, BorderLayout.CENTER);
 
         body.add(wrap);
     }

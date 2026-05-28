@@ -127,7 +127,6 @@ public class WaypointerPanelNearbyTest
             pathfinder,
             config,
             new CollapseStateCodec(new Gson()),
-            mock(WaypointerNavigator.class),
             mock(WaypointShareCodec.class),
             persistence,
             mock(SpriteManager.class),

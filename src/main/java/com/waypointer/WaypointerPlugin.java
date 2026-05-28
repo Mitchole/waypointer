@@ -7,7 +7,7 @@ import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
 import com.waypointer.ui.Icon;
-import com.waypointer.ui.WaypointerNavigator;
+import com.waypointer.ui.TabHost;
 import com.waypointer.ui.WaypointerPanel;
 import java.awt.image.BufferedImage;
 import java.time.Duration;
@@ -20,7 +20,6 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
-import net.runelite.client.ui.MultiplexingPluginPanel;
 
 @Slf4j
 @PluginDescriptor(
@@ -40,7 +39,7 @@ public class WaypointerPlugin extends Plugin
     @Inject private WaypointMenuHandler menuHandler;
     @Inject private WaypointPathfinder pathfinderService;
     @Inject private NearbyComputer nearbyComputer;
-    @Inject private WaypointerNavigator navigator;
+    @Inject private TabHost tabHost;
 
     private NavigationButton navButton;
     private Thread shutdownHook;
@@ -60,15 +59,12 @@ public class WaypointerPlugin extends Plugin
         }, "waypointer-shutdown-flush");
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-        MultiplexingPluginPanel muxer = new MultiplexingPluginPanel(panel);
-        navigator.attach(muxer);
-
         BufferedImage icon = Icon.getSize32();
         navButton = NavigationButton.builder()
             .tooltip("Waypointer")
             .icon(icon)
             .priority(7)
-            .panel(muxer)
+            .panel(tabHost)
             .build();
         clientToolbar.addNavigation(navButton);
         eventBus.register(menuHandler);
@@ -78,7 +74,7 @@ public class WaypointerPlugin extends Plugin
 
         // Pick up RuneLiteLAF's scrollbar colors now that the LAF is installed (the panel
         // was constructed earlier, against Metal's UIDefaults).
-        panel.refreshScrollbarStyling();
+        tabHost.refreshScrollbarStyling();
 
         log.info("Waypointer started: {} waypoints loaded",
             store.getLibrary().getWaypoints().size());
@@ -102,8 +98,7 @@ public class WaypointerPlugin extends Plugin
         eventBus.unregister(panel);
 
         clientToolbar.removeNavigation(navButton);
-        navigator.detach();
-        panel.dispose();
+        tabHost.dispose();
         store.flushPendingSave();
         log.info("Waypointer stopped");
     }
