@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -92,6 +93,21 @@ public final class LandmarkSelection
         }
 
         return new LandmarkSelection(order, selected);
+    }
+
+    public String toJson(Gson gson)
+    {
+        JsonObject root = new JsonObject();
+        JsonArray orderArr = new JsonArray();
+        for (LandmarkType t : order) orderArr.add(t.name());
+        JsonArray selectedArr = new JsonArray();
+        for (LandmarkType t : order) // iterate order so selected output is bar-order
+        {
+            if (selected.contains(t)) selectedArr.add(t.name());
+        }
+        root.add("order", orderArr);
+        root.add("selected", selectedArr);
+        return gson.toJson(root);
     }
 
     private static LandmarkType parseTypeOrNull(String name)

@@ -116,4 +116,18 @@ public class LandmarkSelectionTest
         assertEquals(LandmarkType.ALTAR, s.order().get(1));
         assertEquals(LandmarkType.values().length, s.order().size());
     }
+
+    @Test
+    public void toJson_roundTripsThroughParse()
+    {
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        LandmarkSelection original = LandmarkSelection.canonicalDefault();
+        String json = original.toJson(gson);
+        LandmarkSelection round = LandmarkSelection.parse(json, gson);
+        assertEquals(original.order(), round.order());
+        for (LandmarkType t : LandmarkType.values())
+        {
+            assertEquals("selected[" + t + "]", original.isSelected(t), round.isSelected(t));
+        }
+    }
 }
