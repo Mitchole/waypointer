@@ -56,9 +56,11 @@ src/main/resources/com/waypointer/
 - **Persistence.** The library is written to `~/.runelite/waypointer/library.json`, with a
   `library.json.bak` companion for atomic-rename and backup recovery. Saves are debounced
   500 ms after the last change and flushed on plugin shutdown.
-- **UI.** `WaypointerPanel` is the sidebar panel. It and the preset browser
-  (`PresetBrowserPanel`) are cards inside a `MultiplexingPluginPanel`; `WaypointerNavigator`
-  swaps between them.
+- **UI.** `TabHost` is the `@Singleton PluginPanel` registered with RuneLite. It hosts a
+  `TabStrip` and the `ActivePathBanner` at the top, plus a `CardLayout` body that holds
+  `WaypointerPanel` and `PresetBrowserPanel` as `@Singleton` cards. Clicking a tab swaps
+  which card is visible; both cards stay live underneath so listener subscriptions and
+  scroll position survive.
 - **Pathing.** `WaypointPathfinder` talks to the Shortest Path plugin over `PluginMessage`.
   Shortest Path is optional. When it is not installed, the Play button is disabled and the
   rest of the panel still works.

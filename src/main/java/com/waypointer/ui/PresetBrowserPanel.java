@@ -97,8 +97,10 @@ public class PresetBrowserPanel extends PluginPanel
         rebuild();
     }
 
-    // Same Windows-unmaximize regression pattern as WaypointerPanel - see CLAUDE.md
-    // "Expanding/collapsing panel sections unmaximizes RuneLite" gotcha.
+    // PluginPanel feeds its layout-computed height to ClientUI; the inner JScrollPane
+    // handles overflow, so the height reported outward stays 0 and the frame size keeps
+    // tracking the game canvas. See the WaypointerPanel.getPreferredSize comment for the
+    // full Windows-unmaximize explanation.
     @Override
     public Dimension getPreferredSize()
     {

@@ -37,8 +37,8 @@ route on your world map and minimap.
 2. Install the [Shortest Path](https://github.com/Skretzo/shortest-path) plugin as well if
    you want one-click travel. Waypointer runs fine without it, but the Play button needs it.
 3. Open the Waypointer panel from the RuneLite sidebar (the pin icon).
-4. Your library starts empty. Add your own waypoints, or click **Browse preset waypoints**
-   to start from a curated set.
+4. Your library starts empty. Add your own waypoints, or switch to the **Presets** tab at
+   the top of the panel to start from a curated set.
 
 > **[ Video ]** Short tour: opening the panel, saving a waypoint, pathing to it.
 
@@ -80,14 +80,13 @@ which draws the route on the world map and minimap. To cancel an active route, u
 
 ## Preset waypoints
 
-New to the plugin, or picking up content you have not mapped yet? Open
-**Browse preset waypoints** from the overflow (`⋮`) menu, or from the button shown when
-your library is empty.
+New to the plugin, or picking up content you have not mapped yet? Click the **Presets** tab
+at the top of the panel.
 
-It opens an in-panel browser of curated sets covering Slayer masters, herb and tree
-patches, bosses, raids, runecrafting altars, and more. Expand a set and click `+` on a
-waypoint to add it to your library straight away. Waypoints you already have are marked, so
-you will not add a duplicate.
+It shows a browser of curated sets covering Slayer masters, herb and tree patches, bosses,
+raids, runecrafting altars, and more. Expand a set and click `+` on a waypoint to add it to
+your library straight away. Waypoints you already have are marked, so you will not add a
+duplicate.
 
 > **[ Screenshot ]** The preset browser with one set expanded and a few waypoints already added.
 
