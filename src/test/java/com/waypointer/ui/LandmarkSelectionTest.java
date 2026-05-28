@@ -67,4 +67,53 @@ public class LandmarkSelectionTest
         assertTrue(s.isSelected(LandmarkType.BANK));
         assertFalse(s.isSelected(LandmarkType.ALTAR));
     }
+
+    @Test
+    public void parse_malformedJson_returnsCanonicalDefault()
+    {
+        LandmarkSelection s = LandmarkSelection.parse("{not json", new com.google.gson.Gson());
+        assertEquals(LandmarkSelection.canonicalDefault().order(), s.order());
+    }
+
+    @Test
+    public void parse_unknownEnumName_isSkipped()
+    {
+        String json = "{\"order\":[\"BANK\",\"GHOSTBUSTERS\",\"ALTAR\"],\"selected\":[\"BANK\",\"GHOSTBUSTERS\"]}";
+        LandmarkSelection s = LandmarkSelection.parse(json, new com.google.gson.Gson());
+        // BANK + ALTAR retained at positions 0,1; remaining 9 types appended in enum order.
+        assertEquals(LandmarkType.BANK, s.order().get(0));
+        assertEquals(LandmarkType.ALTAR, s.order().get(1));
+        assertEquals(LandmarkType.values().length, s.order().size());
+        assertTrue(s.isSelected(LandmarkType.BANK));
+        // Unknown name in selected is silently dropped.
+        assertFalse(s.isSelected(LandmarkType.ALTAR));
+    }
+
+    @Test
+    public void parse_missingEnumInOrder_isAppendedCanonical()
+    {
+        // Only BANK and ALTAR listed; remaining 9 must be appended in enum order.
+        String json = "{\"order\":[\"BANK\",\"ALTAR\"],\"selected\":[\"BANK\"]}";
+        LandmarkSelection s = LandmarkSelection.parse(json, new com.google.gson.Gson());
+        assertEquals(LandmarkType.BANK, s.order().get(0));
+        assertEquals(LandmarkType.ALTAR, s.order().get(1));
+        // Position 2 onward = canonical enum order minus BANK/ALTAR.
+        int i = 2;
+        for (LandmarkType t : LandmarkType.values())
+        {
+            if (t == LandmarkType.BANK || t == LandmarkType.ALTAR) continue;
+            assertEquals(t, s.order().get(i++));
+        }
+    }
+
+    @Test
+    public void parse_duplicateEnumInOrder_firstWins()
+    {
+        String json = "{\"order\":[\"BANK\",\"ALTAR\",\"BANK\"],\"selected\":[]}";
+        LandmarkSelection s = LandmarkSelection.parse(json, new com.google.gson.Gson());
+        // Duplicate BANK is dropped; ALTAR stays at index 1.
+        assertEquals(LandmarkType.BANK, s.order().get(0));
+        assertEquals(LandmarkType.ALTAR, s.order().get(1));
+        assertEquals(LandmarkType.values().length, s.order().size());
+    }
 }
