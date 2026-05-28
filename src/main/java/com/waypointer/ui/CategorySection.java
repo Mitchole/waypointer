@@ -235,7 +235,6 @@ public class CategorySection extends JPanel
         {
             TailDropZone tail = new TailDropZone();
             body.add(tail);
-            // Wiring is deferred to Task 8 once DragAndDropHandler.attachTailZone exists.
         }
         body.setVisible(!collapsed);
         add(body, BorderLayout.CENTER);
@@ -343,10 +342,10 @@ public class CategorySection extends JPanel
      * {@link DropIndicatorMode#BORDER_AND_TINT}. Mirrors the existing indicator
      * vocabulary from {@code DragAndDropHandler}.
      */
-    static final class TailDropZone extends JPanel implements DropIndicatable
+    private static final class TailDropZone extends JPanel implements DropIndicatable
     {
         private static final int HEIGHT = 8;
-        private final javax.swing.border.Border resting;
+        private final Border resting;
 
         TailDropZone()
         {
