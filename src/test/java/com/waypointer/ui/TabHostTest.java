@@ -147,6 +147,7 @@ public class TabHostTest
         when(config.showPathingBanner()).thenReturn(true);
         when(config.categoryCollapsedJson()).thenReturn("{}");
         when(config.shortestPathBannerDismissed()).thenReturn(true);
+        when(config.landmarkSelectionJson()).thenReturn("");
 
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
@@ -156,7 +157,9 @@ public class TabHostTest
             pathfinder,
             mock(Client.class),
             mock(ClientThread.class),
-            mock(SpriteManager.class));
+            mock(SpriteManager.class),
+            config,
+            new Gson());
 
         WaypointerPanel waypointerPanel = new WaypointerPanel(
             store,

@@ -1,5 +1,7 @@
 package com.waypointer.ui;
 
+import com.google.gson.Gson;
+import com.waypointer.WaypointerConfig;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkType;
@@ -69,6 +71,9 @@ public final class NearestLandmarkBar extends JPanel
     private final Client client;
     private final ClientThread clientThread;
     private final SpriteManager spriteManager;
+    private final WaypointerConfig config;
+    private final Gson gson;
+    private LandmarkSelection selection;
 
     private final Map<LandmarkType, JButton> primaryButtons = new EnumMap<>(LandmarkType.class);
     private Toasts toasts = Toasts.NO_OP;
@@ -82,13 +87,24 @@ public final class NearestLandmarkBar extends JPanel
 
     @Inject
     public NearestLandmarkBar(BboxIndex bbox, WaypointPathfinder pathfinder, Client client,
-        ClientThread clientThread, SpriteManager spriteManager)
+        ClientThread clientThread, SpriteManager spriteManager,
+        WaypointerConfig config, Gson gson)
     {
         this.bbox = bbox;
         this.pathfinder = pathfinder;
         this.client = client;
         this.clientThread = clientThread;
         this.spriteManager = spriteManager;
+        this.config = config;
+        this.gson = gson;
+
+        this.selection = LandmarkSelection.parse(config.landmarkSelectionJson(), gson);
+        // Persist back if the input differed (seeds defaults on first run, repairs malformed JSON).
+        String canonical = selection.toJson(gson);
+        if (!canonical.equals(config.landmarkSelectionJson()))
+        {
+            config.setLandmarkSelectionJson(canonical);
+        }
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(ColorScheme.DARK_GRAY_COLOR);

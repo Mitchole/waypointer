@@ -29,6 +29,14 @@ public class NearestLandmarkBarTest
     @Mock private Client client;
     @Mock private ClientThread clientThread;
     @Mock private SpriteManager spriteManager;
+    @Mock private com.waypointer.WaypointerConfig config;
+    private final com.google.gson.Gson gson = new com.google.gson.Gson();
+
+    @org.junit.Before
+    public void setUpConfig()
+    {
+        when(config.landmarkSelectionJson()).thenReturn("");
+    }
 
     private static final class CapturingToasts implements Toasts
     {
@@ -56,7 +64,7 @@ public class NearestLandmarkBarTest
     @Test
     public void barHasFivePrimaryButtonsAndOverflow()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
         // Buttons live inside the icon row (first child panel), not directly on bar.
         java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
@@ -72,7 +80,7 @@ public class NearestLandmarkBarTest
     @Test
     public void overflowMenuContainsSixLongTailTypes()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
         JPopupMenu menu = bar.buildOverflowMenu();
         assertEquals(6, menu.getComponentCount());
@@ -89,7 +97,7 @@ public class NearestLandmarkBarTest
     @Test
     public void applyHitRequestsPath()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
         BboxIndex.Hit hit = new BboxIndex.Hit(123456, "Edgeville Bank", 7);
         bar.applyHit(LandmarkType.BANK, hit);
@@ -100,7 +108,7 @@ public class NearestLandmarkBarTest
     @Test
     public void applyHitWithNullHitSkipsPathRequest()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
         bar.applyHit(LandmarkType.BANK, null);
 
@@ -110,7 +118,7 @@ public class NearestLandmarkBarTest
     @Test
     public void applyHitWithNullHitShowsToast()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
         CapturingToasts toasts = new CapturingToasts();
         bar.setToasts(toasts);
 
@@ -125,7 +133,7 @@ public class NearestLandmarkBarTest
     public void onPickShortcircuitsWhenShortestPathUnavailable()
     {
         when(pathfinder.isAvailable()).thenReturn(false);
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
         CapturingToasts toasts = new CapturingToasts();
         bar.setToasts(toasts);
 
@@ -141,7 +149,7 @@ public class NearestLandmarkBarTest
     @Test
     public void setLoggedInTogglesButtonEnabledState()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager);
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
         // Default is disabled (constructor calls setButtonsEnabled(false)).
         for (java.awt.Component c : findAllButtons(bar))

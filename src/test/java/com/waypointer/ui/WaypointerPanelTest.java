@@ -46,6 +46,7 @@ public class WaypointerPanelTest
         WaypointerConfig config = mock(WaypointerConfig.class);
         when(config.categoryCollapsedJson()).thenReturn("{}");
         when(config.shortestPathBannerDismissed()).thenReturn(true);
+        when(config.landmarkSelectionJson()).thenReturn("");
 
         WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
         when(pathfinder.isAvailable()).thenReturn(true);
@@ -59,7 +60,9 @@ public class WaypointerPanelTest
             pathfinder,
             mock(Client.class),
             mock(ClientThread.class),
-            mock(SpriteManager.class));
+            mock(SpriteManager.class),
+            config,
+            new Gson());
 
         return new WaypointerPanel(
             store,
