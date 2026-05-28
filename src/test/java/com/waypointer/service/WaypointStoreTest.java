@@ -523,4 +523,37 @@ public class WaypointStoreTest
         assertEquals("Zebra", result.get(1).getName());
         assertEquals("Apple", result.get(2).getName());
     }
+
+    @Test
+    public void setCategorySortMode_persistsModeAndFiresListeners()
+    {
+        Category cat = store.createCategory("Slayer Masters");
+        java.util.concurrent.atomic.AtomicInteger fires = new java.util.concurrent.atomic.AtomicInteger();
+        store.subscribe(fires::incrementAndGet);
+        int before = fires.get();
+
+        store.setCategorySortMode(cat.getId(), com.waypointer.model.CategorySortMode.NAME);
+
+        assertEquals(com.waypointer.model.CategorySortMode.NAME,
+            store.getCategoryById(cat.getId()).getSortMode());
+        assertTrue("expected at least one notifyChanged fire", fires.get() > before);
+    }
+
+    @Test
+    public void setCategorySortMode_clearsUndoSlot()
+    {
+        Category cat = store.createCategory("X");
+        store.testArmUndoSlot(() -> {});
+        assertTrue(store.hasUndoable());
+
+        store.setCategorySortMode(cat.getId(), com.waypointer.model.CategorySortMode.NAME);
+
+        assertFalse("setCategorySortMode must clear lastUndo", store.hasUndoable());
+    }
+
+    @Test
+    public void setCategorySortMode_unknownCategoryIsSilentNoOp()
+    {
+        store.setCategorySortMode(UUID.randomUUID(), com.waypointer.model.CategorySortMode.NAME);
+    }
 }

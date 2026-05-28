@@ -260,6 +260,15 @@ public class WaypointStore
         notifyChanged();
     }
 
+    public void setCategorySortMode(UUID categoryId, com.waypointer.model.CategorySortMode mode)
+    {
+        lastUndo = null;
+        Category c = getCategoryById(categoryId);
+        if (c == null) return;
+        c.setSortMode(mode);
+        notifyChanged();
+    }
+
     public void reorderCategories(List<UUID> idsInNewOrder)
     {
         lastUndo = null;
