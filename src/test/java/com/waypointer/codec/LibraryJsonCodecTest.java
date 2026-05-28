@@ -111,4 +111,38 @@ public class LibraryJsonCodecTest
     {
         codec.decode("not json {{");
     }
+
+    @Test
+    public void categoryWithSortMode_roundTrips()
+    {
+        Library lib = new Library();
+        UUID catId = UUID.randomUUID();
+        Category c = new Category(catId, "POIs", 0, false, null, false);
+        c.setSortMode(com.waypointer.model.CategorySortMode.NAME);
+        lib.getCategories().add(c);
+
+        Library back = codec.decode(codec.encode(lib));
+
+        assertEquals(1, back.getCategories().size());
+        assertEquals(com.waypointer.model.CategorySortMode.NAME,
+            back.getCategories().get(0).getSortMode());
+    }
+
+    @Test
+    public void legacyJsonWithoutSortMode_decodesAsNull()
+    {
+        String legacyJson =
+            "{\"schemaVersion\":2,"
+            + "\"categories\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Old\","
+            + "\"sortOrder\":0,\"uncategorized\":false,\"bundled\":false}"
+            + "],"
+            + "\"waypoints\":[]}";
+
+        Library back = codec.decode(legacyJson);
+
+        assertEquals(1, back.getCategories().size());
+        assertNull("legacy category must decode with null sortMode",
+            back.getCategories().get(0).getSortMode());
+    }
 }
