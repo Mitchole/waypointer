@@ -4,6 +4,13 @@ import com.waypointer.service.LandmarkType;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
+import java.awt.Point;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -11,9 +18,11 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.TransferHandler;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -21,11 +30,14 @@ import net.runelite.client.ui.FontManager;
 /**
  * Inline picker shown below the {@link NearestLandmarkBar} when the customize button is
  * clicked. One row per landmark type. Each row: drag-handle, checkbox, icon, name.
- * Drag-and-drop is wired in a later task; for now the drag-handle is purely visual.
+ * Rows support drag-to-reorder via a Swing {@link TransferHandler} with string-flavor payload.
  */
 final class ConfigureLandmarksPanel extends JPanel
 {
     private static final int ROW_HEIGHT = 24;
+    private static final int DRAG_THRESHOLD_SQ = 25;
+    private static final String PAYLOAD_PREFIX = "landmark:";
+    private static final DataFlavor STR = DataFlavor.stringFlavor;
 
     private final SpriteManager spriteManager;
     private final Map<LandmarkType, Integer> spriteIds;
@@ -84,7 +96,6 @@ final class ConfigureLandmarksPanel extends JPanel
         handle.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         handle.setFont(FontManager.getRunescapeFont());
         handle.setPreferredSize(new Dimension(10, ROW_HEIGHT));
-        // Drag listener added in a later task.
         row.add(handle);
 
         JCheckBox cb = new JCheckBox();
@@ -105,7 +116,128 @@ final class ConfigureLandmarksPanel extends JPanel
         nameLbl.setFont(FontManager.getRunescapeSmallFont());
         row.add(nameLbl);
 
+        // Drop target: row accepts another row's payload and forwards to onReorder.
+        final int targetIndex = index;
+        row.setTransferHandler(new TransferHandler()
+        {
+            @Override public boolean canImport(TransferSupport s)
+            {
+                return s.isDataFlavorSupported(STR);
+            }
+
+            @Override public boolean importData(TransferSupport s)
+            {
+                String payload = readPayload(s);
+                if (payload == null || !payload.startsWith(PAYLOAD_PREFIX)) return false;
+                LandmarkType dragged = parseTypeOrNull(payload.substring(PAYLOAD_PREFIX.length()));
+                if (dragged == null) return false;
+                int from = selection.order().indexOf(dragged);
+                if (from < 0 || from == targetIndex) return false;
+                onReorder.accept(from, targetIndex);
+                return true;
+            }
+        });
+
+        // Drag source: handle starts a MOVE drag after a 5 px-squared threshold.
+        // Installs a SourceCapable TransferHandler on the row on first press so exportAsDrag has a payload.
+        DragGesture gesture = new DragGesture(row, type);
+        handle.addMouseListener(gesture);
+        handle.addMouseMotionListener(gesture);
+
         return row;
+    }
+
+    private static String readPayload(TransferHandler.TransferSupport s)
+    {
+        try { return (String) s.getTransferable().getTransferData(STR); }
+        catch (Exception e) { return null; }
+    }
+
+    private static LandmarkType parseTypeOrNull(String name)
+    {
+        try { return LandmarkType.valueOf(name); }
+        catch (IllegalArgumentException e) { return null; }
+    }
+
+    /** Tracks press + drag-distance on a row's drag-handle and triggers exportAsDrag. */
+    private static final class DragGesture extends MouseAdapter implements MouseMotionListener
+    {
+        private final JComponent dragSource;
+        private final LandmarkType type;
+        private Point pressPoint;
+        private boolean started;
+
+        DragGesture(JComponent dragSource, LandmarkType type)
+        {
+            this.dragSource = dragSource;
+            this.type = type;
+        }
+
+        @Override public void mousePressed(MouseEvent e)
+        {
+            pressPoint = e.getPoint();
+            started = false;
+            // Lazily install a source-capable wrapper on the row TransferHandler so exportAsDrag has a payload.
+            TransferHandler current = dragSource.getTransferHandler();
+            if (!(current instanceof SourceCapable))
+            {
+                dragSource.setTransferHandler(new SourceCapable(current, type));
+            }
+        }
+
+        @Override public void mouseReleased(MouseEvent e)
+        {
+            pressPoint = null;
+            started = false;
+        }
+
+        @Override public void mouseDragged(MouseEvent e)
+        {
+            if (pressPoint == null || started) return;
+            int dx = e.getX() - pressPoint.x;
+            int dy = e.getY() - pressPoint.y;
+            if (dx * dx + dy * dy >= DRAG_THRESHOLD_SQ)
+            {
+                started = true;
+                TransferHandler th = dragSource.getTransferHandler();
+                if (th != null) th.exportAsDrag(dragSource, e, TransferHandler.MOVE);
+            }
+        }
+
+        @Override public void mouseMoved(MouseEvent e) { }
+    }
+
+    /**
+     * Adapter that augments the row's drop-target TransferHandler with source semantics
+     * (createTransferable + getSourceActions) so exportAsDrag has a payload to ship.
+     */
+    private static final class SourceCapable extends TransferHandler
+    {
+        private final TransferHandler delegate;
+        private final LandmarkType type;
+
+        SourceCapable(TransferHandler delegate, LandmarkType type)
+        {
+            this.delegate = delegate;
+            this.type = type;
+        }
+
+        @Override public int getSourceActions(JComponent c) { return MOVE; }
+
+        @Override protected Transferable createTransferable(JComponent c)
+        {
+            return new StringSelection(PAYLOAD_PREFIX + type.name());
+        }
+
+        @Override public boolean canImport(TransferSupport s)
+        {
+            return delegate != null && delegate.canImport(s);
+        }
+
+        @Override public boolean importData(TransferSupport s)
+        {
+            return delegate != null && delegate.importData(s);
+        }
     }
 
     private void applySprite(JLabel target, LandmarkType type)
