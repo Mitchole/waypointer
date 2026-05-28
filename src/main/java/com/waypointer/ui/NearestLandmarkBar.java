@@ -32,8 +32,8 @@ import net.runelite.client.ui.ColorScheme;
 /**
  * Row of clickable landmark icons in the panel header. Each button pathfinds to the nearest
  * landmark of its type from the player's current tile. The user-selected subset and order
- * is controlled by {@link LandmarkSelection}; the trailing {@code ▾} button will (in a later
- * task) toggle the inline configure picker.
+ * is controlled by {@link LandmarkSelection}; the trailing {@code ▾} button toggles the
+ * inline {@link ConfigureLandmarksPanel} picker.
  */
 @Singleton
 public final class NearestLandmarkBar extends JPanel
@@ -54,6 +54,7 @@ public final class NearestLandmarkBar extends JPanel
     private final Gson gson;
 
     private LandmarkSelection selection;
+    private final ConfigureLandmarksPanel picker;
     private final JPanel iconRow;
     private final Map<LandmarkType, JButton> primaryButtons = new EnumMap<>(LandmarkType.class);
     private JButton overflowBtn;
@@ -95,6 +96,14 @@ public final class NearestLandmarkBar extends JPanel
         iconRow.setAlignmentX(LEFT_ALIGNMENT);
         add(iconRow);
 
+        picker = new ConfigureLandmarksPanel(
+            spriteManager,
+            SPRITE_IDS,
+            selection,
+            this::onPickerToggle,
+            this::onPickerReorder);
+        add(picker);
+
         rebuildBar();
     }
 
@@ -115,12 +124,35 @@ public final class NearestLandmarkBar extends JPanel
         overflowBtn = makeButton();
         overflowBtn.setText("▾"); // U+25BE BLACK DOWN-POINTING SMALL TRIANGLE
         overflowBtn.setToolTipText("Customize landmarks");
-        // ActionListener wired in a later task.
+        overflowBtn.addActionListener(e -> {
+            picker.setVisible(!picker.isVisible());
+            revalidate();
+            repaint();
+        });
         iconRow.add(overflowBtn);
 
         applyEnabledState();
         iconRow.revalidate();
         iconRow.repaint();
+    }
+
+    private void onPickerToggle(LandmarkType type, boolean include)
+    {
+        applySelection(selection.withSelected(type, include));
+    }
+
+    private void onPickerReorder(int fromIndex, int toIndex)
+    {
+        applySelection(selection.withOrderMove(fromIndex, toIndex));
+    }
+
+    private void applySelection(LandmarkSelection next)
+    {
+        if (next == selection) return;
+        selection = next;
+        config.setLandmarkSelectionJson(selection.toJson(gson));
+        rebuildBar();
+        picker.setSelection(selection);
     }
 
     private JButton makeButton()
