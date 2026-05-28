@@ -25,17 +25,15 @@ import javax.swing.SwingUtilities;
 final class OverflowMenu
 {
     private final WaypointStore store;
-    private final WaypointerNavigator navigator;
     private final WaypointShareCodec shareCodec;
     private final LibraryJsonCodec libraryCodec;
     private final WaypointStorePersistence persistence;
 
     @Inject
-    OverflowMenu(WaypointStore store, WaypointerNavigator navigator, WaypointShareCodec shareCodec,
+    OverflowMenu(WaypointStore store, WaypointShareCodec shareCodec,
         LibraryJsonCodec libraryCodec, WaypointStorePersistence persistence)
     {
         this.store = store;
-        this.navigator = navigator;
         this.shareCodec = shareCodec;
         this.libraryCodec = libraryCodec;
         this.persistence = persistence;
@@ -61,10 +59,6 @@ final class OverflowMenu
         });
         menu.add(newCategory);
         menu.addSeparator();
-
-        JMenuItem browsePresets = new JMenuItem("Browse preset waypoints");
-        browsePresets.addActionListener(e -> navigator.openPresetBrowser());
-        menu.add(browsePresets);
 
         JMenuItem importLib = new JMenuItem("Import library...");
         importLib.addActionListener(e ->
