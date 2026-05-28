@@ -8,7 +8,6 @@ import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.IconCatalog;
-import com.waypointer.service.NearbyComputer;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointFilter;
 import com.waypointer.service.WaypointPathfinder;
@@ -85,7 +84,6 @@ public class WaypointerPanel extends PluginPanel
     private final Client client;
     private final ClientThread clientThread;
     private final WildernessConfirmGate wildernessGate;
-    private final NearbyComputer nearbyComputer;
     private final CaptureForm captureForm;
     private final JPanel body = new JPanel();
     private JScrollBar bodyScrollBar;
@@ -99,11 +97,6 @@ public class WaypointerPanel extends PluginPanel
     private static final UUID PINNED_COLLAPSE_KEY =
         UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    // Sentinel UUID used as the key into collapsedByCategory for the synthetic Nearby section.
-    // Same collision argument as PINNED_COLLAPSE_KEY.
-    private static final UUID NEARBY_COLLAPSE_KEY =
-        UUID.fromString("00000000-0000-0000-0000-000000000002");
-
     private final PlaceholderTextField searchField = new PlaceholderTextField("Search waypoints...");
     private final JLabel clearButton = new JLabel("✕"); // U+2715 (multiplication X)
     private String currentFilter = "";
@@ -112,7 +105,6 @@ public class WaypointerPanel extends PluginPanel
     // a Singleton today, in case shutdown ordering changes or the panel ever gets re-created.
     private Listeners.Subscription storeSub;
     private Listeners.Subscription pathSub;
-    private Listeners.Subscription nearbySub;
 
     // Coalesce back-to-back rebuild requests within one EDT cycle into a single call.
     private volatile boolean rebuildPending = false;
@@ -126,8 +118,7 @@ public class WaypointerPanel extends PluginPanel
         WaypointStorePersistence persistence, SpriteManager spriteManager,
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
         NearestLandmarkBar nearestLandmarkBar, LibraryJsonCodec libraryCodec,
-        Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate,
-        NearbyComputer nearbyComputer)
+        Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate)
     {
         super(false);
         this.store = store;
@@ -145,7 +136,6 @@ public class WaypointerPanel extends PluginPanel
         this.client = client;
         this.clientThread = clientThread;
         this.wildernessGate = wildernessGate;
-        this.nearbyComputer = nearbyComputer;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
 
         // Build the panel header: Mark current location with the overflow trigger pinned
@@ -244,7 +234,6 @@ public class WaypointerPanel extends PluginPanel
 
         storeSub = store.subscribe(this::scheduleRebuild);
         pathSub = pathfinder.subscribe(this::scheduleRebuild);
-        nearbySub = nearbyComputer.subscribe(this::scheduleRebuild);
         rebuild();
     }
 
@@ -258,7 +247,6 @@ public class WaypointerPanel extends PluginPanel
     {
         if (storeSub != null) { storeSub.close(); storeSub = null; }
         if (pathSub != null) { pathSub.close(); pathSub = null; }
-        if (nearbySub != null) { nearbySub.close(); nearbySub = null; }
     }
 
     // Re-derive the body scrollbar's UI delegate now that RuneLiteLAF is the active LAF.
@@ -488,13 +476,6 @@ public class WaypointerPanel extends PluginPanel
         }
     }
 
-    // Package-private test seam: lets WaypointerPanelNearbyTest set the filter directly
-    // without going through the debounced search-field path.
-    void setFilterForTest(String filter)
-    {
-        this.currentFilter = filter == null ? "" : filter;
-    }
-
     private void onFilterChanged()
     {
         String txt = searchField.getText();
@@ -567,32 +548,6 @@ public class WaypointerPanel extends PluginPanel
                 w -> store.getCategoryById(w.getCategoryId()));
             body.add(pinnedSec);
             rendered = true;
-        }
-
-        // Synthetic Nearby section: render between Pinned and real categories.
-        // Hidden while filtering — Nearby is for ambient discovery, not search results.
-        if (loweredFilter.isEmpty())
-        {
-            List<Waypoint> nearby = nearbyComputer.getCurrent();
-            if (!nearby.isEmpty())
-            {
-                boolean nearbyCollapsed =
-                    collapsedByCategory.getOrDefault(NEARBY_COLLAPSE_KEY, false);
-                NearbySection nearbySec = new NearbySection(
-                    nearby,
-                    pathfinder.getActiveTarget(),
-                    nearbyCollapsed,
-                    isCollapsed -> {
-                        collapsedByCategory.put(NEARBY_COLLAPSE_KEY, isCollapsed);
-                        config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
-                    },
-                    this::handleRowAction,
-                    this::inlineProviderFor,
-                    spriteManager,
-                    w -> store.getCategoryById(w.getCategoryId()));
-                body.add(nearbySec);
-                rendered = true;
-            }
         }
 
         List<Category> cats = store.getCategoriesOrdered();
@@ -696,9 +651,9 @@ public class WaypointerPanel extends PluginPanel
         };
     }
 
-    // Shared inline-edit provider used by Pinned, Nearby, and real-category sections.
+    // Shared inline-edit provider used by Pinned and real-category sections.
     // Returns the inline editor for a waypoint if the user has it expanded, else null.
-    // Single source of truth for InlineEditPanel construction across all three section types.
+    // Single source of truth for InlineEditPanel construction across both section types.
     private Component inlineProviderFor(Waypoint w)
     {
         if (!expandedWaypoints.contains(w.getId())) return null;

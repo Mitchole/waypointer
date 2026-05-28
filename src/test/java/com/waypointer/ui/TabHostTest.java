@@ -15,7 +15,6 @@ import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.preset.PresetCatalog;
 import com.waypointer.service.BboxIndex;
-import com.waypointer.service.NearbyComputer;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
@@ -159,10 +158,6 @@ public class TabHostTest
             mock(ClientThread.class),
             mock(SpriteManager.class));
 
-        NearbyComputer nearbyComputer = mock(NearbyComputer.class);
-        when(nearbyComputer.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
-        when(nearbyComputer.getCurrent()).thenReturn(Collections.emptyList());
-
         WaypointerPanel waypointerPanel = new WaypointerPanel(
             store,
             mock(WaypointCapture.class),
@@ -178,8 +173,7 @@ public class TabHostTest
             new LibraryJsonCodec(new Gson()),
             mock(Client.class),
             mock(ClientThread.class),
-            mock(WildernessConfirmGate.class),
-            nearbyComputer);
+            mock(WildernessConfirmGate.class));
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 
