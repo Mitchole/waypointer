@@ -174,4 +174,58 @@ public class LandmarkSelectionTest
         assertTrue("original still has ALTAR selected", s.isSelected(LandmarkType.ALTAR));
         assertFalse("new instance does not", next.isSelected(LandmarkType.ALTAR));
     }
+
+    @Test
+    public void withOrderMove_movesForward_shiftsOthersUp()
+    {
+        // Move index 0 (BANK) to index 2.
+        LandmarkSelection s = LandmarkSelection.canonicalDefault();
+        LandmarkSelection next = s.withOrderMove(0, 2);
+        // ALTAR shifts up to 0, SPIRIT_TREE to 1, BANK lands at 2.
+        assertEquals(LandmarkType.ALTAR, next.order().get(0));
+        assertEquals(LandmarkType.SPIRIT_TREE, next.order().get(1));
+        assertEquals(LandmarkType.BANK, next.order().get(2));
+    }
+
+    @Test
+    public void withOrderMove_movesBackward_shiftsOthersDown()
+    {
+        // Move index 3 (FAIRY_RING) to index 0.
+        LandmarkSelection s = LandmarkSelection.canonicalDefault();
+        LandmarkSelection next = s.withOrderMove(3, 0);
+        assertEquals(LandmarkType.FAIRY_RING, next.order().get(0));
+        assertEquals(LandmarkType.BANK, next.order().get(1));
+        assertEquals(LandmarkType.ALTAR, next.order().get(2));
+        assertEquals(LandmarkType.SPIRIT_TREE, next.order().get(3));
+    }
+
+    @Test
+    public void withOrderMove_sameIndex_returnsEquivalent()
+    {
+        LandmarkSelection s = LandmarkSelection.canonicalDefault();
+        LandmarkSelection next = s.withOrderMove(0, 0);
+        assertEquals(s.order(), next.order());
+    }
+
+    @Test
+    public void withOrderMove_movingSelectedType_changesBarOrder()
+    {
+        LandmarkSelection s = LandmarkSelection.canonicalDefault();
+        // SLAYER_MASTER is last (index 10) in canonical order. Move it to index 0.
+        // It is unselected, so bar count is unchanged.
+        int lastIndex = s.order().size() - 1;
+        LandmarkSelection next = s.withOrderMove(lastIndex, 0);
+        assertEquals(LandmarkType.SLAYER_MASTER, next.order().get(0));
+        assertEquals(s.selectedInBarOrder().size(), next.selectedInBarOrder().size());
+        // BANK shifts from index 0 to index 1.
+        assertEquals(LandmarkType.BANK, next.order().get(1));
+    }
+
+    @Test
+    public void withOrderMove_outOfRange_returnsSameOrder()
+    {
+        LandmarkSelection s = LandmarkSelection.canonicalDefault();
+        assertEquals(s.order(), s.withOrderMove(-1, 0).order());
+        assertEquals(s.order(), s.withOrderMove(0, 99).order());
+    }
 }

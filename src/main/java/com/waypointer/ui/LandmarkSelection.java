@@ -125,6 +125,19 @@ public final class LandmarkSelection
         return new LandmarkSelection(order, next);
     }
 
+    public LandmarkSelection withOrderMove(int fromIndex, int toIndex)
+    {
+        if (fromIndex < 0 || fromIndex >= order.size()) return this;
+        if (toIndex < 0 || toIndex >= order.size()) return this;
+        if (fromIndex == toIndex) return this;
+        List<LandmarkType> next = new ArrayList<>(order);
+        LandmarkType moved = next.remove(fromIndex);
+        next.add(toIndex, moved);
+        EnumSet<LandmarkType> sel = EnumSet.noneOf(LandmarkType.class);
+        sel.addAll(selected);
+        return new LandmarkSelection(next, sel);
+    }
+
     private static LandmarkType parseTypeOrNull(String name)
     {
         try { return LandmarkType.valueOf(name); }
