@@ -18,7 +18,7 @@ import net.runelite.client.ui.PluginPanel;
 
 /**
  * Top-level panel hosting the {@link TabStrip}, the active path banner (moved up from
- * {@link WaypointerPanel}), and a {@link CardLayout} body holding the two child panels.
+ * {@link WaypointerPanel}), and a {@link CardLayout} body holding the child panels.
  * Replaces {@link net.runelite.client.ui.MultiplexingPluginPanel} in the plugin's wiring.
  */
 @Singleton
@@ -26,11 +26,16 @@ public class TabHost extends PluginPanel
 {
     private static final String CARD_MY_WAYPOINTS = "my";
     private static final String CARD_PRESETS = "presets";
+    private static final String CARD_DEV = "dev";
 
     private final WaypointerPanel waypointerPanel;
     private final PresetBrowserPanel presetBrowserPanel;
+    private final DevPanel devPanel;
+    private final WaypointerConfig config;
     private final ActivePathBanner banner;
-    private final TabStrip tabStrip;
+    private final JPanel northStack;
+    private TabStrip tabStrip;
+    private java.util.List<TabStrip.Tab> visibleTabs;
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cards = new JPanel(cardLayout);
 
@@ -40,30 +45,32 @@ public class TabHost extends PluginPanel
 
     @Inject
     public TabHost(WaypointerPanel waypointerPanel, PresetBrowserPanel presetBrowserPanel,
-        WaypointPathfinder pathfinder, WaypointerConfig config)
+        DevPanel devPanel, WaypointPathfinder pathfinder, WaypointerConfig config)
     {
         super(false);
         this.waypointerPanel = waypointerPanel;
         this.presetBrowserPanel = presetBrowserPanel;
+        this.devPanel = devPanel;
+        this.config = config;
         this.banner = new ActivePathBanner(pathfinder, config);
-        this.tabStrip = new TabStrip(this::onTabSelected);
 
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        JPanel northStack = new JPanel();
+        northStack = new JPanel();
         northStack.setLayout(new BoxLayout(northStack, BoxLayout.Y_AXIS));
         northStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        tabStrip.setAlignmentX(LEFT_ALIGNMENT);
         banner.setAlignmentX(LEFT_ALIGNMENT);
-        northStack.add(tabStrip);
         northStack.add(banner);
         add(northStack, BorderLayout.NORTH);
 
         cards.setBackground(ColorScheme.DARK_GRAY_COLOR);
         cards.add(waypointerPanel, CARD_MY_WAYPOINTS);
         cards.add(presetBrowserPanel, CARD_PRESETS);
+        cards.add(devPanel.getRoot(), CARD_DEV);
         add(cards, BorderLayout.CENTER);
+
+        rebuildStrip();
 
         pathSub = pathfinder.subscribe(() ->
             SwingUtilities.invokeLater(banner::refresh));
@@ -94,6 +101,16 @@ public class TabHost extends PluginPanel
         revalidate();
     }
 
+    public void selectDev()
+    {
+        if (active == TabStrip.Tab.DEV) return;
+        active = TabStrip.Tab.DEV;
+        visibleCard = CARD_DEV;
+        tabStrip.setActive(active);
+        cardLayout.show(cards, CARD_DEV);
+        revalidate();
+    }
+
     public void refreshScrollbarStyling()
     {
         waypointerPanel.refreshScrollbarStyling();
@@ -108,6 +125,10 @@ public class TabHost extends PluginPanel
         {
             SwingUtilities.invokeLater(banner::refresh);
         }
+        if ("devModeEnabled".equals(e.getKey()))
+        {
+            SwingUtilities.invokeLater(this::rebuildStrip);
+        }
     }
 
     public void dispose()
@@ -115,6 +136,27 @@ public class TabHost extends PluginPanel
         if (pathSub != null) { pathSub.close(); pathSub = null; }
         waypointerPanel.dispose();
         presetBrowserPanel.dispose();
+        devPanel.dispose();
+    }
+
+    private void rebuildStrip()
+    {
+        if (tabStrip != null) northStack.remove(tabStrip);
+        visibleTabs = config.devModeEnabled()
+            ? java.util.Arrays.asList(TabStrip.Tab.MY_WAYPOINTS, TabStrip.Tab.PRESETS, TabStrip.Tab.DEV)
+            : java.util.Arrays.asList(TabStrip.Tab.MY_WAYPOINTS, TabStrip.Tab.PRESETS);
+        tabStrip = new TabStrip(this::onTabSelected, visibleTabs);
+        tabStrip.setAlignmentX(LEFT_ALIGNMENT);
+        northStack.add(tabStrip, 0);
+        if (!visibleTabs.contains(active))
+        {
+            active = TabStrip.Tab.MY_WAYPOINTS;
+            visibleCard = CARD_MY_WAYPOINTS;
+            cardLayout.show(cards, CARD_MY_WAYPOINTS);
+        }
+        tabStrip.setActive(active);
+        northStack.revalidate();
+        northStack.repaint();
     }
 
     private void onTabSelected(TabStrip.Tab tab)
@@ -123,10 +165,13 @@ public class TabHost extends PluginPanel
         {
             case MY_WAYPOINTS: selectMyWaypoints(); break;
             case PRESETS:      selectPresets();     break;
+            case DEV:          selectDev();         break;
         }
     }
 
     // Test seams.
     TabStrip.Tab getActiveTabForTest() { return active; }
     String getVisibleCardNameForTest() { return visibleCard; }
+    int visibleTabCountForTest() { return visibleTabs.size(); }
+    void onDevModeChangedForTest() { rebuildStrip(); }
 }

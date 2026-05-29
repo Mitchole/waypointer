@@ -180,6 +180,9 @@ public class TabHostTest
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 
-        return new TabHost(waypointerPanel, presetPanel, pathfinder, config);
+        DevPanel devPanel = mock(DevPanel.class);
+        when(devPanel.getRoot()).thenReturn(new javax.swing.JPanel());
+
+        return new TabHost(waypointerPanel, presetPanel, devPanel, pathfinder, config);
     }
 }
