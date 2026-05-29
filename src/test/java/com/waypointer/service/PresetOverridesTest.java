@@ -78,4 +78,22 @@ public class PresetOverridesTest
         assertTrue(ov.undoLast());
         assertFalse(ov.undoLast());
     }
+
+    @Test
+    public void blockingSaveAndLoadRoundTrip() throws Exception
+    {
+        java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("po-disk");
+        com.waypointer.codec.PresetOverridesCodec codec =
+            new com.waypointer.codec.PresetOverridesCodec(new com.google.gson.Gson());
+        PresetOverrides ov = PresetOverrides.forTesting(dir, codec);
+        ov.upsertWaypoint("Bosses", null, new Waypoint("V", "", 9, 9, 0));
+        ov.flushBlocking();
+
+        PresetOverrides reread = PresetOverrides.forTesting(dir, codec);
+        reread.loadFromDisk();
+        assertEquals(1, reread.getSnapshot().getByCategory().get("Bosses").getWaypoints().size());
+
+        java.nio.file.Files.walk(dir).sorted(java.util.Comparator.reverseOrder())
+            .forEach(p -> { try { java.nio.file.Files.deleteIfExists(p); } catch (Exception ignored) {} });
+    }
 }

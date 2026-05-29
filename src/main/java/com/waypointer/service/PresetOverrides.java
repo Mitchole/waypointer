@@ -23,11 +23,66 @@ public class PresetOverrides
     private PresetOverridesSnapshot snapshot = PresetOverridesSnapshot.empty();
     private PresetOverridesSnapshot undoBuffer = null;
     private final Listeners listeners = new Listeners();
+    private final OverridePersistence persistence;
+    private final com.waypointer.codec.PresetOverridesCodec codec;
+    private volatile boolean dirty = false;
+    private final java.util.concurrent.ScheduledExecutorService scheduler;
 
     @Inject
-    public PresetOverrides() {}
+    public PresetOverrides(com.waypointer.codec.PresetOverridesCodec codec)
+    {
+        this(net.runelite.client.RuneLite.RUNELITE_DIR.toPath().resolve("waypointer"), codec,
+            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+                r -> { Thread t = new Thread(r, "waypointer-preset-overrides"); t.setDaemon(true); return t; }));
+        loadFromDisk();
+    }
 
-    public static PresetOverrides forTesting() { return new PresetOverrides(); }
+    PresetOverrides(java.nio.file.Path dir, com.waypointer.codec.PresetOverridesCodec codec,
+        java.util.concurrent.ScheduledExecutorService scheduler)
+    {
+        this.persistence = new OverridePersistence(dir, "preset-overrides.json");
+        this.codec = codec;
+        this.scheduler = scheduler;
+    }
+
+    public static PresetOverrides forTesting()
+    {
+        try
+        {
+            return forTesting(java.nio.file.Files.createTempDirectory("po-mem"),
+                new com.waypointer.codec.PresetOverridesCodec(new com.google.gson.Gson()));
+        }
+        catch (java.io.IOException e) { throw new RuntimeException(e); }
+    }
+
+    public static PresetOverrides forTesting(java.nio.file.Path dir,
+        com.waypointer.codec.PresetOverridesCodec codec)
+    {
+        return new PresetOverrides(dir, codec,
+            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+                r -> { Thread t = new Thread(r, "waypointer-preset-overrides-test"); t.setDaemon(true); return t; }));
+    }
+
+    public void loadFromDisk()
+    {
+        snapshot = codec.decode(persistence.loadOrEmpty());
+        listeners.fire();
+    }
+
+    public boolean flushBlocking()
+    {
+        return persistence.writeBlocking(codec.encode(snapshot));
+    }
+
+    private void scheduleSave()
+    {
+        if (dirty) return;
+        dirty = true;
+        scheduler.schedule(() -> {
+            dirty = false;
+            flushBlocking();
+        }, 500, java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
 
     public PresetOverridesSnapshot getSnapshot() { return snapshot; }
     public Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
@@ -46,12 +101,14 @@ public class PresetOverrides
                 {
                     co.getWaypoints().set(i, updated);
                     listeners.fire();
+                    scheduleSave();
                     return;
                 }
             }
         }
         co.getWaypoints().add(updated);
         listeners.fire();
+        scheduleSave();
     }
 
     public void deleteOverrideWaypoint(String category, Waypoint w)
@@ -61,6 +118,7 @@ public class PresetOverrides
         if (co == null) return;
         co.getWaypoints().removeIf(x -> sameTuple(x, w));
         listeners.fire();
+        scheduleSave();
     }
 
     public void deleteBundledWaypoint(String category, String name, int x, int y, int plane)
@@ -68,6 +126,7 @@ public class PresetOverrides
         undoBuffer = deepCopy(snapshot);
         snapshot.getDeletedWaypoints().add(new DeletedWaypoint(category, name, x, y, plane));
         listeners.fire();
+        scheduleSave();
     }
 
     public boolean addCategory(CategoryOverride co)
@@ -80,6 +139,7 @@ public class PresetOverrides
         }
         snapshot.getAddedCategories().add(co);
         listeners.fire();
+        scheduleSave();
         return true;
     }
 
@@ -90,6 +150,7 @@ public class PresetOverrides
         snapshot.getByCategory().remove(name);
         snapshot.getAddedCategories().removeIf(c -> Objects.equals(c.getCategory(), name));
         listeners.fire();
+        scheduleSave();
     }
 
     public boolean undoLast()
@@ -98,6 +159,7 @@ public class PresetOverrides
         snapshot = undoBuffer;
         undoBuffer = null;
         listeners.fire();
+        scheduleSave();
         return true;
     }
 
