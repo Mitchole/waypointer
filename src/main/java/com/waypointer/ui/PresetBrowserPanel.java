@@ -50,6 +50,7 @@ public class PresetBrowserPanel extends PluginPanel
     private String lastToastTextForTest;
 
     private Listeners.Subscription storeSub;
+    private Listeners.Subscription catalogSub;
     private volatile boolean rebuildPending = false;
 
     @Inject
@@ -94,6 +95,7 @@ public class PresetBrowserPanel extends PluginPanel
         add(toastOverlay, BorderLayout.CENTER);
 
         storeSub = store.subscribe(this::scheduleRebuild);
+        catalogSub = catalog.subscribe(this::scheduleRebuild);
         rebuild();
     }
 
@@ -129,6 +131,7 @@ public class PresetBrowserPanel extends PluginPanel
     public void dispose()
     {
         if (storeSub != null) { storeSub.close(); storeSub = null; }
+        if (catalogSub != null) { catalogSub.close(); catalogSub = null; }
     }
 
     private JPanel buildHeader()
