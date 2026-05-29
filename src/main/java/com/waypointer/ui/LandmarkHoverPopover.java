@@ -43,6 +43,8 @@ final class LandmarkHoverPopover
 	boolean visibleIntentForTest() { return visibleIntent; }
 	String labelTextForTest() { return label.getText(); }
 
+	// Guard used by attach/positionAbove (added in later tasks): JWindow.setVisible and
+	// Component.getLocationOnScreen both throw HeadlessException when no display exists.
 	private static boolean displayAvailable()
 	{
 		return !GraphicsEnvironment.isHeadless();
