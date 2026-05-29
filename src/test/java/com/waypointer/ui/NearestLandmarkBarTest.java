@@ -3,14 +3,26 @@ package com.waypointer.ui;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkType;
 import com.waypointer.service.WaypointPathfinder;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import javax.swing.AbstractButton;
 import javax.swing.JButton;
+import javax.swing.SwingUtilities;
 import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -65,9 +77,9 @@ public class NearestLandmarkBarTest
     {
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
-        java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
+        Container iconRow = (Container) bar.getComponent(0);
         int buttonCount = 0;
-        for (java.awt.Component c : iconRow.getComponents())
+        for (Component c : iconRow.getComponents())
         {
             if (c instanceof JButton) buttonCount++;
         }
@@ -105,8 +117,8 @@ public class NearestLandmarkBarTest
 
         bar.applyHit(LandmarkType.BANK, null);
 
-        org.junit.Assert.assertNotNull("expected toast on null hit", toasts.lastText);
-        org.junit.Assert.assertTrue("expected toast to mention bank, got: " + toasts.lastText,
+        assertNotNull("expected toast on null hit", toasts.lastText);
+        assertTrue("expected toast to mention bank, got: " + toasts.lastText,
             toasts.lastText.toLowerCase().contains("bank"));
     }
 
@@ -122,8 +134,8 @@ public class NearestLandmarkBarTest
 
         verify(clientThread, never()).invoke(any(Runnable.class));
         verify(bbox, never()).nearest(any(LandmarkType.class), anyInt());
-        org.junit.Assert.assertNotNull("expected a toast to be shown", toasts.lastText);
-        org.junit.Assert.assertTrue("expected toast to mention shortest path, got: " + toasts.lastText,
+        assertNotNull("expected a toast to be shown", toasts.lastText);
+        assertTrue("expected toast to mention shortest path, got: " + toasts.lastText,
             toasts.lastText.toLowerCase().contains("shortest path"));
     }
 
@@ -133,23 +145,23 @@ public class NearestLandmarkBarTest
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
         // Bar contents: 4 landmark buttons then the customize (▾) button. ▾ is always enabled.
-        java.util.List<JButton> allButtons = findLandmarkButtons(bar);
+        List<JButton> allButtons = findLandmarkButtons(bar);
 
         for (JButton b : allButtons)
         {
-            org.junit.Assert.assertFalse("expected disabled at construction", b.isEnabled());
+            assertFalse("expected disabled at construction", b.isEnabled());
         }
 
         bar.setLoggedIn(true);
         for (JButton b : allButtons)
         {
-            org.junit.Assert.assertTrue("expected enabled after setLoggedIn(true)", b.isEnabled());
+            assertTrue("expected enabled after setLoggedIn(true)", b.isEnabled());
         }
 
         bar.setLoggedIn(false);
         for (JButton b : allButtons)
         {
-            org.junit.Assert.assertFalse("expected disabled after setLoggedIn(false)", b.isEnabled());
+            assertFalse("expected disabled after setLoggedIn(false)", b.isEnabled());
         }
     }
 
@@ -168,9 +180,9 @@ public class NearestLandmarkBarTest
         // Use the real Gson here so the constructor's parse(...) reconstructs the empty selection.
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, realGson);
 
-        java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
+        Container iconRow = (Container) bar.getComponent(0);
         int buttonCount = 0;
-        for (java.awt.Component c : iconRow.getComponents())
+        for (Component c : iconRow.getComponents())
         {
             if (c instanceof JButton) buttonCount++;
         }
@@ -178,11 +190,11 @@ public class NearestLandmarkBarTest
     }
 
     // Returns only the landmark buttons in the icon row (all buttons except the trailing overflow).
-    private static java.util.List<JButton> findLandmarkButtons(NearestLandmarkBar bar)
+    private static List<JButton> findLandmarkButtons(NearestLandmarkBar bar)
     {
-        java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
-        java.util.List<JButton> all = new java.util.ArrayList<>();
-        for (java.awt.Component c : iconRow.getComponents())
+        Container iconRow = (Container) bar.getComponent(0);
+        List<JButton> all = new ArrayList<>();
+        for (Component c : iconRow.getComponents())
         {
             if (c instanceof JButton) all.add((JButton) c);
         }
@@ -201,44 +213,43 @@ public class NearestLandmarkBarTest
         // applySprite seeded one alongside the enabled icon. The test simulates sprite
         // arrival by capturing the SpriteManager.getSpriteAsync callback and feeding it
         // a small placeholder BufferedImage.
-        java.awt.image.BufferedImage stub = new java.awt.image.BufferedImage(
-            16, 16, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-        org.mockito.ArgumentCaptor<java.util.function.Consumer> callback =
-            org.mockito.ArgumentCaptor.forClass(java.util.function.Consumer.class);
-        when(config.landmarkSelectionJson()).thenReturn("");
+        BufferedImage stub = new BufferedImage(
+            16, 16, BufferedImage.TYPE_INT_ARGB);
+        ArgumentCaptor<Consumer> callback =
+            ArgumentCaptor.forClass(Consumer.class);
 
         NearestLandmarkBar bar = new NearestLandmarkBar(
             bbox, pathfinder, client, clientThread, spriteManager, config, gson);
 
         verify(spriteManager, atLeastOnce()).getSpriteAsync(anyInt(), anyInt(), callback.capture());
-        for (java.util.function.Consumer<java.awt.image.BufferedImage> cb : callback.getAllValues())
+        for (Consumer<BufferedImage> cb : callback.getAllValues())
         {
             cb.accept(stub);
         }
         // Drain the EDT so the invokeLater that sets the icons runs.
-        javax.swing.SwingUtilities.invokeAndWait(() -> {});
+        SwingUtilities.invokeAndWait(() -> {});
 
-        java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
+        Container iconRow = (Container) bar.getComponent(0);
         // Read AbstractButton.disabledIcon via reflection so the assertion checks an
         // explicit setDisabledIcon call rather than the LAF's lazy auto-synthesis on
         // first getDisabledIcon() invocation. Without this peek the test would pass
         // even if applySprite never called setDisabledIcon.
         java.lang.reflect.Field disabledIconField =
-            javax.swing.AbstractButton.class.getDeclaredField("disabledIcon");
+            AbstractButton.class.getDeclaredField("disabledIcon");
         disabledIconField.setAccessible(true);
 
         int landmarkCount = 0;
-        for (java.awt.Component c : iconRow.getComponents())
+        for (Component c : iconRow.getComponents())
         {
-            if (!(c instanceof javax.swing.JButton)) continue;
-            javax.swing.JButton jb = (javax.swing.JButton) c;
+            if (!(c instanceof JButton)) continue;
+            JButton jb = (JButton) c;
             if (jb.getIcon() == null) continue; // overflow button has no icon
             landmarkCount++;
             Object explicit = disabledIconField.get(jb);
-            org.junit.Assert.assertNotNull(
+            assertNotNull(
                 "applySprite must explicitly setDisabledIcon (GrayFilter); got null",
                 explicit);
         }
-        org.junit.Assert.assertTrue("at least one landmark button rendered", landmarkCount > 0);
+        assertTrue("at least one landmark button rendered", landmarkCount > 0);
     }
 }
