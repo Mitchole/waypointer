@@ -91,7 +91,11 @@ public class LandmarkHoverPopoverTest
 		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
 		LandmarkHoverPopover popover = new LandmarkHoverPopover();
 		popover.dispose();
-		popover.dispose(); // must not throw
+		assertFalse("dispose must leave visibleIntent false",
+			popover.visibleIntentForTest());
+		popover.dispose(); // second call must not change anything observable
+		assertFalse("visibleIntent must still be false after second dispose",
+			popover.visibleIntentForTest());
 	}
 
 	@Test
@@ -109,6 +113,29 @@ public class LandmarkHoverPopoverTest
 			System.currentTimeMillis(), 0, 0, 0, 0, false));
 
 		assertFalse("after dispose, mouseEntered must not flip visibleIntent",
+			popover.visibleIntentForTest());
+		assertEquals("after dispose, label text must be unchanged",
+			"", popover.labelTextForTest());
+	}
+
+	@Test
+	public void disposeWhileShowingHidesTheWindow()
+	{
+		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		LandmarkHoverPopover popover = new LandmarkHoverPopover();
+		javax.swing.JButton btn = new javax.swing.JButton();
+		btn.setSize(34, 34);
+		popover.attach(btn, () -> "Bank");
+
+		// Pop the popover open via a synthetic hover.
+		btn.dispatchEvent(new java.awt.event.MouseEvent(btn,
+			java.awt.event.MouseEvent.MOUSE_ENTERED,
+			System.currentTimeMillis(), 0, 0, 0, 0, false));
+		org.junit.Assert.assertTrue("popover should be visible before dispose",
+			popover.visibleIntentForTest());
+
+		popover.dispose();
+		assertFalse("dispose called while showing must drop visibleIntent",
 			popover.visibleIntentForTest());
 	}
 }
