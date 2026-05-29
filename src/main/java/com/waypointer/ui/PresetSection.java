@@ -8,8 +8,12 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -32,9 +36,14 @@ class PresetSection extends JPanel
     private static final String CHEVRON_COLLAPSED = "▸";
     private static final String CHEVRON_EXPANDED = "▾";
 
-    // Width budget for the row label inside the panel: PANEL_WIDTH (225) - left padding (22)
-    // - right padding (22) - button (~23) - hgap (12) - scrollbar (~17), with a small margin.
-    private static final int LABEL_WIDTH_PX = 107;
+    // Historical fallback width for the row label: used until componentResized fires with a
+    // real container width. Derived from the old constant kept as a safety value for tests /
+    // very early paint passes when getWidth() is still zero.
+    private static final int FALLBACK_LABEL_WIDTH_PX = 107;
+    // Row chrome reserved on either side of the label: border left (22) + border right (40)
+    // + BorderLayout hgap (12) + AddRemoveToggle button (~23) + a small margin (6).
+    private static final int ROW_RESERVED_PX = 22 + 40 + 12 + 23 + 6;
+    private static final int MIN_LABEL_WIDTH_PX = 60;
 
     private final Preset preset;
     private final SpriteManager spriteManager;
@@ -43,6 +52,8 @@ class PresetSection extends JPanel
     private final Consumer<UUID> onRemove;
     private final JPanel rows = new JPanel();
     private final JLabel chevron = new JLabel(CHEVRON_COLLAPSED);
+    private final List<JLabel> rowLabels = new ArrayList<>();
+    private int labelWidthPx;
     private boolean expanded;
 
     PresetSection(Preset preset, SpriteManager spriteManager, Map<Integer, UUID> existingIdByPacked,
@@ -63,6 +74,38 @@ class PresetSection extends JPanel
         rows.setBackground(ColorScheme.DARK_GRAY_COLOR);
         rows.setVisible(false);
         add(rows, BorderLayout.CENTER);
+
+        // Recompute the row-label width as the container grows or shrinks. Drives
+        // HTML wrap so descriptions stay inside the section instead of clipping at the
+        // hard-coded 107 px the old constant used.
+        addComponentListener(new ComponentAdapter()
+        {
+            @Override public void componentResized(ComponentEvent e)
+            {
+                int w = computeLabelWidth(getWidth());
+                if (w == labelWidthPx) return;
+                labelWidthPx = w;
+                for (JLabel label : rowLabels) applyLabelWidth(label, labelWidthPx);
+                rows.revalidate();
+                rows.repaint();
+            }
+        });
+    }
+
+    private static int computeLabelWidth(int containerWidth)
+    {
+        if (containerWidth <= 0) return FALLBACK_LABEL_WIDTH_PX;
+        return Math.max(MIN_LABEL_WIDTH_PX, containerWidth - ROW_RESERVED_PX);
+    }
+
+    private static void applyLabelWidth(JLabel label, int width)
+    {
+        if (width <= 0) return;
+        View v = (View) label.getClientProperty(BasicHTML.propertyKey);
+        if (v == null) return;
+        v.setSize(width, 0);
+        int h = (int) Math.ceil(v.getPreferredSpan(View.Y_AXIS));
+        label.setPreferredSize(new Dimension(width, h));
     }
 
     // Cap the section to its own preferred height so the parent BoxLayout(Y_AXIS) stacks
@@ -145,6 +188,8 @@ class PresetSection extends JPanel
 
     private void buildRows()
     {
+        rowLabels.clear();
+        if (labelWidthPx <= 0) labelWidthPx = computeLabelWidth(getWidth());
         String desc = preset.getDescription();
         if (desc != null && !desc.trim().isEmpty())
         {
@@ -185,15 +230,11 @@ class PresetSection extends JPanel
         label.setForeground(Color.WHITE);
         // BasicHTML's <div style='width:Npx'> trick is unreliable: JLabel still reports
         // its preferredSize at the unwrapped text width, which overflows the viewport and
-        // clips the EAST button. Force the View to lay out at LABEL_WIDTH_PX, then pin
-        // the label's preferredSize so BorderLayout honours the constraint.
-        View htmlView = (View) label.getClientProperty(BasicHTML.propertyKey);
-        if (htmlView != null)
-        {
-            htmlView.setSize(LABEL_WIDTH_PX, 0);
-            int h = (int) Math.ceil(htmlView.getPreferredSpan(View.Y_AXIS));
-            label.setPreferredSize(new Dimension(LABEL_WIDTH_PX, h));
-        }
+        // clips the EAST button. Force the View to lay out at the current labelWidthPx,
+        // then pin the label's preferredSize so BorderLayout honours the constraint. The
+        // section's componentResized listener re-applies if the container resizes.
+        applyLabelWidth(label, labelWidthPx);
+        rowLabels.add(label);
         row.add(label, BorderLayout.CENTER);
 
         int packed = WorldPointPacker.pack(wp.getX(), wp.getY(), wp.getPlane());

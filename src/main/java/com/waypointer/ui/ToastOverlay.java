@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -48,7 +49,6 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
             BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR, 1),
             BorderFactory.createEmptyBorder(8, 12, 8, 12)));
 
-        message.setForeground(ColorScheme.PROGRESS_COMPLETE_COLOR);
         message.setFont(FontManager.getRunescapeSmallFont());
         card.add(message, BorderLayout.CENTER);
 
@@ -121,7 +121,13 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     @Override
     public void show(String text)
     {
-        message.setText("<html>" + Styles.escapeHtml(text) + "</html>");
+        show(text, Severity.SUCCESS);
+    }
+
+    @Override
+    public void show(String text, Severity severity)
+    {
+        applyMessage(text, severity);
         actionLabel.setVisible(false);
         positionCard();
         presentEntry();
@@ -132,8 +138,14 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     @Override
     public void show(String text, String actionLabel, Runnable onClick)
     {
-        message.setText("<html>" + Styles.escapeHtml(text) + "</html>");
-        this.actionLabel.setText("<html><u>" + Styles.escapeHtml(actionLabel) + "</u></html>");
+        show(text, actionLabel, onClick, Severity.SUCCESS);
+    }
+
+    @Override
+    public void show(String text, String actionLabelText, Runnable onClick, Severity severity)
+    {
+        applyMessage(text, severity);
+        this.actionLabel.setText("<html><u>" + Styles.escapeHtml(actionLabelText) + "</u></html>");
         this.actionLabel.setVisible(true);
 
         // Replace any previous listener so a stale runnable from the prior toast doesn't fire.
@@ -156,6 +168,35 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         presentEntry();
         card.setVisible(true);
         restartAutoHide(ACTION_DURATION_MS);
+    }
+
+    private void applyMessage(String text, Severity severity)
+    {
+        message.setForeground(colorFor(severity));
+        String glyph = glyphFor(severity);
+        message.setText("<html>" + Styles.escapeHtml(glyph + "  " + text) + "</html>");
+    }
+
+    private static Color colorFor(Severity severity)
+    {
+        switch (severity)
+        {
+            case WARN:  return ColorScheme.BRAND_ORANGE;
+            case ERROR: return ColorScheme.PROGRESS_ERROR_COLOR;
+            case SUCCESS:
+            default:    return ColorScheme.PROGRESS_COMPLETE_COLOR;
+        }
+    }
+
+    private static String glyphFor(Severity severity)
+    {
+        switch (severity)
+        {
+            case WARN:  return "⚠"; // U+26A0 warning sign
+            case ERROR: return "✕"; // U+2715 multiplication X
+            case SUCCESS:
+            default:    return "✓"; // U+2713 check mark
+        }
     }
 
     boolean cardIsVisibleForTest() { return card.isVisible(); }

@@ -48,7 +48,7 @@ final class AddRemoveToggle extends JLabel
         addMouseListener(new MouseAdapter()
         {
             @Override
-            public void mousePressed(MouseEvent e)
+            public void mouseClicked(MouseEvent e)
             {
                 if (!SwingUtilities.isLeftMouseButton(e)) return;
                 if (currentId == null)

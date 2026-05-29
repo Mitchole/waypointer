@@ -111,7 +111,7 @@ public class DragAndDropHandler
                     {
                         store.moveWaypointToCategory(dragged, categoryId);
                     }
-                    swapWithinCategory(categoryId, dragged, waypointId);
+                    moveBefore(categoryId, dragged, waypointId);
                     resolveAutoExpandOnDrop(categoryId);
                     onChange.run();
                     return true;
@@ -399,7 +399,7 @@ public class DragAndDropHandler
         return false;
     }
 
-    private void swapWithinCategory(UUID categoryId, UUID dragged, UUID target)
+    private void moveBefore(UUID categoryId, UUID dragged, UUID target)
     {
         List<UUID> order = new ArrayList<>();
         for (Waypoint w : store.getWaypointsInCategory(categoryId)) order.add(w.getId());

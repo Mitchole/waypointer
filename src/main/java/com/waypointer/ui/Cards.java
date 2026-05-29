@@ -29,6 +29,10 @@ final class Cards
 
             @Override public void mouseExited(MouseEvent e)
             {
+                // mouseExited fires when the cursor crosses into a child component too. If
+                // the cursor's still within the card's own bounds the swap would flicker as
+                // the user mouses over a child label, so skip the revert in that case.
+                if (card.contains(e.getPoint())) return;
                 card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
             }
 

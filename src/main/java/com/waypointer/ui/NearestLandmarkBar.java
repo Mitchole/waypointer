@@ -229,7 +229,7 @@ public final class NearestLandmarkBar extends JPanel
     {
         if (!pathfinder.isAvailable())
         {
-            toasts.show("Install the Shortest Path plugin to use Play.");
+            toasts.show("Install the Shortest Path plugin to use Play.", Toasts.Severity.WARN);
             return;
         }
         clientThread.invoke(() -> {
@@ -249,7 +249,7 @@ public final class NearestLandmarkBar extends JPanel
     {
         if (hit == null)
         {
-            toasts.show("No " + type.displayName().toLowerCase() + " found.");
+            toasts.show("No " + type.displayName().toLowerCase() + " found.", Toasts.Severity.WARN);
             return;
         }
         pathfinder.requestPath(hit.packed, hit.name);
