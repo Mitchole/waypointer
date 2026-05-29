@@ -22,7 +22,7 @@ import net.runelite.client.ui.FontManager;
 // surprises (the panel is constructed before RuneLiteLAF is installed).
 final class TabStrip extends JPanel
 {
-    enum Tab { MY_WAYPOINTS, PRESETS }
+    enum Tab { MY_WAYPOINTS, PRESETS, DEV }
 
     private final Map<Tab, JLabel> labels = new EnumMap<>(Tab.class);
     private final Consumer<Tab> onSelect;
@@ -30,18 +30,36 @@ final class TabStrip extends JPanel
 
     TabStrip(Consumer<Tab> onSelect)
     {
+        this(onSelect, java.util.Arrays.asList(Tab.MY_WAYPOINTS, Tab.PRESETS));
+    }
+
+    TabStrip(Consumer<Tab> onSelect, java.util.List<Tab> visible)
+    {
         this.onSelect = onSelect;
-        setLayout(new GridLayout(1, 2, 0, 0));
+        setLayout(new GridLayout(1, visible.size(), 0, 0));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        labels.put(Tab.MY_WAYPOINTS, buildTab("My waypoints", Tab.MY_WAYPOINTS));
-        labels.put(Tab.PRESETS, buildTab("Presets", Tab.PRESETS));
+        for (Tab t : visible)
+        {
+            labels.put(t, buildTab(displayName(t), t));
+        }
 
         for (JLabel l : labels.values())
         {
             add(l);
         }
         applyStyles();
+    }
+
+    private static String displayName(Tab t)
+    {
+        switch (t)
+        {
+            case MY_WAYPOINTS: return "My waypoints";
+            case PRESETS:      return "Presets";
+            case DEV:          return "Dev";
+        }
+        return t.name();
     }
 
     Tab getActive() { return active; }

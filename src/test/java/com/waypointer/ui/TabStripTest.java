@@ -58,6 +58,15 @@ public class TabStripTest
         assertNotNull(strip.labelFor(TabStrip.Tab.PRESETS));
     }
 
+    @Test
+    public void variableTabConstructorRendersThreeTabs()
+    {
+        TabStrip strip = new TabStrip(t -> {},
+            java.util.Arrays.asList(TabStrip.Tab.MY_WAYPOINTS,
+                TabStrip.Tab.PRESETS, TabStrip.Tab.DEV));
+        assertNotNull(strip.labelFor(TabStrip.Tab.DEV));
+    }
+
     private static void assertActiveBorderIsBrandOrange(TabStrip strip, TabStrip.Tab tab)
     {
         JLabel l = strip.labelFor(tab);
