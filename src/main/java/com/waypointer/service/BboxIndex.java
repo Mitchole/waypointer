@@ -48,12 +48,12 @@ public class BboxIndex
         new ResourceEntry("/com/waypointer/landmarks/landmarks-bboxes.tsv",      null),
     };
 
-    static final class Entry
+    public static final class Entry
     {
-        final int x1, y1, x2, y2, plane, area;
-        final String name;
+        public final int x1, y1, x2, y2, plane, area;
+        public final String name;
         @javax.annotation.Nullable
-        final LandmarkType type;
+        public final LandmarkType type;
 
         Entry(int x1, int y1, int x2, int y2, int plane, String name)
         {
@@ -96,6 +96,13 @@ public class BboxIndex
     public com.waypointer.util.Listeners.Subscription subscribe(Runnable r)
     {
         return listeners.subscribe(r);
+    }
+
+    public java.util.List<Entry> bundledOfType(LandmarkType t)
+    {
+        java.util.List<Entry> out = new java.util.ArrayList<>();
+        for (Entry e : bundled) if (e.type == t) out.add(e);
+        return out;
     }
 
     public void reload(LandmarkOverridesSnapshot s)
