@@ -23,11 +23,66 @@ public class LandmarkOverrides
     private LandmarkOverridesSnapshot snapshot = LandmarkOverridesSnapshot.empty();
     private final Listeners listeners = new Listeners();
     private LandmarkOverridesSnapshot undoBuffer = null;
+    private final OverridePersistence persistence;
+    private final com.waypointer.codec.LandmarkOverridesCodec codec;
+    private volatile boolean dirty = false;
+    private final java.util.concurrent.ScheduledExecutorService scheduler;
 
     @Inject
-    public LandmarkOverrides() {}
+    public LandmarkOverrides(com.waypointer.codec.LandmarkOverridesCodec codec)
+    {
+        this(net.runelite.client.RuneLite.RUNELITE_DIR.toPath().resolve("waypointer"), codec,
+            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+                r -> { Thread t = new Thread(r, "waypointer-landmark-overrides"); t.setDaemon(true); return t; }));
+        loadFromDisk();
+    }
 
-    public static LandmarkOverrides forTesting() { return new LandmarkOverrides(); }
+    LandmarkOverrides(java.nio.file.Path dir, com.waypointer.codec.LandmarkOverridesCodec codec,
+        java.util.concurrent.ScheduledExecutorService scheduler)
+    {
+        this.persistence = new OverridePersistence(dir, "landmark-overrides.json");
+        this.codec = codec;
+        this.scheduler = scheduler;
+    }
+
+    public static LandmarkOverrides forTesting()
+    {
+        try
+        {
+            return forTesting(java.nio.file.Files.createTempDirectory("lo-mem"),
+                new com.waypointer.codec.LandmarkOverridesCodec(new com.google.gson.Gson()));
+        }
+        catch (java.io.IOException e) { throw new RuntimeException(e); }
+    }
+
+    public static LandmarkOverrides forTesting(java.nio.file.Path dir,
+        com.waypointer.codec.LandmarkOverridesCodec codec)
+    {
+        return new LandmarkOverrides(dir, codec,
+            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+                r -> { Thread t = new Thread(r, "waypointer-landmark-overrides-test"); t.setDaemon(true); return t; }));
+    }
+
+    public void loadFromDisk()
+    {
+        snapshot = codec.decode(persistence.loadOrEmpty());
+        listeners.fire();
+    }
+
+    public boolean flushBlocking()
+    {
+        return persistence.writeBlocking(codec.encode(snapshot));
+    }
+
+    private void scheduleSave()
+    {
+        if (dirty) return;
+        dirty = true;
+        scheduler.schedule(() -> {
+            dirty = false;
+            flushBlocking();
+        }, 500, java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
 
     public LandmarkOverridesSnapshot getSnapshot() { return snapshot; }
 
@@ -40,6 +95,7 @@ public class LandmarkOverrides
             k -> new TypeOverride(new ArrayList<>()));
         t.getEntries().add(e);
         listeners.fire();
+        scheduleSave();
     }
 
     public void replaceEntry(String type, Entry original, Entry updated)
@@ -52,6 +108,7 @@ public class LandmarkOverrides
             created.getEntries().add(updated);
             snapshot.getByType().put(type, created);
             listeners.fire();
+            scheduleSave();
             return;
         }
         for (int i = 0; i < t.getEntries().size(); i++)
@@ -60,6 +117,7 @@ public class LandmarkOverrides
             {
                 t.getEntries().set(i, updated);
                 listeners.fire();
+                scheduleSave();
                 return;
             }
         }
@@ -70,6 +128,7 @@ public class LandmarkOverrides
             k -> new TypeOverride(new ArrayList<>()));
         tt.getEntries().add(updated);
         listeners.fire();
+        scheduleSave();
     }
 
     public void deleteOverrideEntry(String type, Entry e)
@@ -79,6 +138,7 @@ public class LandmarkOverrides
         if (t == null) return;
         t.getEntries().removeIf(x -> sameTuple(x, e));
         listeners.fire();
+        scheduleSave();
     }
 
     public void deleteBundledEntry(String type, String name, int x1, int y1, int x2, int y2, int plane)
@@ -86,6 +146,7 @@ public class LandmarkOverrides
         undoBuffer = deepCopy(snapshot);
         snapshot.getDeletions().add(new DeletedEntry(type, name, x1, y1, x2, y2, plane));
         listeners.fire();
+        scheduleSave();
     }
 
     public boolean undoLast()
@@ -94,6 +155,7 @@ public class LandmarkOverrides
         snapshot = undoBuffer;
         undoBuffer = null;
         listeners.fire();
+        scheduleSave();
         return true;
     }
 

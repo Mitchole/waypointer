@@ -73,4 +73,23 @@ public class LandmarkOverridesTest
         assertTrue(ov.undoLast());
         assertFalse(ov.undoLast());
     }
+
+    @Test
+    public void blockingSaveAndLoadRoundTrip() throws Exception
+    {
+        java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("lo-disk");
+        com.waypointer.codec.LandmarkOverridesCodec codec =
+            new com.waypointer.codec.LandmarkOverridesCodec(new com.google.gson.Gson());
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(dir, codec);
+        ov.addEntry("BANK", new Entry("disk", 7, 7, 7, 7, 0));
+        ov.flushBlocking();
+
+        LandmarkOverrides reread = LandmarkOverrides.forTesting(dir, codec);
+        reread.loadFromDisk();
+        assertEquals(1, reread.getSnapshot().getByType().get("BANK").getEntries().size());
+
+        // cleanup
+        java.nio.file.Files.walk(dir).sorted(java.util.Comparator.reverseOrder())
+            .forEach(p -> { try { java.nio.file.Files.deleteIfExists(p); } catch (Exception ignored) {} });
+    }
 }
