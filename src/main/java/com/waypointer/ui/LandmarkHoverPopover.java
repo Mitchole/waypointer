@@ -61,6 +61,13 @@ final class LandmarkHoverPopover
 	 * target, horizontally centred. The supplier is re-read on every enter so the
 	 * text follows late-arriving updates (e.g. a rebuild changing a button's meaning).
 	 *
+	 * <p>Attach is single-use per target component. Calling {@code attach} twice on the
+	 * same target registers two listeners, which would race on every hover event. The
+	 * existing caller in {@link NearestLandmarkBar} rebuilds its buttons from scratch
+	 * on every panel rebuild, so re-attaching is naturally avoided. If a future caller
+	 * needs to detach, add a {@code detach(JComponent)} method then — don't make this
+	 * idempotent by stealth.
+	 *
 	 * <p>Attach is a no-op after {@link #dispose()}.
 	 */
 	void attach(JComponent target, Supplier<String> textSupplier)
@@ -80,6 +87,7 @@ final class LandmarkHoverPopover
 
 			@Override public void mouseExited(MouseEvent e)
 			{
+				if (disposed) return;
 				visibleIntent = false;
 				if (displayAvailable()) window.setVisible(false);
 			}
