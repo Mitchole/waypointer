@@ -224,7 +224,7 @@ public class CategorySection extends JPanel
         }
         if (waypoints.isEmpty())
         {
-            JLabel empty = new JLabel("(empty)");
+            JLabel empty = new JLabel("(empty - drag here)");
             empty.setForeground(Color.GRAY);
             empty.setOpaque(false);
             empty.setBorder(BorderFactory.createEmptyBorder(2, 12, 2, 4));

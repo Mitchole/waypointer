@@ -29,7 +29,7 @@ import net.runelite.client.ui.FontManager;
 /**
  * Synthetic top-of-panel section listing pinned waypoints. Reuses {@link WaypointRow} for
  * the rows. Differences from {@link CategorySection}: no drag source, no category-icon
- * slot, no popup menu on the header, no "(empty)" placeholder (caller skips rendering
+ * slot, no popup menu on the header, no empty placeholder (caller skips rendering
  * when the list is empty). Rows are constructed with the drag handle disabled.
  */
 public class PinnedSection extends JPanel
