@@ -8,6 +8,6 @@ import net.runelite.client.ui.ColorScheme;
 @Singleton
 public class PresetEditorPanel extends JPanel
 {
-	@Inject public PresetEditorPanel() { setBackground(ColorScheme.DARK_GRAY_COLOR); }
-	public void dispose() {}
+    @Inject public PresetEditorPanel() { setBackground(ColorScheme.DARK_GRAY_COLOR); }
+    public void dispose() {}
 }

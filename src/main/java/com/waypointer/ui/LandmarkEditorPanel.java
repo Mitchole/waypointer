@@ -8,6 +8,6 @@ import net.runelite.client.ui.ColorScheme;
 @Singleton
 public class LandmarkEditorPanel extends JPanel
 {
-	@Inject public LandmarkEditorPanel() { setBackground(ColorScheme.DARK_GRAY_COLOR); }
-	public void dispose() {}
+    @Inject public LandmarkEditorPanel() { setBackground(ColorScheme.DARK_GRAY_COLOR); }
+    public void dispose() {}
 }
