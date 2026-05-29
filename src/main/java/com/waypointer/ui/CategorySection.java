@@ -181,8 +181,12 @@ public class CategorySection extends JPanel
 
         add(headerRow, BorderLayout.NORTH);
 
+        // Hide the drag handle when the row can't actually be dragged: either the category
+        // sort mode is non-MANUAL (reorder is auto), or the panel passed a null dnd because
+        // a search filter is active and drop targets would refer to invisible neighbours.
         boolean sortDisablesDrag = category.getSortMode() != null
             && category.getSortMode() != com.waypointer.model.CategorySortMode.MANUAL;
+        boolean dragDisabled = sortDisablesDrag || dnd == null;
 
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -196,7 +200,7 @@ public class CategorySection extends JPanel
                 active,
                 w.isPinned(),
                 com.waypointer.service.Wilderness.isInWilderness(w.getPackedWorldPoint()),
-                /* dragDisabled */ sortDisablesDrag,
+                /* dragDisabled */ dragDisabled,
                 () -> onRowAction.accept(w, RowAction.PLAY),
                 () -> onRowAction.accept(w, RowAction.EXPAND),
                 () -> onRowAction.accept(w, RowAction.TOGGLE_PIN),
