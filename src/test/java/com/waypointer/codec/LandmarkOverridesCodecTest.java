@@ -40,4 +40,20 @@ public class LandmarkOverridesCodecTest
         assertEquals("Tel Teklan bank", bank.getEntries().get(0).getName());
         assertEquals(1234, bank.getEntries().get(0).getX1());
     }
+
+    @Test
+    public void emptyStringReturnsEmptySnapshot()
+    {
+        LandmarkOverridesSnapshot s = codec.decode("");
+        assertEquals(1, s.getVersion());
+        assertTrue(s.getByType().isEmpty());
+    }
+
+    @Test
+    public void malformedJsonReturnsEmptySnapshot()
+    {
+        LandmarkOverridesSnapshot s = codec.decode("{\"byType\":\"not-an-object\"");
+        assertEquals(1, s.getVersion());
+        assertTrue(s.getByType().isEmpty());
+    }
 }

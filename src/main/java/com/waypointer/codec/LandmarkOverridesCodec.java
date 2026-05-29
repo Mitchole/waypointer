@@ -24,18 +24,19 @@ public class LandmarkOverridesCodec
 
     public LandmarkOverridesSnapshot decode(String json)
     {
-        LandmarkOverridesSnapshot decoded = gson.fromJson(json, LandmarkOverridesSnapshot.class);
-        if (decoded == null)
+        if (json == null || json.isEmpty()) return LandmarkOverridesSnapshot.empty();
+        try
         {
-            return LandmarkOverridesSnapshot.empty();
-        }
-        if (decoded.getByType() == null || decoded.getDeletions() == null)
-        {
+            LandmarkOverridesSnapshot decoded = gson.fromJson(json, LandmarkOverridesSnapshot.class);
+            if (decoded == null) return LandmarkOverridesSnapshot.empty();
             return new LandmarkOverridesSnapshot(
-                decoded.getVersion(),
+                decoded.getVersion() == 0 ? LandmarkOverridesSnapshot.CURRENT_SCHEMA_VERSION : decoded.getVersion(),
                 decoded.getByType() == null ? new java.util.LinkedHashMap<>() : decoded.getByType(),
                 decoded.getDeletions() == null ? new java.util.ArrayList<>() : decoded.getDeletions());
         }
-        return decoded;
+        catch (com.google.gson.JsonParseException e)
+        {
+            return LandmarkOverridesSnapshot.empty();
+        }
     }
 }
