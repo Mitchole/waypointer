@@ -5,6 +5,8 @@ import com.waypointer.service.LandmarkOverridesSnapshot.TypeOverride;
 import com.waypointer.util.Listeners.Subscription;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class LandmarkOverridesTest
 {
@@ -50,5 +52,25 @@ public class LandmarkOverridesTest
         sub.close();
         ov.addEntry("BANK", new Entry("y", 2, 2, 2, 2, 0));
         assertEquals(1, count[0]);
+    }
+
+    @Test
+    public void undoLastRestoresPriorSnapshot()
+    {
+        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        ov.addEntry("BANK", new Entry("x", 1, 1, 1, 1, 0));
+        ov.addEntry("BANK", new Entry("y", 2, 2, 2, 2, 0));
+        assertTrue(ov.undoLast());
+        assertEquals(1, ov.getSnapshot().getByType().get("BANK").getEntries().size());
+        assertEquals("x", ov.getSnapshot().getByType().get("BANK").getEntries().get(0).getName());
+    }
+
+    @Test
+    public void undoTwiceIsNoOp()
+    {
+        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        ov.addEntry("BANK", new Entry("x", 1, 1, 1, 1, 0));
+        assertTrue(ov.undoLast());
+        assertFalse(ov.undoLast());
     }
 }
