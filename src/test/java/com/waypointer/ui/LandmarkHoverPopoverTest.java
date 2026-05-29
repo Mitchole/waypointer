@@ -84,4 +84,31 @@ public class LandmarkHoverPopoverTest
 		assertEquals("supplier must be re-read on every enter",
 			"Anvil", popover.labelTextForTest());
 	}
+
+	@Test
+	public void disposeIsIdempotent()
+	{
+		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		LandmarkHoverPopover popover = new LandmarkHoverPopover();
+		popover.dispose();
+		popover.dispose(); // must not throw
+	}
+
+	@Test
+	public void afterDisposeMouseEnterIsNoOp()
+	{
+		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		LandmarkHoverPopover popover = new LandmarkHoverPopover();
+		javax.swing.JButton btn = new javax.swing.JButton();
+		btn.setSize(34, 34);
+		popover.attach(btn, () -> "Bank");
+		popover.dispose();
+
+		btn.dispatchEvent(new java.awt.event.MouseEvent(btn,
+			java.awt.event.MouseEvent.MOUSE_ENTERED,
+			System.currentTimeMillis(), 0, 0, 0, 0, false));
+
+		assertFalse("after dispose, mouseEntered must not flip visibleIntent",
+			popover.visibleIntentForTest());
+	}
 }

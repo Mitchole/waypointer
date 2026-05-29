@@ -104,4 +104,17 @@ final class LandmarkHoverPopover
 		int y = onScreen.y - window.getHeight() - gap;
 		window.setLocation(x, y);
 	}
+
+	/**
+	 * Releases the popover's {@link JWindow}. Subsequent {@link #attach} calls still
+	 * register listeners but those listeners short-circuit because {@code disposed}
+	 * is sticky. Safe to call multiple times.
+	 */
+	void dispose()
+	{
+		if (disposed) return;
+		disposed = true;
+		visibleIntent = false;
+		window.dispose();
+	}
 }
