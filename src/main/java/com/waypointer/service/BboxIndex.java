@@ -75,6 +75,7 @@ public class BboxIndex
     }
 
     private final Map<Integer, List<Entry>> byPlane = new HashMap<>();
+    private final List<Entry> bundled = new ArrayList<>();
     private int total;
 
     @Inject
@@ -170,8 +171,53 @@ public class BboxIndex
 
     private void addEntry(Entry e)
     {
+        addEntryInternal(e);
+        bundled.add(e);
+    }
+
+    private void addEntryInternal(Entry e)
+    {
         byPlane.computeIfAbsent(e.plane, k -> new ArrayList<>()).add(e);
         total++;
+    }
+
+    public void applyOverrides(LandmarkOverridesSnapshot s)
+    {
+        byPlane.clear();
+        total = 0;
+
+        java.util.Set<String> replacedTypes = new java.util.HashSet<>(s.getByType().keySet());
+
+        for (Entry b : bundled)
+        {
+            if (b.type != null && replacedTypes.contains(b.type.name())) continue;
+            if (isDeleted(b, s)) continue;
+            addEntryInternal(b);
+        }
+        for (Map.Entry<String, LandmarkOverridesSnapshot.TypeOverride> ent : s.getByType().entrySet())
+        {
+            LandmarkType t;
+            try { t = LandmarkType.valueOf(ent.getKey()); }
+            catch (IllegalArgumentException e) { log.warn("Unknown landmark type in override: {}", ent.getKey()); continue; }
+            for (LandmarkOverridesSnapshot.Entry e : ent.getValue().getEntries())
+            {
+                addEntryInternal(new Entry(e.getX1(), e.getY1(), e.getX2(), e.getY2(), e.getPlane(), e.getName(), t));
+            }
+        }
+    }
+
+    private boolean isDeleted(Entry b, LandmarkOverridesSnapshot s)
+    {
+        if (b.type == null) return false;
+        for (LandmarkOverridesSnapshot.DeletedEntry d : s.getDeletions())
+        {
+            if (!d.getType().equals(b.type.name())) continue;
+            if (d.getX1() == b.x1 && d.getY1() == b.y1
+                && d.getX2() == b.x2 && d.getY2() == b.y2
+                && d.getPlane() == b.plane
+                && java.util.Objects.equals(d.getName(), b.name)) return true;
+        }
+        return false;
     }
 
     private void loadResource(ResourceEntry res)
