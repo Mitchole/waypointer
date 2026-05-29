@@ -27,7 +27,7 @@ public class WaypointCaptureTest
         store = new WaypointStore();
         store.bootstrap(new Library());
         ClientThread clientThread = mock(ClientThread.class);
-        LandmarkLookup lookup = new LandmarkLookup(new BboxIndex(), new CacheLabelIndex());
+        LandmarkLookup lookup = new LandmarkLookup(new BboxIndex(LandmarkOverrides.forTesting()), new CacheLabelIndex());
         capture = new WaypointCapture(client, store, clientThread, lookup);
     }
 

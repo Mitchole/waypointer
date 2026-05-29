@@ -56,4 +56,21 @@ public class BboxIndexOverrideMergeTest
         idx.applyOverrides(LandmarkOverridesSnapshot.empty());
         assertEquals("Bundled", idx.lookup(WorldPointPacker.pack(1, 1, 0)));
     }
+
+    @Test
+    public void reloadAppliesLatestSnapshot()
+    {
+        BboxIndex idx = BboxIndex.forTesting(Arrays.asList(
+            new BboxIndex.Entry(1, 1, 1, 1, 0, "Bundled", LandmarkType.BANK)));
+        idx.applyOverrides(LandmarkOverridesSnapshot.empty());
+        int[] fired = {0};
+        idx.subscribe(() -> fired[0]++);
+
+        Map<String, TypeOverride> by = new LinkedHashMap<>();
+        by.put("BANK", new TypeOverride(Arrays.asList(new Entry("New", 9, 9, 9, 9, 0))));
+        idx.reload(new LandmarkOverridesSnapshot(1, by, new ArrayList<>()));
+
+        assertEquals(1, fired[0]);
+        assertEquals("New", idx.lookup(WorldPointPacker.pack(9, 9, 0)));
+    }
 }

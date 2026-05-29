@@ -75,19 +75,33 @@ public class BboxIndex
     }
 
     private final Map<Integer, List<Entry>> byPlane = new HashMap<>();
+    private final com.waypointer.util.Listeners listeners = new com.waypointer.util.Listeners();
     private final List<Entry> bundled = new ArrayList<>();
     private int total;
 
     @Inject
-    public BboxIndex()
+    public BboxIndex(LandmarkOverrides overrides)
     {
         for (ResourceEntry res : RESOURCES) loadResource(res);
         log.info("BboxIndex loaded {} bbox entries across {} planes", total, byPlane.size());
+        applyOverrides(overrides.getSnapshot());
+        overrides.subscribe(() -> reload(overrides.getSnapshot()));
     }
 
     private BboxIndex(boolean skipResourceLoad)
     {
         // package-private; only used by forTesting()
+    }
+
+    public com.waypointer.util.Listeners.Subscription subscribe(Runnable r)
+    {
+        return listeners.subscribe(r);
+    }
+
+    public void reload(LandmarkOverridesSnapshot s)
+    {
+        applyOverrides(s);
+        listeners.fire();
     }
 
     static BboxIndex forTesting(Collection<Entry> entries)
