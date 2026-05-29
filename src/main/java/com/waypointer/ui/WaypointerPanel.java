@@ -464,6 +464,45 @@ public class WaypointerPanel extends PluginPanel
         }
     }
 
+    /**
+     * Flips every collapsible body section (Pinned + real categories) to {@code expanded},
+     * persists the new collapse map, and rebuilds. Powers the overflow menu's
+     * Expand all / Collapse all toggle.
+     */
+    public void setAllSectionsExpanded(boolean expanded)
+    {
+        for (Category c : store.getCategoriesOrdered())
+        {
+            collapsedByCategory.put(c.getId(), !expanded);
+        }
+        collapsedByCategory.put(PINNED_COLLAPSE_KEY, !expanded);
+        config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
+        rebuild();
+    }
+
+    /**
+     * True when at least half of the visible collapsible sections are currently collapsed.
+     * Drives the overflow menu's label flip between "Expand all" and "Collapse all". Mirrors
+     * rebuild's visibility rules so a section that's not on screen doesn't sway the count.
+     */
+    public boolean isMajorityCollapsed()
+    {
+        int collapsed = 0;
+        int total = 0;
+        if (!store.getPinnedWaypoints(config.newestPinAtTop()).isEmpty())
+        {
+            total++;
+            if (collapsedByCategory.getOrDefault(PINNED_COLLAPSE_KEY, false)) collapsed++;
+        }
+        for (Category c : store.getCategoriesOrdered())
+        {
+            if (c.isUncategorized() && store.getWaypointsInCategory(c.getId()).isEmpty()) continue;
+            total++;
+            if (collapsedByCategory.getOrDefault(c.getId(), false)) collapsed++;
+        }
+        return total == 0 || collapsed * 2 >= total;
+    }
+
     private void onFilterChanged()
     {
         String txt = searchField.getText();
