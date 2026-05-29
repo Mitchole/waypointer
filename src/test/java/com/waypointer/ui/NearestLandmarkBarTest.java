@@ -193,7 +193,8 @@ public class NearestLandmarkBarTest
 
     @Test
     public void landmarkButtonsHaveGrayFilteredDisabledIcon()
-        throws java.lang.reflect.InvocationTargetException, InterruptedException
+        throws java.lang.reflect.InvocationTargetException, InterruptedException,
+               NoSuchFieldException, IllegalAccessException
     {
         // The spec wants disabled landmark buttons to read as obviously disabled. Swing
         // swaps to the disabled icon when isEnabled() == false; this test checks that
@@ -218,6 +219,14 @@ public class NearestLandmarkBarTest
         javax.swing.SwingUtilities.invokeAndWait(() -> {});
 
         java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
+        // Read AbstractButton.disabledIcon via reflection so the assertion checks an
+        // explicit setDisabledIcon call rather than the LAF's lazy auto-synthesis on
+        // first getDisabledIcon() invocation. Without this peek the test would pass
+        // even if applySprite never called setDisabledIcon.
+        java.lang.reflect.Field disabledIconField =
+            javax.swing.AbstractButton.class.getDeclaredField("disabledIcon");
+        disabledIconField.setAccessible(true);
+
         int landmarkCount = 0;
         for (java.awt.Component c : iconRow.getComponents())
         {
@@ -225,9 +234,10 @@ public class NearestLandmarkBarTest
             javax.swing.JButton jb = (javax.swing.JButton) c;
             if (jb.getIcon() == null) continue; // overflow button has no icon
             landmarkCount++;
+            Object explicit = disabledIconField.get(jb);
             org.junit.Assert.assertNotNull(
-                "every landmark button must have a disabledIcon for GrayFilter swap",
-                jb.getDisabledIcon());
+                "applySprite must explicitly setDisabledIcon (GrayFilter); got null",
+                explicit);
         }
         org.junit.Assert.assertTrue("at least one landmark button rendered", landmarkCount > 0);
     }

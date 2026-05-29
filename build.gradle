@@ -38,6 +38,10 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.named('test') {
     useJUnit()
+    // Required for NearestLandmarkBarTest: reads AbstractButton.disabledIcon via
+    // reflection to assert that applySprite called setDisabledIcon explicitly
+    // rather than relying on the LAF's lazy auto-synthesis.
+    jvmArgs '--add-opens', 'java.desktop/javax.swing=ALL-UNNAMED'
     testLogging {
         events 'failed', 'skipped'
         showStandardStreams = false
