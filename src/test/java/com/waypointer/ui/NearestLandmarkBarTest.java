@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -188,5 +189,46 @@ public class NearestLandmarkBarTest
         // Drop trailing overflow button.
         if (!all.isEmpty()) all.remove(all.size() - 1);
         return all;
+    }
+
+    @Test
+    public void landmarkButtonsHaveGrayFilteredDisabledIcon()
+        throws java.lang.reflect.InvocationTargetException, InterruptedException
+    {
+        // The spec wants disabled landmark buttons to read as obviously disabled. Swing
+        // swaps to the disabled icon when isEnabled() == false; this test checks that
+        // applySprite seeded one alongside the enabled icon. The test simulates sprite
+        // arrival by capturing the SpriteManager.getSpriteAsync callback and feeding it
+        // a small placeholder BufferedImage.
+        java.awt.image.BufferedImage stub = new java.awt.image.BufferedImage(
+            16, 16, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        org.mockito.ArgumentCaptor<java.util.function.Consumer> callback =
+            org.mockito.ArgumentCaptor.forClass(java.util.function.Consumer.class);
+        when(config.landmarkSelectionJson()).thenReturn("");
+
+        NearestLandmarkBar bar = new NearestLandmarkBar(
+            bbox, pathfinder, client, clientThread, spriteManager, config, gson);
+
+        verify(spriteManager, atLeastOnce()).getSpriteAsync(anyInt(), anyInt(), callback.capture());
+        for (java.util.function.Consumer<java.awt.image.BufferedImage> cb : callback.getAllValues())
+        {
+            cb.accept(stub);
+        }
+        // Drain the EDT so the invokeLater that sets the icons runs.
+        javax.swing.SwingUtilities.invokeAndWait(() -> {});
+
+        java.awt.Container iconRow = (java.awt.Container) bar.getComponent(0);
+        int landmarkCount = 0;
+        for (java.awt.Component c : iconRow.getComponents())
+        {
+            if (!(c instanceof javax.swing.JButton)) continue;
+            javax.swing.JButton jb = (javax.swing.JButton) c;
+            if (jb.getIcon() == null) continue; // overflow button has no icon
+            landmarkCount++;
+            org.junit.Assert.assertNotNull(
+                "every landmark button must have a disabledIcon for GrayFilter swap",
+                jb.getDisabledIcon());
+        }
+        org.junit.Assert.assertTrue("at least one landmark button rendered", landmarkCount > 0);
     }
 }

@@ -17,6 +17,7 @@ import javax.inject.Singleton;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.GrayFilter;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -207,7 +208,11 @@ public final class NearestLandmarkBar extends JPanel
         spriteManager.getSpriteAsync(id, 0, img -> {
             if (img == null) return;
             SwingUtilities.invokeLater(() -> {
-                b.setIcon(new ImageIcon(scaleDownIfNeeded(img)));
+                Image scaled = scaleDownIfNeeded(img);
+                b.setIcon(new ImageIcon(scaled));
+                // GrayFilter produces a desaturated copy so the disabled (logged-out)
+                // state reads as obviously inactive on the RuneLite dark theme.
+                b.setDisabledIcon(new ImageIcon(GrayFilter.createDisabledImage(scaled)));
                 b.revalidate();
                 b.repaint();
             });
