@@ -94,4 +94,13 @@ public interface WaypointerConfig extends Config
 
     @ConfigItem(keyName = "landmarkSelectionJson", name = "", description = "")
     void setLandmarkSelectionJson(String v);
+
+    @ConfigItem(
+        keyName = "devModeEnabled",
+        name = "Dev mode",
+        description = "Show a Dev tab for editing bundled landmark tiles and preset waypoints. "
+            + "For plugin authors and contributors. Off for normal play.",
+        position = 100
+    )
+    default boolean devModeEnabled() { return false; }
 }
