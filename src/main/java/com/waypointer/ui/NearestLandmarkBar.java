@@ -65,6 +65,7 @@ public final class NearestLandmarkBar extends JPanel
     // text and click targets reflect the current data. Closed in dispose(); the field is
     // nullable because the BboxIndex mock in unit tests returns null from subscribe(...).
     private final com.waypointer.util.Listeners.Subscription bboxSub;
+    private final LandmarkHoverPopover popover = new LandmarkHoverPopover();
 
     public void setToasts(Toasts toasts)
     {
@@ -122,6 +123,7 @@ public final class NearestLandmarkBar extends JPanel
     public void dispose()
     {
         if (bboxSub != null) bboxSub.close();
+        popover.dispose();
     }
 
     private void rebuildBar()
@@ -136,17 +138,18 @@ public final class NearestLandmarkBar extends JPanel
             applySprite(b, type);
             primaryButtons.put(type, b);
             iconRow.add(b);
+            popover.attach(b, () -> type.displayName());
         }
 
         overflowBtn = makeButton();
         overflowBtn.setText("▾"); // U+25BE BLACK DOWN-POINTING SMALL TRIANGLE
-        overflowBtn.setToolTipText("Customize landmarks");
         overflowBtn.addActionListener(e -> {
             picker.setVisible(!picker.isVisible());
             revalidate();
             repaint();
         });
         iconRow.add(overflowBtn);
+        popover.attach(overflowBtn, () -> "Customize");
 
         applyEnabledState();
         iconRow.revalidate();
@@ -185,14 +188,12 @@ public final class NearestLandmarkBar extends JPanel
 
     private void applyEnabledState()
     {
+        // setEnabled(false) triggers Swing's setDisabledIcon swap (see applySprite),
+        // which is the only visible signal we need. Tooltips were replaced by the
+        // immediate hover popover in rebuildBar.
         for (JButton b : primaryButtons.values()) b.setEnabled(loggedIn);
         // The customize button stays enabled regardless of login state.
         if (overflowBtn != null) overflowBtn.setEnabled(true);
-        String suffix = loggedIn ? "" : " (log in to use)";
-        for (Map.Entry<LandmarkType, JButton> e : primaryButtons.entrySet())
-        {
-            e.getValue().setToolTipText("Path to nearest " + e.getKey().displayName().toLowerCase() + suffix);
-        }
     }
 
     public void setLoggedIn(boolean loggedIn)
