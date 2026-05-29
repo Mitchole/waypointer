@@ -29,6 +29,8 @@ public class LandmarkEditorPanel extends JPanel
     private final JComboBox<LandmarkType> typePicker = new JComboBox<>(LandmarkType.values());
     private final PlaceholderTextField searchField = new PlaceholderTextField("Search by name");
     private final JButton addBtn = new JButton("+ Add entry");
+    private final JButton exportBtn = new JButton("Export changes");
+    private final com.waypointer.codec.LandmarkOverridesCodec landmarkOverridesCodec;
     private final JPanel body = new JPanel();
     private JPanel activeInline = null;
 
@@ -36,12 +38,14 @@ public class LandmarkEditorPanel extends JPanel
 
     @Inject
     public LandmarkEditorPanel(BboxIndex bboxIndex, LandmarkOverrides overrides,
-        WaypointCapture capture, AreaPreviewOverlay areaOverlay)
+        WaypointCapture capture, AreaPreviewOverlay areaOverlay,
+        com.waypointer.codec.LandmarkOverridesCodec landmarkOverridesCodec)
     {
         this.bboxIndex = bboxIndex;
         this.overrides = overrides;
         this.capture = capture;
         this.areaOverlay = areaOverlay;
+        this.landmarkOverridesCodec = landmarkOverridesCodec;
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
 
@@ -52,9 +56,11 @@ public class LandmarkEditorPanel extends JPanel
         Styles.combo(typePicker);
         Styles.textField(searchField);
         Styles.secondaryButton(addBtn);
+        Styles.secondaryButton(exportBtn);
         header.add(typePicker);
         header.add(searchField);
         header.add(addBtn);
+        header.add(exportBtn);
         add(header, BorderLayout.NORTH);
 
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
@@ -69,6 +75,15 @@ public class LandmarkEditorPanel extends JPanel
         typePicker.addActionListener(e -> { closeInline(); rebuild(); });
         searchField.getDocument().addDocumentListener(Styles.documentListener(this::rebuild));
         addBtn.addActionListener(e -> openAdd());
+
+        exportBtn.addActionListener(e -> {
+            String json = landmarkOverridesCodec.encode(overrides.getSnapshot());
+            java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()
+                .setContents(new java.awt.datatransfer.StringSelection(json), null);
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Override snapshot copied to clipboard.", "Waypointer",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        });
 
         bboxSub = bboxIndex.subscribe(() -> SwingUtilities.invokeLater(this::rebuild));
         rebuild();

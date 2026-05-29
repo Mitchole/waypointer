@@ -168,7 +168,7 @@ public class PresetCatalog
     }
 
     /** Parses preset JSON into a list. Returns an empty list on malformed or empty input. */
-    List<Preset> parse(String json)
+    public List<Preset> parse(String json)
     {
         try
         {
