@@ -42,4 +42,20 @@ public class PresetOverridesCodecTest
         assertEquals("Vorkath", bosses.getWaypoints().get(0).getName());
         assertEquals(2272, bosses.getWaypoints().get(0).getX());
     }
+
+    @Test
+    public void emptyStringReturnsEmptySnapshot()
+    {
+        PresetOverridesSnapshot s = codec.decode("");
+        assertEquals(1, s.getVersion());
+        assertTrue(s.getByCategory().isEmpty());
+    }
+
+    @Test
+    public void malformedJsonReturnsEmptySnapshot()
+    {
+        PresetOverridesSnapshot s = codec.decode("{garbage");
+        assertEquals(1, s.getVersion());
+        assertTrue(s.getByCategory().isEmpty());
+    }
 }
