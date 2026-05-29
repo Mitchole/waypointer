@@ -60,6 +60,10 @@ public final class NearestLandmarkBar extends JPanel
     private JButton overflowBtn;
     private boolean loggedIn;
     private Toasts toasts = Toasts.NO_OP;
+    // Fires when dev-mode landmark overrides reload BboxIndex; rebuilds the row so button
+    // text and click targets reflect the current data. Closed in dispose(); the field is
+    // nullable because the BboxIndex mock in unit tests returns null from subscribe(...).
+    private final com.waypointer.util.Listeners.Subscription bboxSub;
 
     public void setToasts(Toasts toasts)
     {
@@ -105,6 +109,18 @@ public final class NearestLandmarkBar extends JPanel
         add(picker);
 
         rebuildBar();
+
+        this.bboxSub = bbox.subscribe(() ->
+            SwingUtilities.invokeLater(this::rebuildBar));
+    }
+
+    /**
+     * Releases the {@link BboxIndex} subscription so the bar doesn't outlive the plugin
+     * lifecycle. Called from {@link WaypointerPanel#dispose()}.
+     */
+    public void dispose()
+    {
+        if (bboxSub != null) bboxSub.close();
     }
 
     private void rebuildBar()

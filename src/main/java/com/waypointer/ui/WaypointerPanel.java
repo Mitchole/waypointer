@@ -247,6 +247,7 @@ public class WaypointerPanel extends PluginPanel
     {
         if (storeSub != null) { storeSub.close(); storeSub = null; }
         if (pathSub != null) { pathSub.close(); pathSub = null; }
+        nearestLandmarkBar.dispose();
     }
 
     // Re-derive the body scrollbar's UI delegate now that RuneLiteLAF is the active LAF.
