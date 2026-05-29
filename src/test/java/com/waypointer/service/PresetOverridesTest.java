@@ -59,4 +59,23 @@ public class PresetOverridesTest
         assertEquals(1, count[0]);
         sub.close();
     }
+
+    @Test
+    public void undoLastRestoresPriorSnapshot()
+    {
+        PresetOverrides ov = PresetOverrides.forTesting();
+        ov.upsertWaypoint("Bosses", null, new Waypoint("A", "", 1, 1, 0));
+        ov.upsertWaypoint("Bosses", null, new Waypoint("B", "", 2, 2, 0));
+        assertTrue(ov.undoLast());
+        assertEquals(1, ov.getSnapshot().getByCategory().get("Bosses").getWaypoints().size());
+    }
+
+    @Test
+    public void undoTwiceIsNoOp()
+    {
+        PresetOverrides ov = PresetOverrides.forTesting();
+        ov.upsertWaypoint("Bosses", null, new Waypoint("A", "", 1, 1, 0));
+        assertTrue(ov.undoLast());
+        assertFalse(ov.undoLast());
+    }
 }
