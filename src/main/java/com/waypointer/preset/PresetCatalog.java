@@ -2,6 +2,7 @@ package com.waypointer.preset;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.PresetOverridesSnapshot;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -28,11 +29,25 @@ public class PresetCatalog
     private List<Preset> bundled = null;
     private List<Preset> cached;
     private PresetOverridesSnapshot lastOverrides = PresetOverridesSnapshot.empty();
+    private final com.waypointer.util.Listeners listeners = new com.waypointer.util.Listeners();
 
     @Inject
-    public PresetCatalog(Gson gson)
+    public PresetCatalog(Gson gson, PresetOverrides overrides)
     {
         this.gson = gson;
+        applyOverrides(overrides.getSnapshot());
+        overrides.subscribe(() -> reload(overrides.getSnapshot()));
+    }
+
+    public com.waypointer.util.Listeners.Subscription subscribe(Runnable r)
+    {
+        return listeners.subscribe(r);
+    }
+
+    public void reload(PresetOverridesSnapshot s)
+    {
+        applyOverrides(s);
+        listeners.fire();
     }
 
     /**
@@ -125,7 +140,7 @@ public class PresetCatalog
 
     public static PresetCatalog forTesting(List<Preset> bundled)
     {
-        PresetCatalog c = new PresetCatalog(new Gson());
+        PresetCatalog c = new PresetCatalog(new Gson(), PresetOverrides.forTesting());
         c.bundled = new ArrayList<>(bundled);
         c.rebuild();
         return c;

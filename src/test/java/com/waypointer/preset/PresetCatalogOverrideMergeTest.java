@@ -87,6 +87,17 @@ public class PresetCatalogOverrideMergeTest
         assertEquals(1, findCat(c, "Bosses").getWaypoints().size());
     }
 
+    @Test
+    public void reloadFiresListeners()
+    {
+        Preset bundled = new Preset("Bosses", null, null, new ArrayList<>());
+        PresetCatalog c = catalog(Arrays.asList(bundled));
+        int[] fired = {0};
+        c.subscribe(() -> fired[0]++);
+        c.reload(PresetOverridesSnapshot.empty());
+        assertEquals(1, fired[0]);
+    }
+
     private static Preset findCat(PresetCatalog c, String name)
     {
         for (Preset p : c.getPresets())
