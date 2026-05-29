@@ -551,6 +551,11 @@ public class WaypointerPanel extends PluginPanel
             rendered = true;
         }
 
+        // A section was rendered as the immediate previous body child. Used to insert a 1-px
+        // divider between adjacent section blocks (banners + empty state don't count, so the
+        // flag resets after the pinned/category-loop block decides what to add).
+        boolean prevWasSection = rendered;
+
         List<Category> cats = store.getCategoriesOrdered();
         long totalWaypoints = snap.getWaypoints().size();
         if (totalWaypoints == 0 && cats.size() <= 1)
@@ -592,8 +597,10 @@ public class WaypointerPanel extends PluginPanel
                         () -> exportCategoryToFile(c),
                         mode -> store.setCategorySortMode(c.getId(), mode)),
                     spriteManager);
+                if (prevWasSection) body.add(buildSectionDivider());
                 body.add(section);
                 rendered = true;
+                prevWasSection = true;
             }
         }
 
@@ -637,6 +644,19 @@ public class WaypointerPanel extends PluginPanel
         wrap.add(empty, BorderLayout.NORTH);
 
         body.add(wrap);
+    }
+
+    // 1-px DARKER_GRAY divider between adjacent section blocks. Pinned by both max and
+    // preferred size so BoxLayout(Y_AXIS) doesn't stretch it vertically.
+    private static JComponent buildSectionDivider()
+    {
+        JPanel divider = new JPanel();
+        divider.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        divider.setOpaque(true);
+        divider.setPreferredSize(new Dimension(0, 1));
+        divider.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        divider.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return divider;
     }
 
     // JPanel whose maximum height collapses to its preferred height, so banners don't get
