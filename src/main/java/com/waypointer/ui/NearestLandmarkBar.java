@@ -126,6 +126,12 @@ public final class NearestLandmarkBar extends JPanel
         popover.dispose();
     }
 
+    /**
+     * Rebuilds the icon row from the current selection. Old buttons are released along
+     * with their popover listeners — the listeners reference the popover but cannot fire
+     * because the old buttons leave the component hierarchy. New buttons get a fresh
+     * popover.attach in the per-type loop and on the overflow button.
+     */
     private void rebuildBar()
     {
         iconRow.removeAll();

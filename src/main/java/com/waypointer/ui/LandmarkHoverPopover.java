@@ -31,8 +31,6 @@ final class LandmarkHoverPopover
 
 	LandmarkHoverPopover()
 	{
-		this.window = new JWindow();
-		this.window.setFocusableWindowState(false);
 		this.label = new JLabel("");
 		this.label.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		this.label.setFont(FontManager.getRunescapeSmallFont());
@@ -41,8 +39,20 @@ final class LandmarkHoverPopover
 			BorderFactory.createEmptyBorder(4, 6, 4, 6)));
 		this.label.setOpaque(true);
 		this.label.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		this.window.getContentPane().add(label);
-		this.window.pack();
+
+		// Skip JWindow allocation in headless JVMs (CI). All show/hide call sites
+		// already guard on displayAvailable(), so a null window is safe.
+		if (displayAvailable())
+		{
+			this.window = new JWindow();
+			this.window.setFocusableWindowState(false);
+			this.window.getContentPane().add(label);
+			this.window.pack();
+		}
+		else
+		{
+			this.window = null;
+		}
 	}
 
 	boolean visibleIntentForTest() { return visibleIntent; }
@@ -79,24 +89,25 @@ final class LandmarkHoverPopover
 				if (disposed) return;
 				String text = textSupplier.get();
 				label.setText(text == null ? "" : text);
+				visibleIntent = true;
+				if (window == null) return; // headless: state updated, no window to show.
 				window.pack();
 				positionAbove(target);
-				visibleIntent = true;
-				if (displayAvailable()) window.setVisible(true);
+				window.setVisible(true);
 			}
 
 			@Override public void mouseExited(MouseEvent e)
 			{
 				if (disposed) return;
 				visibleIntent = false;
-				if (displayAvailable()) window.setVisible(false);
+				if (window != null) window.setVisible(false);
 			}
 		});
 	}
 
 	private void positionAbove(JComponent target)
 	{
-		if (!displayAvailable()) return;
+		if (window == null) return;
 		if (!target.isShowing()) return;
 		Point onScreen = target.getLocationOnScreen();
 		int gap = 4;
@@ -115,6 +126,6 @@ final class LandmarkHoverPopover
 		if (disposed) return;
 		disposed = true;
 		visibleIntent = false;
-		window.dispose();
+		if (window != null) window.dispose();
 	}
 }
