@@ -17,14 +17,11 @@ import com.waypointer.util.Listeners;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.LayoutManager;
 import java.awt.Window;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -97,8 +94,7 @@ public class WaypointerPanel extends PluginPanel
     private static final UUID PINNED_COLLAPSE_KEY =
         UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    private final PlaceholderTextField searchField = new PlaceholderTextField("Search waypoints...");
-    private final JLabel clearButton = new JLabel("✕"); // U+2715 (multiplication X)
+    private final ClearableTextField searchField = new ClearableTextField("Search waypoints...");
     private String currentFilter = "";
 
     // Subscription tokens so the panel can deregister cleanly. Held even though the panel is
@@ -396,16 +392,18 @@ public class WaypointerPanel extends PluginPanel
 
     private JComponent buildSearchBar()
     {
-        JPanel container = new JPanel(new BorderLayout(4, 0));
+        JPanel container = new JPanel(new BorderLayout(0, 0));
         container.setBackground(ColorScheme.DARK_GRAY_COLOR);
         container.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
 
         searchField.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         searchField.setForeground(Color.WHITE);
         searchField.setCaretColor(Color.WHITE);
+        // Right inset is widened to make room for the field's own clear-glyph paint.
+        // ClearableTextField derives its hit zone from getInsets(), so the two stay in sync.
         searchField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR, 1),
-            BorderFactory.createEmptyBorder(4, 6, 4, 6)));
+            BorderFactory.createEmptyBorder(4, 6, 4, 22)));
         searchField.setToolTipText("Search waypoints");
         searchField.getDocument().addDocumentListener(new DocumentListener()
         {
@@ -426,17 +424,6 @@ public class WaypointerPanel extends PluginPanel
         });
 
         container.add(searchField, BorderLayout.CENTER);
-
-        clearButton.setForeground(Color.LIGHT_GRAY);
-        clearButton.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 4));
-        clearButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        clearButton.setToolTipText("Clear search");
-        clearButton.setVisible(false);
-        clearButton.addMouseListener(new MouseAdapter()
-        {
-            @Override public void mouseClicked(MouseEvent e) { searchField.setText(""); }
-        });
-        container.add(clearButton, BorderLayout.EAST);
 
         return container;
     }
@@ -484,7 +471,6 @@ public class WaypointerPanel extends PluginPanel
         if (searchDebounceTimer != null && searchDebounceTimer.isRunning()) searchDebounceTimer.stop();
         searchDebounceTimer = new Timer(120, e -> {
             currentFilter = typed;
-            clearButton.setVisible(!currentFilter.isEmpty());
             rebuild();
         });
         searchDebounceTimer.setRepeats(false);
