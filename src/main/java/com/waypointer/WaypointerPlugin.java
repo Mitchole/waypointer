@@ -1,10 +1,13 @@
 package com.waypointer;
 
 import com.google.inject.Provides;
+import com.waypointer.service.LandmarkOverrides;
+import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.WaypointMenuHandler;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
+import com.waypointer.ui.AreaPreviewOverlay;
 import com.waypointer.ui.Icon;
 import com.waypointer.ui.TabHost;
 import com.waypointer.ui.WaypointerPanel;
@@ -15,10 +18,13 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.ui.overlay.OverlayManager;
 
 @Slf4j
 @PluginDescriptor(
@@ -38,6 +44,10 @@ public class WaypointerPlugin extends Plugin
     @Inject private WaypointMenuHandler menuHandler;
     @Inject private WaypointPathfinder pathfinderService;
     @Inject private TabHost tabHost;
+    @Inject private LandmarkOverrides landmarkOverrides;
+    @Inject private PresetOverrides presetOverrides;
+    @Inject private AreaPreviewOverlay areaPreviewOverlay;
+    @Inject private OverlayManager overlayManager;
 
     private NavigationButton navButton;
     private Thread shutdownHook;
@@ -74,6 +84,8 @@ public class WaypointerPlugin extends Plugin
         // was constructed earlier, against Metal's UIDefaults).
         tabHost.refreshScrollbarStyling();
 
+        if (config.devModeEnabled()) overlayManager.add(areaPreviewOverlay);
+
         log.info("Waypointer started: {} waypoints loaded",
             store.getLibrary().getWaypoints().size());
     }
@@ -97,7 +109,21 @@ public class WaypointerPlugin extends Plugin
         clientToolbar.removeNavigation(navButton);
         tabHost.dispose();
         store.flushPendingSave();
+        overlayManager.remove(areaPreviewOverlay);
+        landmarkOverrides.flushBlocking();
+        presetOverrides.flushBlocking();
         log.info("Waypointer stopped");
+    }
+
+    @Subscribe
+    public void onConfigChanged(ConfigChanged e)
+    {
+        if (!"waypointer".equals(e.getGroup())) return;
+        if ("devModeEnabled".equals(e.getKey()))
+        {
+            if (config.devModeEnabled()) overlayManager.add(areaPreviewOverlay);
+            else overlayManager.remove(areaPreviewOverlay);
+        }
     }
 
     @Provides
