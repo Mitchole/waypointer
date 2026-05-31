@@ -107,8 +107,9 @@ public class WaypointMenuHandler
         {
             int sceneX = source.getParam0();
             int sceneY = source.getParam1();
+            int plane = client.getPlane();
             String name = net.runelite.client.util.Text.removeTags(source.getTarget());
-            addEntry(1, e -> onSaveFromObject(sceneX, sceneY, name));
+            addEntry(1, e -> onSaveFromObject(sceneX, sceneY, plane, name));
         }
     }
 
@@ -169,9 +170,9 @@ public class WaypointMenuHandler
         openCaptureDialog(WorldPointPacker.pack(wp), npcName, npcName);
     }
 
-    private void onSaveFromObject(int sceneX, int sceneY, String name)
+    private void onSaveFromObject(int sceneX, int sceneY, int plane, String name)
     {
-        WorldPoint wp = WorldPoint.fromScene(client, sceneX, sceneY, client.getPlane());
+        WorldPoint wp = WorldPoint.fromScene(client, sceneX, sceneY, plane);
         if (wp == null) return;
         openCaptureDialog(WorldPointPacker.pack(wp), name, null);
     }

@@ -195,4 +195,19 @@ public class WaypointMenuHandlerTest
 
         verify(menu).createMenuEntry(anyInt());
     }
+
+    @Test
+    public void entityFlowIgnoresPlainEntryWhenNoNpcAndNotObjectAction()
+    {
+        when(config.entityRightClickEnabled()).thenReturn(true);
+        when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(null);
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(true);
+        when(config.tileRightClickEnabled()).thenReturn(false); // so tile branch doesn't fire
+        when(sourceEntry.getNpc()).thenReturn(null);
+        when(sourceEntry.getType()).thenReturn(MenuAction.WALK);
+
+        handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
+
+        verify(menu, never()).createMenuEntry(anyInt());
+    }
 }
