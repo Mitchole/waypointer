@@ -745,4 +745,52 @@ public class WaypointStoreTest
         store.deleteWaypoints(java.util.Collections.singletonList(UUID.randomUUID()));
         assertFalse("nothing found -> no undo armed", store.hasUndoable());
     }
+
+    @Test
+    public void deleteWaypointsLeavesUnselectedIntact()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        Waypoint b = store.createWaypoint(2, "B", uId);
+        Waypoint c = store.createWaypoint(3, "C", uId);
+        store.deleteWaypoints(java.util.Collections.singletonList(b.getId()));
+        assertNotNull(store.getWaypointById(a.getId()));
+        assertNull(store.getWaypointById(b.getId()));
+        assertNotNull(store.getWaypointById(c.getId()));
+        assertEquals(2, store.getWaypointsInCategory(uId).size());
+    }
+
+    @Test
+    public void deleteWaypointsEmptyCollectionIsNoOp()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        store.deleteWaypoints(java.util.Collections.emptyList());
+        assertNotNull(store.getWaypointById(a.getId()));
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void moveWaypointsEmptyCollectionIsNoOp()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Category bossing = store.createCategory("Bossing");
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        store.moveWaypointsToCategory(java.util.Collections.emptyList(), bossing.getId());
+        assertEquals(uId, store.getWaypointById(a.getId()).getCategoryId());
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void moveWaypointsAlreadyInTargetBumpsToTail()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        Waypoint b = store.createWaypoint(2, "B", uId);
+        // Move A (already in Uncategorized) — it should relocate to the tail, after B.
+        store.moveWaypointsToCategory(java.util.Collections.singletonList(a.getId()), uId);
+        java.util.List<Waypoint> after = store.getWaypointsInCategory(uId);
+        assertEquals("B", after.get(0).getName());
+        assertEquals("A", after.get(1).getName());
+    }
 }
