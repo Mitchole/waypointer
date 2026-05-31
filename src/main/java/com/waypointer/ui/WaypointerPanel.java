@@ -99,6 +99,20 @@ public class WaypointerPanel extends PluginPanel
     private final ClearableTextField searchField = new ClearableTextField("Search waypoints...");
     private String currentFilter = "";
 
+    // Footer (#23): one static tip chosen once per panel instance (one plugin-enable). No timer,
+    // no rotation at runtime. Index varies across restarts via the nanoTime seed. The tips are
+    // verified against current features (export lives on the overflow menu since #36).
+    private static final String[] FOOTER_TIPS = {
+        "Drag the dot-grip to reorder",
+        "Click a row to edit it inline",
+        "Open the ⋮ menu to import or export",
+        "Pin a waypoint to keep it up top",
+        "Use Select for bulk move and delete",
+        "Right-click a waypoint for quick actions",
+        "Search by name or category",
+    };
+    private final int footerTipIndex = Math.floorMod(System.nanoTime(), FOOTER_TIPS.length);
+
     // Bulk select mode. Dormant until the search-row toggle (added later) flips selectMode.
     private boolean selectMode = false;
     private final BulkSelection selection = new BulkSelection();
@@ -641,6 +655,10 @@ public class WaypointerPanel extends PluginPanel
 
         // Push remaining vertical space to the bottom so sections stack tight at the top.
         body.add(Box.createVerticalGlue());
+        // Footer (#23) sits below the glue: pinned to the viewport bottom on a short list,
+        // scrolls in after the last section on a long one. Divider separates it from the list.
+        body.add(buildSectionDivider());
+        body.add(buildFooter());
         body.revalidate();
         body.repaint();
     }
@@ -663,11 +681,19 @@ public class WaypointerPanel extends PluginPanel
         wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
         wrap.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel empty = new JLabel("<html><div style='text-align:center;padding:20px 12px 8px;"
+        // Faint up-arrow (#24) at the top of the body, aimed up past the search bar at the orange
+        // Mark button. Only painted here, so it vanishes the moment the first waypoint exists.
+        JLabel arrow = new JLabel("↑", SwingConstants.CENTER);
+        arrow.setForeground(new Color(0x6e, 0x6e, 0x6e));
+        arrow.setFont(arrow.getFont().deriveFont(28f));
+        arrow.setBorder(BorderFactory.createEmptyBorder(12, 0, 0, 0));
+        wrap.add(arrow, BorderLayout.NORTH);
+
+        JLabel empty = new JLabel("<html><div style='text-align:center;padding:8px 12px 8px;"
             + "color:#9b9b9b;'>No waypoints yet.<br>Mark a location to begin, or start "
             + "from a curated set.</div></html>", SwingConstants.CENTER);
         empty.setForeground(Color.LIGHT_GRAY);
-        wrap.add(empty, BorderLayout.NORTH);
+        wrap.add(empty, BorderLayout.CENTER);
 
         body.add(wrap);
     }
@@ -683,6 +709,44 @@ public class WaypointerPanel extends PluginPanel
         divider.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
         divider.setAlignmentX(Component.LEFT_ALIGNMENT);
         return divider;
+    }
+
+    // Pure count-line formatter for the footer (#23). Package-private so it is unit-testable
+    // without constructing the Swing panel. Separator is U+00B7 (middle dot).
+    static String footerCountText(int waypoints, int categories)
+    {
+        return waypoints + (waypoints == 1 ? " waypoint" : " waypoints")
+            + " · "
+            + categories + (categories == 1 ? " category" : " categories");
+    }
+
+    // Footer strip (#23): centered count line + one static tip. Appended as the last body child
+    // after the vertical glue, so on a short list the glue pins it to the bottom of the viewport
+    // and on a long list it scrolls in after the last section. Height-capped like the banners so
+    // the body's BoxLayout(Y_AXIS) does not stretch it. Never hidden — renders in every state.
+    // The waypoint count is the full library total; the category count is non-empty categories
+    // only (an empty category, including a freshly created one, contributes 0). Neither count
+    // changes with the active search filter.
+    private JComponent buildFooter()
+    {
+        int waypoints = store.getLibrary().getWaypoints().size();
+        int categories = 0;
+        for (Category c : store.getCategoriesOrdered())
+        {
+            if (!store.getWaypointsInCategory(c.getId()).isEmpty()) categories++;
+        }
+
+        JPanel footer = newCappedHeightPanel(new BorderLayout());
+        footer.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        footer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        footer.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+
+        JLabel label = new JLabel("<html><div style='text-align:center;'>"
+            + "<span style='color:#9b9b9b;'>" + footerCountText(waypoints, categories) + "</span><br>"
+            + "<span style='color:#6e6e6e;font-style:italic;'>" + FOOTER_TIPS[footerTipIndex] + "</span>"
+            + "</div></html>", SwingConstants.CENTER);
+        footer.add(label, BorderLayout.CENTER);
+        return footer;
     }
 
     // JPanel whose maximum height collapses to its preferred height, so banners don't get
