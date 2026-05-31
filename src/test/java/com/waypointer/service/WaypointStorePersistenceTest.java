@@ -199,6 +199,9 @@ public class WaypointStorePersistenceTest
         persistence.saveBlocking(lib);
         persistence.seedFromDefault(); // active key is null; nothing to do
         // No library-*.json files created.
-        assertFalse(Files.list(tmpDir).anyMatch(p -> p.getFileName().toString().startsWith("library-")));
+        try (java.util.stream.Stream<java.nio.file.Path> listing = Files.list(tmpDir))
+        {
+            assertFalse(listing.anyMatch(p -> p.getFileName().toString().startsWith("library-")));
+        }
     }
 }

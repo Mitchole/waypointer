@@ -71,7 +71,7 @@ public class WaypointStorePersistence
 
     // Copy the default slot's files into the active slot when the active slot has no primary file
     // yet. No-op for the default slot, when the slot already exists, or when the default is absent
-    // (brand-new user) -> the slot then loads empty.
+    // (brand-new user); the slot then loads empty.
     public void seedFromDefault()
     {
         if (activeProfileKey == null) return;
