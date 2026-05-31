@@ -51,6 +51,15 @@ public interface WaypointerConfig extends Config
     default boolean showWildernessGlyph() { return true; }
 
     @ConfigItem(
+        keyName = "autoPathOnDeath",
+        name = "Auto-path to death location",
+        description = "When you die, automatically start a path back to the tile you "
+            + "died on. Requires the Shortest Path plugin.",
+        position = 27
+    )
+    default boolean autoPathOnDeath() { return false; }
+
+    @ConfigItem(
         keyName = "newestPinAtTop",
         name = "Newest pin at top",
         description = "Order pinned waypoints with the most recently pinned at the top. Off puts newest at the bottom.",
