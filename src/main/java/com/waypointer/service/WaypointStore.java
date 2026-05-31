@@ -7,6 +7,7 @@ import com.waypointer.util.Listeners;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Collections;
 import java.util.HashMap;
@@ -432,6 +433,32 @@ public class WaypointStore
         notifyChanged();
     }
 
+    /**
+     * Batch delete. Snapshots every found waypoint and arms ONE undo that re-adds them all;
+     * unknown ids are skipped, and if none are found the undo slot is cleared without firing.
+     * Mirrors the single-item {@link #deleteWaypoint(UUID)}.
+     */
+    public void deleteWaypoints(Collection<UUID> ids)
+    {
+        Set<UUID> idSet = new HashSet<>(ids);
+        List<Waypoint> removed = new ArrayList<>();
+        for (Waypoint w : library.getWaypoints())
+        {
+            if (idSet.contains(w.getId())) removed.add(w);
+        }
+        if (removed.isEmpty())
+        {
+            lastUndo = null;
+            return;
+        }
+        library.getWaypoints().removeIf(w -> idSet.contains(w.getId()));
+        lastUndo = () -> {
+            library.getWaypoints().addAll(removed);
+            notifyChanged();
+        };
+        notifyChanged();
+    }
+
     public void moveWaypointToCategory(UUID waypointId, UUID newCategoryId)
     {
         lastUndo = null;
@@ -441,6 +468,28 @@ public class WaypointStore
         w.setCategoryId(newCategoryId);
         w.setSortOrder(nextWaypointSortOrder(newCategoryId));
         notifyChanged();
+    }
+
+    /**
+     * Batch reparent. Validates the target once; each found waypoint is moved to the tail of
+     * {@code targetId} with ascending sortOrder. Unknown ids are skipped. Non-undoable, matching
+     * the single-item {@link #moveWaypointToCategory(UUID, UUID)}.
+     */
+    public void moveWaypointsToCategory(Collection<UUID> ids, UUID targetId)
+    {
+        lastUndo = null;
+        if (getCategoryById(targetId) == null) return;
+        int order = nextWaypointSortOrder(targetId);
+        boolean any = false;
+        for (UUID id : ids)
+        {
+            Waypoint w = getWaypointById(id);
+            if (w == null) continue;
+            w.setCategoryId(targetId);
+            w.setSortOrder(order++);
+            any = true;
+        }
+        if (any) notifyChanged();
     }
 
     public void reorderWithinCategory(UUID categoryId, List<UUID> waypointIdsInOrder)

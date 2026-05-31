@@ -637,4 +637,112 @@ public class WaypointStoreTest
         assertEquals("Apple", manual.get(1).getName());
         assertEquals("Banana", manual.get(2).getName());
     }
+
+    @Test
+    public void moveWaypointsToCategoryReparentsAllToTail()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Category bossing = store.createCategory("Bossing");
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        Waypoint b = store.createWaypoint(2, "B", uId);
+        Waypoint keep = store.createWaypoint(3, "Keep", bossing.getId());
+
+        store.moveWaypointsToCategory(java.util.Arrays.asList(a.getId(), b.getId()), bossing.getId());
+
+        assertEquals(0, store.getWaypointsInCategory(uId).size());
+        java.util.List<Waypoint> target = store.getWaypointsInCategory(bossing.getId());
+        assertEquals(3, target.size());
+        assertEquals("Keep", target.get(0).getName());
+        assertTrue(target.get(1).getSortOrder() < target.get(2).getSortOrder());
+    }
+
+    @Test
+    public void moveWaypointsToUnknownTargetIsNoOp()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        store.moveWaypointsToCategory(java.util.Collections.singletonList(a.getId()), UUID.randomUUID());
+        assertEquals(uId, store.getWaypointById(a.getId()).getCategoryId());
+    }
+
+    @Test
+    public void moveWaypointsAssignsTailOrderInIterationOrder()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Category bossing = store.createCategory("Bossing");
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        Waypoint b = store.createWaypoint(2, "B", uId);
+        // Pass b before a; the target tail order must follow the given iteration order.
+        store.moveWaypointsToCategory(java.util.Arrays.asList(b.getId(), a.getId()), bossing.getId());
+        java.util.List<Waypoint> target = store.getWaypointsInCategory(bossing.getId());
+        assertEquals("B", target.get(0).getName());
+        assertEquals("A", target.get(1).getName());
+    }
+
+    @Test
+    public void moveWaypointsSkipsUnknownIds()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Category bossing = store.createCategory("Bossing");
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        store.moveWaypointsToCategory(
+            java.util.Arrays.asList(a.getId(), UUID.randomUUID()), bossing.getId());
+        assertEquals(1, store.getWaypointsInCategory(bossing.getId()).size());
+    }
+
+    @Test
+    public void moveWaypointsClearsUndoSlot()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Category bossing = store.createCategory("Bossing");
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        store.deleteWaypoint(store.createWaypoint(9, "Doomed", uId).getId()); // arms undo
+        assertTrue(store.hasUndoable());
+        store.moveWaypointsToCategory(java.util.Collections.singletonList(a.getId()), bossing.getId());
+        assertFalse("move is non-undoable and clears the slot", store.hasUndoable());
+    }
+
+    @Test
+    public void deleteWaypointsRemovesAll()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        Waypoint b = store.createWaypoint(2, "B", uId);
+        store.deleteWaypoints(java.util.Arrays.asList(a.getId(), b.getId()));
+        assertNull(store.getWaypointById(a.getId()));
+        assertNull(store.getWaypointById(b.getId()));
+    }
+
+    @Test
+    public void deleteWaypointsSingleUndoRestoresAll()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        Waypoint b = store.createWaypoint(2, "B", uId);
+        store.deleteWaypoints(java.util.Arrays.asList(a.getId(), b.getId()));
+        assertTrue("batch delete arms one undo", store.hasUndoable());
+        store.undoLast();
+        assertNotNull(store.getWaypointById(a.getId()));
+        assertNotNull(store.getWaypointById(b.getId()));
+        assertEquals(2, store.getWaypointsInCategory(uId).size());
+        assertFalse("slot cleared after undo", store.hasUndoable());
+    }
+
+    @Test
+    public void deleteWaypointsThenOtherMutationClearsUndoSlot()
+    {
+        UUID uId = store.getUncategorized().getId();
+        Waypoint a = store.createWaypoint(1, "A", uId);
+        Waypoint b = store.createWaypoint(2, "B", uId);
+        store.deleteWaypoints(java.util.Arrays.asList(a.getId(), b.getId()));
+        store.createWaypoint(3, "C", uId); // any other mutation clears the slot
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void deleteWaypointsSkipsUnknownIdsAndDoesNotArmWhenNoneFound()
+    {
+        store.deleteWaypoints(java.util.Collections.singletonList(UUID.randomUUID()));
+        assertFalse("nothing found -> no undo armed", store.hasUndoable());
+    }
 }
