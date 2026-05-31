@@ -51,7 +51,9 @@ public class NpcHighlightOverlay extends Overlay
     static String activeNpcName(Library lib, int activeTarget)
     {
         if (activeTarget == WorldPointPacker.UNDEFINED) return null;
-        for (Waypoint w : lib.getWaypoints())
+        // Copy: render() runs on the client thread while WaypointStore is mutated from the EDT,
+        // so iterating the live list directly could throw ConcurrentModificationException.
+        for (Waypoint w : new java.util.ArrayList<>(lib.getWaypoints()))
         {
             if (w.getPackedWorldPoint() == activeTarget && w.getTargetNpcName() != null)
             {
