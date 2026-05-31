@@ -124,7 +124,7 @@ final class WaypointTreePicker extends JPanel
             body.setAlignmentX(LEFT_ALIGNMENT);
             for (Waypoint w : model.waypointsOf(category.getId()))
             {
-                LeafView lv = new LeafView(w);
+                LeafView lv = new LeafView(w, this);
                 leaves.add(lv);
                 body.add(lv);
             }
@@ -165,10 +165,12 @@ final class WaypointTreePicker extends JPanel
     {
         private final Waypoint waypoint;
         private final TriStateBox box = new TriStateBox();
+        private final CategoryView owner;
 
-        LeafView(Waypoint waypoint)
+        LeafView(Waypoint waypoint, CategoryView owner)
         {
             this.waypoint = waypoint;
+            this.owner = owner;
             setLayout(new FlowLayout(FlowLayout.LEFT, 4, 1));
             setBackground(ColorScheme.DARK_GRAY_COLOR);
             setAlignmentX(LEFT_ALIGNMENT);
@@ -179,7 +181,7 @@ final class WaypointTreePicker extends JPanel
                 {
                     model.setWaypointChecked(waypoint.getId(),
                         !model.isWaypointChecked(waypoint.getId()));
-                    refresh();
+                    owner.refresh();
                     fireChanged();
                 }
             });
@@ -218,6 +220,7 @@ final class WaypointTreePicker extends JPanel
             setMinimumSize(d);
             setMaximumSize(d);
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            setOpaque(false);
         }
 
         void setState(State s) { this.state = s; repaint(); }
