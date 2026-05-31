@@ -716,6 +716,7 @@ public class WaypointerPanel extends PluginPanel
     // after the vertical glue, so on a short list the glue pins it to the bottom of the viewport
     // and on a long list it scrolls in after the last section. Height-capped like the banners so
     // the body's BoxLayout(Y_AXIS) does not stretch it. Never hidden — renders in every state.
+    // The counts are full-library totals and do not change with the active search filter.
     private JComponent buildFooter()
     {
         int waypoints = store.getLibrary().getWaypoints().size();
@@ -734,7 +735,6 @@ public class WaypointerPanel extends PluginPanel
             + "<span style='color:#9b9b9b;'>" + footerCountText(waypoints, categories) + "</span><br>"
             + "<span style='color:#6e6e6e;font-style:italic;'>" + FOOTER_TIPS[footerTipIndex] + "</span>"
             + "</div></html>", SwingConstants.CENTER);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
         footer.add(label, BorderLayout.CENTER);
         return footer;
     }
