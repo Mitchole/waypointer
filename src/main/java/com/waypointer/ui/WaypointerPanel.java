@@ -742,6 +742,7 @@ public class WaypointerPanel extends PluginPanel
             lastClickedId = null;
         }
         selectToggleBtn.setForeground(selectMode ? ColorScheme.BRAND_ORANGE : Color.WHITE);
+        selectToggleBtn.setText(selectMode ? "Done" : "Select");
         rebuild();
         refreshBulkBar();
     }
