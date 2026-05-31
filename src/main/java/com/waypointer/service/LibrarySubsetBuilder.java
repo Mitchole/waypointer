@@ -27,8 +27,8 @@ public final class LibrarySubsetBuilder
      */
     public static Library build(Library source, Set<UUID> waypointIds, Set<UUID> categoryIds)
     {
-        Set<UUID> wantWaypoints = waypointIds == null ? new HashSet<>() : waypointIds;
-        Set<UUID> wantCategories = new HashSet<>(categoryIds == null ? new HashSet<>() : categoryIds);
+        Set<UUID> wantWaypoints = waypointIds == null ? new HashSet<>() : new HashSet<>(waypointIds);
+        Set<UUID> wantCategories = categoryIds == null ? new HashSet<>() : new HashSet<>(categoryIds);
 
         Library out = new Library();
         for (Waypoint w : source.getWaypoints())
@@ -39,6 +39,8 @@ public final class LibrarySubsetBuilder
                 wantCategories.add(w.getCategoryId());
             }
         }
+        // Waypoints whose categoryId has no matching Category in source carry no category row;
+        // importMerge will route them to Uncategorized on the receiving end.
         for (Category c : source.getCategories())
         {
             if (wantCategories.contains(c.getId()))

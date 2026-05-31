@@ -146,4 +146,38 @@ public class LibrarySubsetBuilderTest
             Collections.emptySet(), Collections.emptySet());
         assertEquals(Library.CURRENT_SCHEMA_VERSION, out.getSchemaVersion());
     }
+
+    @Test
+    public void orphanWaypointWithUnknownCategoryCarriesNoCategory()
+    {
+        UUID unknownCat = UUID.randomUUID();
+        UUID wpId = UUID.randomUUID();
+        Library src = new Library();
+        // source has no category matching unknownCat
+        src.getWaypoints().add(wp(wpId, unknownCat, "Orphan"));
+
+        Library out = LibrarySubsetBuilder.build(src,
+            new HashSet<>(Collections.singletonList(wpId)), Collections.emptySet());
+
+        assertEquals(1, out.getWaypoints().size());
+        assertTrue(out.getCategories().isEmpty());
+    }
+
+    @Test
+    public void nullSetsAreTreatedAsEmpty()
+    {
+        UUID cat = UUID.randomUUID();
+        UUID wpId = UUID.randomUUID();
+        Library src = new Library();
+        src.getCategories().add(new Category(cat, "Banks", 0, false, null, false));
+        src.getWaypoints().add(wp(wpId, cat, "GE"));
+
+        Library out = LibrarySubsetBuilder.build(src, null, null);
+
+        assertEquals(0, out.getWaypoints().size());
+        assertEquals(0, out.getCategories().size());
+        // source must not be touched
+        assertEquals(1, src.getWaypoints().size());
+        assertEquals(1, src.getCategories().size());
+    }
 }
