@@ -685,6 +685,15 @@ public class WaypointerPanel extends PluginPanel
         return divider;
     }
 
+    // Pure count-line formatter for the footer (#23). Package-private so it is unit-testable
+    // without constructing the Swing panel. Separator is U+00B7 (middle dot).
+    static String footerCountText(int waypoints, int categories)
+    {
+        return waypoints + (waypoints == 1 ? " waypoint" : " waypoints")
+            + " · "
+            + categories + (categories == 1 ? " category" : " categories");
+    }
+
     // JPanel whose maximum height collapses to its preferred height, so banners don't get
     // stretched vertically by the body's BoxLayout(Y_AXIS).
     private static JPanel newCappedHeightPanel(LayoutManager lm)
