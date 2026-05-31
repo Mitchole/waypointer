@@ -284,6 +284,15 @@ public class WaypointStore
         notifyChanged();
     }
 
+    public void setCategoryColor(UUID categoryId, Integer color)
+    {
+        lastUndo = null;
+        Category c = getCategoryById(categoryId);
+        if (c == null) return;
+        c.setColor(color);
+        notifyChanged();
+    }
+
     public void setCategorySortMode(UUID categoryId, com.waypointer.model.CategorySortMode mode)
     {
         lastUndo = null;

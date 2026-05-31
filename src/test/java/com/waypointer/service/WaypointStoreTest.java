@@ -782,6 +782,20 @@ public class WaypointStoreTest
     }
 
     @Test
+    public void setCategoryColorPersistsOnCategory()
+    {
+        Category c = store.createCategory("Bossing");
+        store.setCategoryColor(c.getId(), 0x4080CC);
+        assertEquals(Integer.valueOf(0x4080CC),
+            store.getLibrary().getCategories().stream()
+                .filter(x -> x.getId().equals(c.getId())).findFirst().get().getColor());
+
+        store.setCategoryColor(c.getId(), null);
+        assertNull(store.getLibrary().getCategories().stream()
+            .filter(x -> x.getId().equals(c.getId())).findFirst().get().getColor());
+    }
+
+    @Test
     public void moveWaypointsAlreadyInTargetBumpsToTail()
     {
         UUID uId = store.getUncategorized().getId();
