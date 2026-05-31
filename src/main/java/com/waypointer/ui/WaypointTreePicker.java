@@ -2,16 +2,12 @@ package com.waypointer.ui;
 
 import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
-import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -19,7 +15,6 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
@@ -205,48 +200,4 @@ final class WaypointTreePicker extends JPanel
         }
     }
 
-    /** A three-state checkbox painted by hand so it stays font- and LAF-independent. */
-    static final class TriStateBox extends JComponent
-    {
-        enum State { UNCHECKED, CHECKED, PARTIAL }
-
-        private static final int SIZE = 14;
-        private State state = State.UNCHECKED;
-
-        TriStateBox()
-        {
-            Dimension d = new Dimension(SIZE, SIZE);
-            setPreferredSize(d);
-            setMinimumSize(d);
-            setMaximumSize(d);
-            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            setOpaque(false);
-        }
-
-        void setState(State s) { this.state = s; repaint(); }
-        State getState() { return state; }
-
-        @Override protected void paintComponent(Graphics g)
-        {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(ColorScheme.DARKER_GRAY_COLOR);
-            g2.fillRect(0, 0, SIZE - 1, SIZE - 1);
-            g2.setColor(ColorScheme.LIGHT_GRAY_COLOR);
-            g2.drawRect(0, 0, SIZE - 1, SIZE - 1);
-            if (state == State.CHECKED)
-            {
-                g2.setColor(ColorScheme.BRAND_ORANGE);
-                g2.setStroke(new BasicStroke(2f));
-                g2.drawLine(3, 7, 6, 10);
-                g2.drawLine(6, 10, 11, 3);
-            }
-            else if (state == State.PARTIAL)
-            {
-                g2.setColor(ColorScheme.BRAND_ORANGE);
-                g2.fillRect(4, 4, SIZE - 8, SIZE - 8);
-            }
-            g2.dispose();
-        }
-    }
 }
