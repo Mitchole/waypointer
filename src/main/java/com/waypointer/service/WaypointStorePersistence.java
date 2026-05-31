@@ -48,7 +48,6 @@ public class WaypointStorePersistence
     public String getActiveProfileKey() { return activeProfileKey; }
     public Path libraryFile() { return dir.resolve(fileNameFor(activeProfileKey)); }
     public Path backupFile() { return dir.resolve(fileNameFor(activeProfileKey) + ".bak"); }
-    private Path tmpFile() { return dir.resolve(fileNameFor(activeProfileKey) + ".tmp"); }
 
     // Default slot keeps the legacy filename; per-account slots are library-<sanitized-key>.json.
     static String fileNameFor(String key)
@@ -56,6 +55,7 @@ public class WaypointStorePersistence
         return key == null ? LIBRARY_FILENAME : "library-" + sanitizeKey(key) + ".json";
     }
 
+    // Dots are intentionally preserved: real RS profile keys contain them (e.g. rsprofile.12345.STANDARD).
     static String sanitizeKey(String key)
     {
         return key.replaceAll("[^A-Za-z0-9._-]", "_");
@@ -151,23 +151,28 @@ public class WaypointStorePersistence
             log.warn("Save refused: library files are in a corrupt state pending user reset");
             return false;
         }
-        Path tmp = tmpFile();
+        // Snapshot the active slot once so a concurrent switchProfile cannot move this save's
+        // temp file into a different slot's primary or backup mid-write.
+        final String slotKey = activeProfileKey;
+        Path tmp = dir.resolve(fileNameFor(slotKey) + ".tmp");
+        Path primary = dir.resolve(fileNameFor(slotKey));
+        Path backup = dir.resolve(fileNameFor(slotKey) + ".bak");
         try
         {
             Files.writeString(tmp, json, StandardCharsets.UTF_8);
             try
             {
-                Files.move(tmp, libraryFile(),
+                Files.move(tmp, primary,
                     StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             }
             catch (AtomicMoveNotSupportedException e)
             {
-                Files.move(tmp, libraryFile(), StandardCopyOption.REPLACE_EXISTING);
+                Files.move(tmp, primary, StandardCopyOption.REPLACE_EXISTING);
             }
             // Best-effort backup copy after successful primary write.
             try
             {
-                Files.copy(libraryFile(), backupFile(), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(primary, backup, StandardCopyOption.REPLACE_EXISTING);
             }
             catch (IOException e)
             {

@@ -135,6 +135,7 @@ public class WaypointStorePersistenceTest
 
         assertTrue(Files.exists(tmpDir.resolve("library-acct1.json")));
         assertFalse(Files.exists(tmpDir.resolve("library.json")));
+        assertTrue(Files.exists(tmpDir.resolve("library-acct1.json.bak")));
     }
 
     @Test
