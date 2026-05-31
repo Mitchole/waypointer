@@ -1,6 +1,7 @@
 package com.waypointer;
 
 import com.google.inject.Provides;
+import com.waypointer.service.DeathAutoPathfinder;
 import com.waypointer.service.LandmarkOverrides;
 import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.WaypointMenuHandler;
@@ -43,6 +44,7 @@ public class WaypointerPlugin extends Plugin
     @Inject private EventBus eventBus;
     @Inject private WaypointMenuHandler menuHandler;
     @Inject private WaypointPathfinder pathfinderService;
+    @Inject private DeathAutoPathfinder deathAutoPathfinder;
     @Inject private TabHost tabHost;
     @Inject private LandmarkOverrides landmarkOverrides;
     @Inject private PresetOverrides presetOverrides;
@@ -77,6 +79,7 @@ public class WaypointerPlugin extends Plugin
         clientToolbar.addNavigation(navButton);
         eventBus.register(menuHandler);
         eventBus.register(pathfinderService);
+        eventBus.register(deathAutoPathfinder);
         eventBus.register(panel);
         eventBus.register(tabHost);
 
@@ -103,6 +106,7 @@ public class WaypointerPlugin extends Plugin
 
         eventBus.unregister(menuHandler);
         eventBus.unregister(pathfinderService);
+        eventBus.unregister(deathAutoPathfinder);
         eventBus.unregister(panel);
         eventBus.unregister(tabHost);
 
