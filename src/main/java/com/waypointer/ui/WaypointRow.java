@@ -9,12 +9,14 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.function.Consumer;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
@@ -25,6 +27,10 @@ import net.runelite.client.ui.ColorScheme;
  * button on the right (dark at rest, brand orange on hover or when this row is the active
  * path target). Custom sprite icons (when set) attach to the name label so icon + text
  * share JLabel's built-in vertical centering and align with the Play button.
+ *
+ * In select mode the left edge shows a checkbox instead of the drag handle, the right-side
+ * Play / overflow buttons are hidden, and a body click toggles selection (shift = range)
+ * instead of expanding the inline editor.
  */
 public class WaypointRow extends JPanel implements DropIndicatable
 {
@@ -38,18 +44,51 @@ public class WaypointRow extends JPanel implements DropIndicatable
         Runnable onPlay, Runnable onClickBody, Runnable onTogglePin,
         Runnable onDelete,
         SpriteManager spriteManager,
-        String originCategoryName)
+        String originCategoryName,
+        boolean selectMode, boolean selected,
+        Consumer<Boolean> onSelectClick)
     {
         this.waypoint = waypoint;
         setLayout(new BorderLayout(8, 0));
         setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
         setOpaque(true);
 
-        // Hover-clickable surface: body clicks expand the row.
-        MouseAdapter ma = Cards.clickable(this, onClickBody);
+        // Body click: in select mode toggle selection (shift = range); otherwise expand inline.
+        final MouseAdapter ma;
+        if (selectMode)
+        {
+            setBackground(ColorScheme.DARKER_GRAY_COLOR);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            ma = new MouseAdapter()
+            {
+                @Override public void mouseEntered(MouseEvent e)
+                {
+                    setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
+                }
+                @Override public void mouseExited(MouseEvent e)
+                {
+                    // ma is also attached to child components (checkbox, name label), so the
+                    // event point is in the child's coordinate space. Convert to the row's
+                    // space before the bounds test, or exiting via the small checkbox leaves
+                    // the hover tint stuck.
+                    java.awt.Point p = SwingUtilities.convertPoint(
+                        e.getComponent(), e.getPoint(), WaypointRow.this);
+                    if (contains(p)) return;
+                    setBackground(ColorScheme.DARKER_GRAY_COLOR);
+                }
+                @Override public void mouseClicked(MouseEvent e)
+                {
+                    if (SwingUtilities.isLeftMouseButton(e)) onSelectClick.accept(e.isShiftDown());
+                }
+            };
+            addMouseListener(ma);
+        }
+        else
+        {
+            ma = Cards.clickable(this, onClickBody);
+        }
 
-        // Right-click anywhere on the row body opens a popup with pin/delete items.
-        // Cross-platform popup-trigger handling is provided automatically by setComponentPopupMenu.
+        // Right-click popup (pin / delete) stays available in both modes.
         JPopupMenu popup = new JPopupMenu();
         JMenuItem pinItem = new JMenuItem(isPinned ? "Unpin" : "Pin to top");
         pinItem.addActionListener(e -> onTogglePin.run());
@@ -60,13 +99,22 @@ public class WaypointRow extends JPanel implements DropIndicatable
         popup.add(deleteItem);
         setComponentPopupMenu(popup);
 
-        // WEST: drag handle. Cursor MOVE_CURSOR; NOT attached to ma so dragging from the
-        // grip doesn't fire expand. DragAndDropHandler wires the drag externally.
-        // Pinned section disables drag (rows are sorted by pin order, not user-arrangeable
-        // by hand), so the handle is omitted.
-        if (!dragDisabled)
+        // WEST: checkbox in select mode; drag handle otherwise (when draggable).
+        if (selectMode)
         {
-            dragHandle = new JLabel("⠿"); // U+283F braille pattern dots-123456
+            TriStateBox box = new TriStateBox();
+            box.setState(selected ? TriStateBox.State.CHECKED : TriStateBox.State.UNCHECKED);
+            box.addMouseListener(ma);
+            JPanel west = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+            west.setOpaque(false);
+            west.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
+            west.add(box);
+            add(west, BorderLayout.WEST);
+            dragHandle = null;
+        }
+        else if (!dragDisabled)
+        {
+            dragHandle = new JLabel("⠿"); // braille pattern dots-123456
             dragHandle.setForeground(new Color(120, 120, 120));
             dragHandle.setOpaque(false);
             dragHandle.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
@@ -79,9 +127,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
             dragHandle = null;
         }
 
-        // CENTER: bold name label, optionally prefixed with a 16x16 custom sprite. JLabel's
-        // default vertical alignment is CENTER, so text/icon align with the Play button text.
-        // Wilderness waypoints get a skull prefix and muted red foreground.
+        // CENTER: bold name label, optionally prefixed with a 16x16 custom sprite.
         String displayName = (isWilderness ? "☠ " : "") + waypoint.getName();
         JLabel name = new JLabel(displayName);
         name.setToolTipText(buildHoverTooltip(waypoint, originCategoryName));
@@ -95,50 +141,50 @@ public class WaypointRow extends JPanel implements DropIndicatable
         name.addMouseListener(ma);
         add(name, BorderLayout.CENTER);
 
-        // EAST: hover-revealed overflow trigger to the left of an icon-only Play button.
-        // Play styling mirrors the pathfinder state (orange-locked when this is the active
-        // target). The trigger's foreground is pinned to the row's resting background so it
-        // reserves layout space at all times but disappears against the row at rest; the
-        // hover listener below brightens it when the cursor is anywhere on the row.
-        JButton play = new JButton("▶"); // U+25B6 black right-pointing triangle
-        Styles.playIconButton(play, active);
-        play.setToolTipText(active ? "Pathing here" : "Path to here");
-        play.addActionListener(e -> onPlay.run());
-
-        JLabel menuTrigger = new JLabel("⋮"); // U+22EE vertical ellipsis
-        menuTrigger.setFont(menuTrigger.getFont().deriveFont(Font.BOLD));
-        menuTrigger.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
-        menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        menuTrigger.setToolTipText("More");
-        menuTrigger.addMouseListener(new MouseAdapter()
-        {
-            @Override public void mouseClicked(MouseEvent e)
-            {
-                popup.show(menuTrigger, 0, menuTrigger.getHeight());
-            }
-        });
-
-        JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        eastPanel.setOpaque(false);
-        eastPanel.add(menuTrigger);
-        eastPanel.add(play);
-        add(eastPanel, BorderLayout.EAST);
-
         this.restingBackground = getBackground();
-        // Pin the trigger's resting foreground to the row background so it's invisible until
-        // the row is hovered; the listener swaps in LIGHT_GRAY to reveal it.
-        menuTrigger.setForeground(restingBackground);
-        addMouseListener(new MouseAdapter()
+
+        // EAST: Play + overflow controls, hidden in select mode.
+        if (!selectMode)
         {
-            @Override public void mouseEntered(MouseEvent e)
+            JButton play = new JButton("▶"); // black right-pointing triangle
+            Styles.playIconButton(play, active);
+            play.setToolTipText(active ? "Pathing here" : "Path to here");
+            play.addActionListener(e -> onPlay.run());
+
+            JLabel menuTrigger = new JLabel("⋮"); // vertical ellipsis
+            menuTrigger.setFont(menuTrigger.getFont().deriveFont(Font.BOLD));
+            menuTrigger.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
+            menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            menuTrigger.setToolTipText("More");
+            menuTrigger.addMouseListener(new MouseAdapter()
             {
-                menuTrigger.setForeground(Color.LIGHT_GRAY);
-            }
-            @Override public void mouseExited(MouseEvent e)
+                @Override public void mouseClicked(MouseEvent e)
+                {
+                    popup.show(menuTrigger, 0, menuTrigger.getHeight());
+                }
+            });
+
+            JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            eastPanel.setOpaque(false);
+            eastPanel.add(menuTrigger);
+            eastPanel.add(play);
+            add(eastPanel, BorderLayout.EAST);
+
+            // Pin the trigger's resting foreground to the row background so it's invisible until
+            // the row is hovered; the listener swaps in LIGHT_GRAY to reveal it.
+            menuTrigger.setForeground(restingBackground);
+            addMouseListener(new MouseAdapter()
             {
-                menuTrigger.setForeground(restingBackground);
-            }
-        });
+                @Override public void mouseEntered(MouseEvent e)
+                {
+                    menuTrigger.setForeground(Color.LIGHT_GRAY);
+                }
+                @Override public void mouseExited(MouseEvent e)
+                {
+                    menuTrigger.setForeground(restingBackground);
+                }
+            });
+        }
     }
 
     public Waypoint getWaypoint() { return waypoint; }

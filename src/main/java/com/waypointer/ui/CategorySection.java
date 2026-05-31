@@ -48,7 +48,11 @@ public class CategorySection extends JPanel
         Function<Waypoint, Component> inlineProvider,
         DragAndDropHandler dnd,
         Actions actions,
-        SpriteManager spriteManager)
+        SpriteManager spriteManager,
+        boolean selectMode,
+        BulkSelection selection,
+        BiConsumer<Waypoint, Boolean> onRowSelectClick,
+        BiConsumer<java.util.List<UUID>, Boolean> onHeaderSelectToggle)
     {
         this.category = category;
         this.collapsed = collapsed;
@@ -119,13 +123,41 @@ public class CategorySection extends JPanel
         if (dnd != null) dnd.attachCategoryHeader(headerLabel, headerIndicator, category.getId(), this);
 
         // Optional icon on the LEFT of the header row.
-        if (category.getIconId() != null && spriteManager != null)
+        if (!selectMode && category.getIconId() != null && spriteManager != null)
         {
             JLabel iconLabel = new JLabel();
             iconLabel.setPreferredSize(new Dimension(16, 16));
             iconLabel.setOpaque(false);
             SpriteIcons.apply(iconLabel, category.getIconId(), spriteManager);
             headerRow.add(iconLabel, BorderLayout.WEST);
+        }
+
+        // Select-mode tri-state checkbox at the header's left edge. Clicking it selects or
+        // deselects all of this category's currently-visible waypoints.
+        if (selectMode)
+        {
+            java.util.List<UUID> catIds = new java.util.ArrayList<>();
+            for (Waypoint w : waypoints) catIds.add(w.getId());
+            TriStateBox headerBox = new TriStateBox();
+            switch (selection.categoryState(catIds))
+            {
+                case ALL:     headerBox.setState(TriStateBox.State.CHECKED); break;
+                case PARTIAL: headerBox.setState(TriStateBox.State.PARTIAL); break;
+                default:      headerBox.setState(TriStateBox.State.UNCHECKED); break;
+            }
+            headerBox.addMouseListener(new MouseAdapter()
+            {
+                @Override public void mouseClicked(MouseEvent e)
+                {
+                    boolean allSelected = selection.categoryState(catIds) == BulkSelection.TriState.ALL;
+                    onHeaderSelectToggle.accept(catIds, !allSelected);
+                }
+            });
+            JPanel headerWest = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+            headerWest.setOpaque(false);
+            headerWest.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
+            headerWest.add(headerBox);
+            headerRow.add(headerWest, BorderLayout.WEST);
         }
 
         // Build the popup menu and the trigger glyph on the RIGHT.
@@ -199,7 +231,10 @@ public class CategorySection extends JPanel
                 () -> onRowAction.accept(w, RowAction.TOGGLE_PIN),
                 () -> onRowAction.accept(w, RowAction.DELETE),
                 spriteManager,
-                /* originCategoryName */ null);
+                /* originCategoryName */ null,
+                selectMode,
+                selection != null && selection.ids().contains(w.getId()),
+                shift -> onRowSelectClick.accept(w, shift));
             row.setAlignmentX(LEFT_ALIGNMENT);
             body.add(row);
             if (dnd != null) dnd.attachWaypointRow(row, row.getDragHandle(),

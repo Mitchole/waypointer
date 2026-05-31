@@ -108,7 +108,10 @@ public class PinnedSection extends JPanel
                 () -> onRowAction.accept(w, CategorySection.RowAction.TOGGLE_PIN),
                 () -> onRowAction.accept(w, CategorySection.RowAction.DELETE),
                 spriteManager,
-                originName);
+                originName,
+                /* selectMode */ false,
+                /* selected */ false,
+                shift -> { });
             row.setAlignmentX(LEFT_ALIGNMENT);
             body.add(row);
             if (inlineProvider != null)

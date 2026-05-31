@@ -93,6 +93,14 @@ public class WaypointerPanel extends PluginPanel
     private final ClearableTextField searchField = new ClearableTextField("Search waypoints...");
     private String currentFilter = "";
 
+    // Bulk select mode. Dormant until the search-row toggle (added later) flips selectMode.
+    private boolean selectMode = false;
+    private final BulkSelection selection = new BulkSelection();
+    private UUID lastClickedId;
+    // Ordered ids of the waypoints currently rendered in real categories (Pinned excluded),
+    // rebuilt every render pass so shift-range select honours the active filter and sort.
+    private final java.util.List<UUID> visibleOrderedIds = new ArrayList<>();
+
     // Subscription tokens so the panel can deregister cleanly. Held even though the panel is
     // a Singleton today, in case shutdown ordering changes or the panel ever gets re-created.
     private Listeners.Subscription storeSub;
@@ -478,6 +486,7 @@ public class WaypointerPanel extends PluginPanel
     public void rebuild()
     {
         body.removeAll();
+        visibleOrderedIds.clear();
         Library snap = store.getLibrary();
         // Lowercase once for the whole render pass; per-row matchers reuse this string.
         String loweredFilter = currentFilter.toLowerCase(Locale.ROOT);
@@ -550,7 +559,8 @@ public class WaypointerPanel extends PluginPanel
         {
             // Disable drag-and-drop while filtering, or rows would reorder relative to
             // invisible neighbours.
-            DragAndDropHandler dnd = isFiltering ? null : new DragAndDropHandler(store, this::rebuild);
+            DragAndDropHandler dnd = (isFiltering || selectMode) ? null
+                : new DragAndDropHandler(store, this::rebuild);
             for (Category c : cats)
             {
                 List<Waypoint> all = store.getWaypointsInCategory(c.getId());
@@ -560,6 +570,8 @@ public class WaypointerPanel extends PluginPanel
                 if (c.isUncategorized() && ws.isEmpty()) continue;
                 // Hide empty categories during search (when their name didn't match either).
                 if (isFiltering && ws.isEmpty()) continue;
+
+                for (Waypoint w : ws) visibleOrderedIds.add(w.getId());
 
                 // While filtering, force expanded so matches are visible.
                 boolean collapsed = isFiltering ? false
@@ -578,7 +590,11 @@ public class WaypointerPanel extends PluginPanel
                         () -> promptDeleteCategory(c),
                         () -> promptSetCategoryIcon(c),
                         mode -> store.setCategorySortMode(c.getId(), mode)),
-                    spriteManager);
+                    spriteManager,
+                    selectMode,
+                    selection,
+                    this::onRowSelectClicked,
+                    this::onHeaderSelectToggle);
                 if (prevWasSection) body.add(buildSectionDivider());
                 body.add(section);
                 rendered = true;
@@ -664,6 +680,35 @@ public class WaypointerPanel extends PluginPanel
         return new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
             () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
             () -> focusWorldMap(w.getPackedWorldPoint()));
+    }
+
+    // A row was clicked in select mode: shift extends the range from the last click; a plain
+    // click toggles. Keyed by id so it is filter/sort independent.
+    private void onRowSelectClicked(Waypoint w, boolean shift)
+    {
+        UUID id = w.getId();
+        if (shift && lastClickedId != null)
+        {
+            selection.selectRange(visibleOrderedIds, lastClickedId, id);
+        }
+        else
+        {
+            selection.toggle(id);
+        }
+        lastClickedId = id;
+        afterSelectionChanged();
+    }
+
+    private void onHeaderSelectToggle(java.util.List<UUID> ids, boolean select)
+    {
+        selection.setCategory(ids, select);
+        afterSelectionChanged();
+    }
+
+    // Re-render so checkbox states reflect the model. A later task also refreshes the action bar.
+    private void afterSelectionChanged()
+    {
+        rebuild();
     }
 
     private void handleRowAction(Waypoint w, CategorySection.RowAction action)
