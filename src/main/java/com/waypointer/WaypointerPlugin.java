@@ -6,6 +6,7 @@ import com.waypointer.service.LandmarkOverrides;
 import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.WaypointMenuHandler;
 import com.waypointer.service.WaypointPathfinder;
+import com.waypointer.service.ProfileLibrarySwitcher;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
 import com.waypointer.ui.AreaPreviewOverlay;
@@ -40,8 +41,8 @@ public class WaypointerPlugin extends Plugin
     @Inject private WaypointerPanel panel;
     @Inject private WaypointStore store;
     @Inject private WaypointStorePersistence persistence;
-    @Inject private net.runelite.client.config.ConfigManager configManager;
-    @Inject private com.waypointer.service.ProfileLibrarySwitcher profileLibrarySwitcher;
+    @Inject private ConfigManager configManager;
+    @Inject private ProfileLibrarySwitcher profileLibrarySwitcher;
     @Inject private ScheduledExecutorService scheduler;
     @Inject private EventBus eventBus;
     @Inject private WaypointMenuHandler menuHandler;
