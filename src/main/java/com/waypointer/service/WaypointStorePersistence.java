@@ -69,6 +69,31 @@ public class WaypointStorePersistence
         this.refuseSavesUntilReset = false;
     }
 
+    // Copy the default slot's files into the active slot when the active slot has no primary file
+    // yet. No-op for the default slot, when the slot already exists, or when the default is absent
+    // (brand-new user) -> the slot then loads empty.
+    public void seedFromDefault()
+    {
+        if (activeProfileKey == null) return;
+        Path slot = libraryFile();
+        if (Files.exists(slot)) return;
+        Path defaultPrimary = dir.resolve(LIBRARY_FILENAME);
+        if (!Files.exists(defaultPrimary)) return;
+        try
+        {
+            Files.copy(defaultPrimary, slot, StandardCopyOption.REPLACE_EXISTING);
+            Path defaultBackup = dir.resolve(BACKUP_FILENAME);
+            if (Files.exists(defaultBackup))
+            {
+                Files.copy(defaultBackup, backupFile(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+        catch (IOException e)
+        {
+            log.warn("Could not seed profile library from default slot", e);
+        }
+    }
+
     public boolean isRefusingSaves() { return refuseSavesUntilReset; }
 
     public void allowSavesAfterReset()

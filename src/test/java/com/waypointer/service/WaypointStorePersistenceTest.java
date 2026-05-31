@@ -150,4 +150,55 @@ public class WaypointStorePersistenceTest
         persistence.switchProfile("acct1");
         assertFalse(persistence.isRefusingSaves());
     }
+
+    @Test
+    public void seedFromDefaultCopiesDefaultIntoAbsentSlot() throws IOException
+    {
+        Library lib = new Library();
+        lib.getCategories().add(new Category(UUID.randomUUID(), "Banks", 0, false, null, false));
+        persistence.saveBlocking(lib); // writes default library.json (+ .bak)
+
+        persistence.switchProfile("acct1");
+        assertFalse(Files.exists(tmpDir.resolve("library-acct1.json")));
+        persistence.seedFromDefault();
+
+        assertTrue(Files.exists(tmpDir.resolve("library-acct1.json")));
+        assertTrue(Files.exists(tmpDir.resolve("library-acct1.json.bak")));
+        Library seeded = persistence.loadOrEmpty();
+        assertEquals("Banks", seeded.getCategories().get(0).getName());
+    }
+
+    @Test
+    public void seedFromDefaultDoesNotOverwriteExistingSlot() throws IOException
+    {
+        Library defaultLib = new Library();
+        defaultLib.getCategories().add(new Category(UUID.randomUUID(), "Default", 0, false, null, false));
+        persistence.saveBlocking(defaultLib);
+
+        persistence.switchProfile("acct1");
+        Library acctLib = new Library();
+        acctLib.getCategories().add(new Category(UUID.randomUUID(), "Account", 0, false, null, false));
+        persistence.saveBlocking(acctLib); // slot now exists with its own content
+
+        persistence.seedFromDefault(); // must be a no-op
+        assertEquals("Account", persistence.loadOrEmpty().getCategories().get(0).getName());
+    }
+
+    @Test
+    public void seedFromDefaultNoOpWhenDefaultAbsent()
+    {
+        persistence.switchProfile("acct1");
+        persistence.seedFromDefault(); // no default file exists; must not throw
+        assertTrue(persistence.loadOrEmpty().getCategories().isEmpty());
+    }
+
+    @Test
+    public void seedFromDefaultNoOpOnDefaultSlot() throws IOException
+    {
+        Library lib = new Library();
+        persistence.saveBlocking(lib);
+        persistence.seedFromDefault(); // active key is null; nothing to do
+        // No library-*.json files created.
+        assertFalse(Files.list(tmpDir).anyMatch(p -> p.getFileName().toString().startsWith("library-")));
+    }
 }
