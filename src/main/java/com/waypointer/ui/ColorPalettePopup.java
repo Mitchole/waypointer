@@ -9,6 +9,7 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 
 /**
  * A compact palette of category accent colours. Fixed swatches chosen to read against the
@@ -34,9 +35,13 @@ final class ColorPalettePopup
     static JPopupMenu build(Integer current, Consumer<Integer> onPick)
     {
         JPopupMenu popup = new JPopupMenu();
+        popup.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        popup.setBorder(BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR));
         for (int rgb : SWATCHES)
         {
             JMenuItem item = new JMenuItem();
+            item.setOpaque(true);
+            item.setBackground(ColorScheme.DARKER_GRAY_COLOR);
             item.getAccessibleContext().setAccessibleName("Category colour " + String.format("#%06X", rgb));
             item.add(new Swatch(new Color(rgb), current != null && current == rgb));
             item.addActionListener(e -> onPick.accept(rgb));
@@ -44,6 +49,10 @@ final class ColorPalettePopup
         }
         popup.addSeparator();
         JMenuItem none = new JMenuItem("None");
+        none.setOpaque(true);
+        none.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        none.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        none.setFont(FontManager.getRunescapeSmallFont());
         none.getAccessibleContext().setAccessibleName("Clear category colour");
         none.addActionListener(e -> onPick.accept(null));
         popup.add(none);
@@ -60,6 +69,8 @@ final class ColorPalettePopup
         {
             this.color = color;
             this.selected = selected;
+            setOpaque(true);
+            setBackground(ColorScheme.DARKER_GRAY_COLOR);
             setPreferredSize(new Dimension(96, 16));
             setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
         }
@@ -67,6 +78,8 @@ final class ColorPalettePopup
         @Override
         protected void paintComponent(Graphics g)
         {
+            g.setColor(getBackground());
+            g.fillRect(0, 0, getWidth(), getHeight());
             g.setColor(color);
             g.fillRect(2, 2, getWidth() - 4, getHeight() - 4);
             if (selected)
