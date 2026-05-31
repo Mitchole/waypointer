@@ -40,6 +40,8 @@ public class WaypointerPlugin extends Plugin
     @Inject private WaypointerPanel panel;
     @Inject private WaypointStore store;
     @Inject private WaypointStorePersistence persistence;
+    @Inject private net.runelite.client.config.ConfigManager configManager;
+    @Inject private com.waypointer.service.ProfileLibrarySwitcher profileLibrarySwitcher;
     @Inject private ScheduledExecutorService scheduler;
     @Inject private EventBus eventBus;
     @Inject private WaypointMenuHandler menuHandler;
@@ -57,8 +59,9 @@ public class WaypointerPlugin extends Plugin
     @Override
     protected void startUp() throws Exception
     {
-        store.bootstrap(persistence.loadOrEmpty());
         store.enableDebouncedPersistence(persistence, scheduler, Duration.ofMillis(500));
+        profileLibrarySwitcher.initialize(
+            profileLibrarySwitcher.resolveStartupKey(configManager.getRSProfileKey()));
 
         // Flush any pending debounced save if the JVM terminates before shutDown() runs (e.g.
         // a hard client crash or user closing the RuneLite window). Removed in shutDown() so
@@ -128,6 +131,16 @@ public class WaypointerPlugin extends Plugin
             if (config.devModeEnabled()) overlayManager.add(areaPreviewOverlay);
             else overlayManager.remove(areaPreviewOverlay);
         }
+    }
+
+    @Subscribe
+    public void onRuneScapeProfileChanged(net.runelite.client.events.RuneScapeProfileChanged e)
+    {
+        // getRSProfileKey() is updated before this event is posted and is the same source startUp
+        // uses, so reading it here keeps the key format consistent. Marshal the swap (file I/O +
+        // panel rebuild) to the EDT.
+        final String key = configManager.getRSProfileKey();
+        javax.swing.SwingUtilities.invokeLater(() -> profileLibrarySwitcher.switchToProfile(key));
     }
 
     @Provides
