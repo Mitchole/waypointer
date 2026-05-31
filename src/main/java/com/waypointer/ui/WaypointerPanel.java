@@ -99,6 +99,20 @@ public class WaypointerPanel extends PluginPanel
     private final ClearableTextField searchField = new ClearableTextField("Search waypoints...");
     private String currentFilter = "";
 
+    // Footer (#23): one static tip chosen once per panel instance (one plugin-enable). No timer,
+    // no rotation at runtime. Index varies across restarts via the nanoTime seed. The tips are
+    // verified against current features (export lives on the overflow menu since #36).
+    private static final String[] FOOTER_TIPS = {
+        "Drag the dot-grip to reorder",
+        "Click a row to edit it inline",
+        "Open the ⋮ menu to import or export",
+        "Pin a waypoint to keep it up top",
+        "Use Select for bulk move and delete",
+        "Right-click a waypoint for quick actions",
+        "Search by name or category",
+    };
+    private final int footerTipIndex = Math.floorMod(System.nanoTime(), FOOTER_TIPS.length);
+
     // Bulk select mode. Dormant until the search-row toggle (added later) flips selectMode.
     private boolean selectMode = false;
     private final BulkSelection selection = new BulkSelection();
@@ -641,6 +655,10 @@ public class WaypointerPanel extends PluginPanel
 
         // Push remaining vertical space to the bottom so sections stack tight at the top.
         body.add(Box.createVerticalGlue());
+        // Footer (#23) sits below the glue: pinned to the viewport bottom on a short list,
+        // scrolls in after the last section on a long one. Divider separates it from the list.
+        body.add(buildSectionDivider());
+        body.add(buildFooter());
         body.revalidate();
         body.repaint();
     }
@@ -692,6 +710,33 @@ public class WaypointerPanel extends PluginPanel
         return waypoints + (waypoints == 1 ? " waypoint" : " waypoints")
             + " · "
             + categories + (categories == 1 ? " category" : " categories");
+    }
+
+    // Footer strip (#23): centered count line + one static tip. Appended as the last body child
+    // after the vertical glue, so on a short list the glue pins it to the bottom of the viewport
+    // and on a long list it scrolls in after the last section. Height-capped like the banners so
+    // the body's BoxLayout(Y_AXIS) does not stretch it. Never hidden — renders in every state.
+    private JComponent buildFooter()
+    {
+        int waypoints = store.getLibrary().getWaypoints().size();
+        int categories = 0;
+        for (Category c : store.getCategoriesOrdered())
+        {
+            if (!store.getWaypointsInCategory(c.getId()).isEmpty()) categories++;
+        }
+
+        JPanel footer = newCappedHeightPanel(new BorderLayout());
+        footer.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        footer.setAlignmentX(Component.LEFT_ALIGNMENT);
+        footer.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+
+        JLabel label = new JLabel("<html><div style='text-align:center;'>"
+            + "<span style='color:#9b9b9b;'>" + footerCountText(waypoints, categories) + "</span><br>"
+            + "<span style='color:#6e6e6e;font-style:italic;'>" + FOOTER_TIPS[footerTipIndex] + "</span>"
+            + "</div></html>", SwingConstants.CENTER);
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        footer.add(label, BorderLayout.CENTER);
+        return footer;
     }
 
     // JPanel whose maximum height collapses to its preferred height, so banners don't get
