@@ -34,14 +34,6 @@ public class WaypointShareCodec
     @Inject
     public WaypointShareCodec(Gson gson) { this.gson = gson; }
 
-    public String encodeSingle(Waypoint w, Category c)
-    {
-        JsonObject obj = new JsonObject();
-        obj.add("waypoint", gson.toJsonTree(w));
-        obj.add("category", gson.toJsonTree(c));
-        return SINGLE_MAGIC + gzipBase64(obj.toString());
-    }
-
     public SingleResult decodeSingle(String input)
     {
         String body = stripMagic(input, SINGLE_MAGIC);

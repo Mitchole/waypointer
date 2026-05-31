@@ -15,6 +15,32 @@ public class WaypointShareCodecTest
 {
     private WaypointShareCodec codec;
 
+    private final Gson fixtureGson = new GsonBuilder()
+        .registerTypeAdapter(Instant.class,
+            (com.google.gson.JsonSerializer<Instant>) (src, t, c) ->
+                new com.google.gson.JsonPrimitive(src.toString()))
+        .registerTypeAdapter(Instant.class,
+            (com.google.gson.JsonDeserializer<Instant>) (e, t, c) ->
+                Instant.parse(e.getAsString()))
+        .create();
+
+    private String legacyWp1(Waypoint w, Category c) throws java.io.IOException
+    {
+        com.google.gson.JsonObject obj = new com.google.gson.JsonObject();
+        obj.add("waypoint", fixtureGson.toJsonTree(w));
+        obj.add("category", fixtureGson.toJsonTree(c));
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.GZIPOutputStream gz = new java.util.zip.GZIPOutputStream(baos))
+        {
+            gz.write(obj.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+        // Unpadded base64 matches what the deleted encodeSingle produced; the codec's
+        // ungzipBase64 uses a plain Base64.getDecoder(), which accepts unpadded input. Do NOT
+        // switch this to a padded / URL / MIME encoder or the legacy decode contract drifts.
+        return "WP1:" + java.util.Base64.getEncoder().withoutPadding()
+            .encodeToString(baos.toByteArray());
+    }
+
     @Before
     public void setUp()
     {
@@ -30,20 +56,34 @@ public class WaypointShareCodecTest
     }
 
     @Test
-    public void singleWaypointRoundTrip()
+    public void legacySingleCodeStillDecodes() throws Exception
     {
         UUID catId = UUID.randomUUID();
         Category c = new Category(catId, "Bossing", 0, false, null, false);
         Waypoint w = new Waypoint(UUID.randomUUID(), "Vorkath", 42, catId, null, "",
             Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false);
 
-        String code = codec.encodeSingle(w, c);
+        String code = legacyWp1(w, c);
         assertTrue(code.startsWith("WP1:"));
 
         WaypointShareCodec.SingleResult result = codec.decodeSingle(code);
         assertEquals("Vorkath", result.waypoint.getName());
         assertEquals(42, result.waypoint.getPackedWorldPoint());
         assertEquals("Bossing", result.category.getName());
+    }
+
+    @Test
+    public void legacySingleCodeDecodesAsOneWaypointLibrary() throws Exception
+    {
+        UUID catId = UUID.randomUUID();
+        Category c = new Category(catId, "Bossing", 0, false, null, false);
+        Waypoint w = new Waypoint(UUID.randomUUID(), "Vorkath", 42, catId, null, "",
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false);
+
+        Library lib = codec.decodeLibrary(legacyWp1(w, c));
+        assertEquals(1, lib.getWaypoints().size());
+        assertEquals(1, lib.getCategories().size());
+        assertEquals("Vorkath", lib.getWaypoints().get(0).getName());
     }
 
     @Test
@@ -121,7 +161,7 @@ public class WaypointShareCodecTest
     }
 
     @Test
-    public void singleWaypointRoundTripPreservesIconNotesAndCreatedAt()
+    public void legacySingleCodePreservesIconNotesAndCreatedAt() throws Exception
     {
         UUID catId = UUID.randomUUID();
         Category c = new Category(catId, "Skilling", 0, false, 99, false);
@@ -129,7 +169,7 @@ public class WaypointShareCodecTest
         Waypoint w = new Waypoint(UUID.randomUUID(), "Yew tree", 100, catId, 42,
             "100k/hr at 90 wc", ts, 3, false, null, false);
 
-        WaypointShareCodec.SingleResult r = codec.decodeSingle(codec.encodeSingle(w, c));
+        WaypointShareCodec.SingleResult r = codec.decodeSingle(legacyWp1(w, c));
         assertEquals(Integer.valueOf(42), r.waypoint.getIconId());
         assertEquals("100k/hr at 90 wc", r.waypoint.getNotes());
         assertEquals(ts, r.waypoint.getCreatedAt());
