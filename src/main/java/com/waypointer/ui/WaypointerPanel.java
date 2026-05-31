@@ -1,6 +1,8 @@
 package com.waypointer.ui;
 
 import com.waypointer.WaypointerConfig;
+import com.waypointer.codec.LibraryJsonCodec;
+import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
@@ -77,11 +79,15 @@ public class WaypointerPanel extends PluginPanel
     private final Client client;
     private final ClientThread clientThread;
     private final WildernessConfirmGate wildernessGate;
+    private final WaypointShareCodec shareCodec;
+    private final LibraryJsonCodec libraryCodec;
     private final CaptureForm captureForm;
     private final JPanel body = new JPanel();
     private JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
     private final JButton markBtn = new JButton("Mark current location");
+    private final JButton selectToggleBtn = new JButton("Select");
+    private BulkActionBar bulkBar;
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
 
@@ -117,7 +123,8 @@ public class WaypointerPanel extends PluginPanel
         WaypointStorePersistence persistence, SpriteManager spriteManager,
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
         NearestLandmarkBar nearestLandmarkBar,
-        Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate)
+        Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate,
+        WaypointShareCodec shareCodec, LibraryJsonCodec libraryCodec)
     {
         super(false);
         this.store = store;
@@ -133,6 +140,8 @@ public class WaypointerPanel extends PluginPanel
         this.client = client;
         this.clientThread = clientThread;
         this.wildernessGate = wildernessGate;
+        this.shareCodec = shareCodec;
+        this.libraryCodec = libraryCodec;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
 
         // Build the panel header: Mark current location with the overflow trigger pinned
@@ -228,6 +237,14 @@ public class WaypointerPanel extends PluginPanel
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         add(northStack, BorderLayout.NORTH);
         add(toastOverlay, BorderLayout.CENTER);
+
+        this.bulkBar = new BulkActionBar(
+            store::getCategoriesOrdered,
+            this::bulkMoveTo,
+            this::bulkDelete,
+            this::bulkExport);
+        bulkBar.setVisible(false);
+        add(bulkBar, BorderLayout.SOUTH);
 
         storeSub = store.subscribe(this::scheduleRebuild);
         pathSub = pathfinder.subscribe(this::scheduleRebuild);
@@ -391,6 +408,17 @@ public class WaypointerPanel extends PluginPanel
         });
 
         container.add(searchField, BorderLayout.CENTER);
+
+        selectToggleBtn.setToolTipText("Select multiple waypoints");
+        Styles.secondaryButton(selectToggleBtn);
+        Dimension toggleSize = new Dimension(58, searchField.getPreferredSize().height);
+        selectToggleBtn.setPreferredSize(toggleSize);
+        selectToggleBtn.addActionListener(e -> toggleSelectMode());
+        JPanel east = new JPanel(new BorderLayout());
+        east.setOpaque(false);
+        east.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0));
+        east.add(selectToggleBtn, BorderLayout.CENTER);
+        container.add(east, BorderLayout.EAST);
 
         return container;
     }
@@ -705,10 +733,71 @@ public class WaypointerPanel extends PluginPanel
         afterSelectionChanged();
     }
 
-    // Re-render so checkbox states reflect the model. A later task also refreshes the action bar.
+    private void toggleSelectMode()
+    {
+        selectMode = !selectMode;
+        if (!selectMode)
+        {
+            selection.clear();
+            lastClickedId = null;
+        }
+        selectToggleBtn.setForeground(selectMode ? ColorScheme.BRAND_ORANGE : Color.WHITE);
+        rebuild();
+        refreshBulkBar();
+    }
+
+    private void refreshBulkBar()
+    {
+        if (bulkBar == null) return;
+        bulkBar.setVisible(selectMode);
+        if (selectMode)
+        {
+            bulkBar.setCount(selection.size());
+            bulkBar.setActionsEnabled(!selection.isEmpty());
+        }
+        revalidate();
+        repaint();
+    }
+
+    private void bulkMoveTo(UUID targetId)
+    {
+        if (selection.isEmpty()) return;
+        Category target = store.getCategoryById(targetId);
+        int n = selection.size();
+        store.moveWaypointsToCategory(selection.ids(), targetId);
+        selection.clear();
+        lastClickedId = null;
+        afterSelectionChanged();
+        toastOverlay.show("Moved " + n + " to " + (target == null ? "category" : target.getName()),
+            null, null);
+    }
+
+    private void bulkDelete()
+    {
+        if (selection.isEmpty()) return;
+        int n = selection.size();
+        store.deleteWaypoints(selection.ids());
+        selection.clear();
+        lastClickedId = null;
+        afterSelectionChanged();
+        toastOverlay.show(n + " deleted", "Undo", store::undoLast);
+    }
+
+    private void bulkExport()
+    {
+        if (selection.isEmpty()) return;
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        new ExportPickerDialog(owner, store, shareCodec, libraryCodec, toastOverlay,
+            selection.ids()).setVisible(true);
+        // Selection is non-destructive for export; leave it intact.
+    }
+
+    // Re-render so checkbox states reflect the model, and sync the action bar's count + enabled
+    // state to the live selection.
     private void afterSelectionChanged()
     {
         rebuild();
+        refreshBulkBar();
     }
 
     private void handleRowAction(Waypoint w, CategorySection.RowAction action)
