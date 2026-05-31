@@ -27,6 +27,12 @@ public final class Category
      * unchanged; set via {@link #setSortMode(CategorySortMode)}.
      */
     private CategorySortMode sortMode;
+    /**
+     * Optional accent colour as a packed RGB int. {@code null} = no accent. Like
+     * {@link #sortMode}, kept out of the 6-arg constructor so existing positional call
+     * sites compile unchanged; set via {@link #setColor(Integer)}.
+     */
+    private Integer color;
 
     public Category(UUID id, String name, int sortOrder, boolean uncategorized,
         Integer iconId, boolean bundled)

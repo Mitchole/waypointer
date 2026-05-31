@@ -129,6 +129,25 @@ public class LibraryJsonCodecTest
     }
 
     @Test
+    public void categoryColorRoundTrips()
+    {
+        Library lib = new Library();
+        UUID catId = UUID.randomUUID();
+        Category c = new Category(catId, "Danger", 0, false, null, false);
+        c.setColor(0xCC4040);
+        lib.getCategories().add(c);
+
+        Library back = codec.decode(codec.encode(lib));
+        assertEquals(Integer.valueOf(0xCC4040), back.getCategories().get(0).getColor());
+
+        // null colour also round-trips
+        Library lib2 = new Library();
+        lib2.getCategories().add(new Category(UUID.randomUUID(), "Plain", 0, false, null, false));
+        Library back2 = codec.decode(codec.encode(lib2));
+        assertNull(back2.getCategories().get(0).getColor());
+    }
+
+    @Test
     public void legacyJsonWithoutSortMode_decodesAsNull()
     {
         String legacyJson =
