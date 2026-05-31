@@ -35,6 +35,8 @@ import net.runelite.client.ui.FontManager;
 // the right (rename / delete / set-icon).
 public class CategorySection extends JPanel
 {
+    private static final int COLOUR_STRIPE_WIDTH = 3;
+
     private final Category category;
     private final JPanel body = new JPanel();
     private final JLabel headerLabel;
@@ -58,7 +60,19 @@ public class CategorySection extends JPanel
         this.collapsed = collapsed;
         this.onCollapseChange = onCollapseChange;
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
+        Integer accent = category.getColor();
+        if (accent != null)
+        {
+            setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, COLOUR_STRIPE_WIDTH, 0, 0, new Color(accent)),
+                BorderFactory.createEmptyBorder(4, 0, 4, 0)));
+        }
+        else
+        {
+            // Reserve the stripe width even when uncoloured so rows don't shift when a colour
+            // is set or cleared.
+            setBorder(BorderFactory.createEmptyBorder(4, COLOUR_STRIPE_WIDTH, 4, 0));
+        }
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         // BoxLayout in the parent horizontal-stretches us to the column width, but must not
         // centre us. Pin to the left edge.
