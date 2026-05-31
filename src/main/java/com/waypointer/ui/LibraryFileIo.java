@@ -33,32 +33,6 @@ final class LibraryFileIo
         this.toasts = toasts == null ? Toasts.NO_OP : toasts;
     }
 
-    void importFromFile()
-    {
-        JFileChooser fc = new JFileChooser();
-        fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Waypointer JSON", "json"));
-        if (fc.showOpenDialog(parent) != JFileChooser.APPROVE_OPTION) return;
-        try
-        {
-            String json = new String(Files.readAllBytes(fc.getSelectedFile().toPath()), StandardCharsets.UTF_8);
-            Library incoming = codec.decode(json);
-            WaypointStore.ImportResult r = store.importMerge(incoming);
-            toasts.show(String.format("Imported %d waypoints, %d categories. Skipped %d.",
-                r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped));
-        }
-        catch (IOException | RuntimeException ex)
-        {
-            JOptionPane.showMessageDialog(parent, "Import failed: " + ex.getMessage(),
-                "Waypointer", JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-    void exportToFile()
-    {
-        String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
-        exportLibraryToFile(store.getLibrary(), "waypointer-library-" + stamp + ".json");
-    }
-
     void exportLibraryToFile(Library lib, String suggestedFileName)
     {
         JFileChooser fc = new JFileChooser();

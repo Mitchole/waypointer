@@ -43,7 +43,6 @@ final class OverflowMenu
     void show(Component near, WaypointerPanel panel, Toasts toasts)
     {
         Component anchor = panel;
-        LibraryFileIo fileIo = new LibraryFileIo(store, libraryCodec, anchor, toasts);
         JPopupMenu menu = new JPopupMenu();
 
         JMenuItem newCategory = new JMenuItem("New category...");
@@ -68,26 +67,17 @@ final class OverflowMenu
         menu.add(expandToggle);
         menu.addSeparator();
 
-        JMenuItem importLib = new JMenuItem("Import library...");
-        importLib.addActionListener(e ->
-            new PasteImportDialog(SwingUtilities.getWindowAncestor(anchor), store, shareCodec)
-                .setVisible(true));
-        menu.add(importLib);
+        JMenuItem exportItem = new JMenuItem("Export...");
+        exportItem.addActionListener(e ->
+            new ExportPickerDialog(SwingUtilities.getWindowAncestor(anchor), store, shareCodec,
+                libraryCodec, toasts, null).setVisible(true));
+        menu.add(exportItem);
 
-        JMenuItem exportLib = new JMenuItem("Export library");
-        exportLib.addActionListener(e -> {
-            String code = shareCodec.encodeLibrary(store.getLibrary());
-            fileIo.copyShareCodeToClipboard(code, store.getLibrary().getWaypoints().size());
-        });
-        menu.add(exportLib);
-
-        JMenuItem importFile = new JMenuItem("Import library from file...");
-        importFile.addActionListener(e -> fileIo.importFromFile());
-        menu.add(importFile);
-
-        JMenuItem exportFile = new JMenuItem("Export library to file...");
-        exportFile.addActionListener(e -> fileIo.exportToFile());
-        menu.add(exportFile);
+        JMenuItem importItem = new JMenuItem("Import...");
+        importItem.addActionListener(e ->
+            new ImportPickerDialog(SwingUtilities.getWindowAncestor(anchor), store, shareCodec,
+                libraryCodec, toasts).setVisible(true));
+        menu.add(importItem);
 
         JMenuItem openFolder = new JMenuItem("Open data folder");
         openFolder.addActionListener(e -> openDataFolder(anchor));
