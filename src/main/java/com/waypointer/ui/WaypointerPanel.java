@@ -681,11 +681,19 @@ public class WaypointerPanel extends PluginPanel
         wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
         wrap.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel empty = new JLabel("<html><div style='text-align:center;padding:20px 12px 8px;"
+        // Faint up-arrow (#24) at the top of the body, aimed up past the search bar at the orange
+        // Mark button. Only painted here, so it vanishes the moment the first waypoint exists.
+        JLabel arrow = new JLabel("↑", SwingConstants.CENTER);
+        arrow.setForeground(new Color(0x6e, 0x6e, 0x6e));
+        arrow.setFont(arrow.getFont().deriveFont(28f));
+        arrow.setBorder(BorderFactory.createEmptyBorder(12, 0, 0, 0));
+        wrap.add(arrow, BorderLayout.NORTH);
+
+        JLabel empty = new JLabel("<html><div style='text-align:center;padding:8px 12px 8px;"
             + "color:#9b9b9b;'>No waypoints yet.<br>Mark a location to begin, or start "
             + "from a curated set.</div></html>", SwingConstants.CENTER);
         empty.setForeground(Color.LIGHT_GRAY);
-        wrap.add(empty, BorderLayout.NORTH);
+        wrap.add(empty, BorderLayout.CENTER);
 
         body.add(wrap);
     }
