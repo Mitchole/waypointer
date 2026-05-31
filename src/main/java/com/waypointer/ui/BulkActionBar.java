@@ -36,6 +36,7 @@ final class BulkActionBar extends JPanel
     {
         setLayout(new BorderLayout(4, 0));
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        setOpaque(true);
         setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 0, 0, 0, ColorScheme.DARK_GRAY_COLOR),
             BorderFactory.createEmptyBorder(6, 8, 6, 8)));
