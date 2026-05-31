@@ -24,6 +24,7 @@ final class BulkSelection
     /**
      * Additively selects the inclusive range of {@code ordered} between {@code fromId} and
      * {@code toId} (anchor order does not matter). No-op if either id is not in {@code ordered}.
+     * Assumes {@code ordered} contains distinct ids (the panel's visible row list does).
      */
     void selectRange(List<UUID> ordered, UUID fromId, UUID toId)
     {
@@ -41,6 +42,7 @@ final class BulkSelection
         else ids.removeAll(categoryWaypointIds);
     }
 
+    /** Tri-state for a category's waypoints. Assumes {@code categoryWaypointIds} are distinct. */
     TriState categoryState(Collection<UUID> categoryWaypointIds)
     {
         if (categoryWaypointIds.isEmpty()) return TriState.NONE;

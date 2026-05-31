@@ -132,4 +132,26 @@ public class BulkSelectionTest
         s.ids().clear(); // mutating the returned set must not affect internal state
         assertTrue(s.ids().contains(a));
     }
+
+    @Test
+    public void selectRangeFromEqualsToSelectsExactlyOne()
+    {
+        BulkSelection s = new BulkSelection();
+        UUID a = UUID.randomUUID(), b = UUID.randomUUID(), c = UUID.randomUUID();
+        s.selectRange(Arrays.asList(a, b, c), b, b);
+        assertEquals(1, s.size());
+        assertTrue(s.ids().contains(b));
+    }
+
+    @Test
+    public void setCategoryOverlapKeepsExistingAndAddsRest()
+    {
+        BulkSelection s = new BulkSelection();
+        UUID a = UUID.randomUUID(), b = UUID.randomUUID();
+        s.toggle(a);                                   // pre-existing partial selection
+        s.setCategory(Arrays.asList(a, b), true);      // overlap: a already in
+        assertEquals(2, s.size());
+        assertTrue(s.ids().contains(a));
+        assertTrue(s.ids().contains(b));
+    }
 }
