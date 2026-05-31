@@ -148,6 +148,27 @@ public class LibraryJsonCodecTest
     }
 
     @Test
+    public void waypointTargetNpcNameRoundTrips()
+    {
+        Library lib = new Library();
+        Waypoint w = new Waypoint(
+            UUID.randomUUID(), "Banker", 42, null, null, "",
+            Instant.parse("2026-05-02T12:00:00Z"), 0, false, null, false);
+        w.setTargetNpcName("Banker");
+        lib.getWaypoints().add(w);
+
+        Library back = codec.decode(codec.encode(lib));
+        assertEquals("Banker", back.getWaypoints().get(0).getTargetNpcName());
+
+        // a non-NPC waypoint keeps it null
+        Library lib2 = new Library();
+        lib2.getWaypoints().add(new Waypoint(
+            UUID.randomUUID(), "Tile", 7, null, null, "",
+            Instant.parse("2026-05-02T12:00:00Z"), 0, false, null, false));
+        assertNull(codec.decode(codec.encode(lib2)).getWaypoints().get(0).getTargetNpcName());
+    }
+
+    @Test
     public void legacyJsonWithoutSortMode_decodesAsNull()
     {
         String legacyJson =

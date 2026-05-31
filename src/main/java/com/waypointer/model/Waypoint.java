@@ -3,7 +3,6 @@ package com.waypointer.model;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +14,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public final class Waypoint
 {
     private UUID id;
@@ -29,6 +27,30 @@ public final class Waypoint
     private boolean pinned;
     private Instant pinnedAt;   // null when not pinned
     private boolean bypassWildernessConfirm;
+
+    /**
+     * Name of the NPC this waypoint was captured from. {@code null} = not an NPC waypoint.
+     * Drives the active-path NPC highlight. Kept out of the canonical constructor below so
+     * existing positional call sites compile unchanged; set via {@link #setTargetNpcName}.
+     */
+    private String targetNpcName;
+
+    public Waypoint(UUID id, String name, int packedWorldPoint, UUID categoryId, Integer iconId,
+        String notes, Instant createdAt, int sortOrder, boolean pinned, Instant pinnedAt,
+        boolean bypassWildernessConfirm)
+    {
+        this.id = id;
+        this.name = name;
+        this.packedWorldPoint = packedWorldPoint;
+        this.categoryId = categoryId;
+        this.iconId = iconId;
+        this.notes = notes;
+        this.createdAt = createdAt;
+        this.sortOrder = sortOrder;
+        this.pinned = pinned;
+        this.pinnedAt = pinnedAt;
+        this.bypassWildernessConfirm = bypassWildernessConfirm;
+    }
 
     @Override
     public boolean equals(Object o)
