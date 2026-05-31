@@ -32,23 +32,32 @@ public class CaptureDialog extends JDialog
 {
     private final WaypointStore store;
     private final int packedPoint;
+    private final String targetNpcName;
 
     private JComboBox<CategoryComboItem> categoryCombo;
     private CategoryComboItem lastSelected;
 
     public CaptureDialog(Window owner, WaypointStore store, WaypointCapture capture, int packedPoint)
     {
+        this(owner, store, capture, packedPoint, null, null);
+    }
+
+    public CaptureDialog(Window owner, WaypointStore store, WaypointCapture capture, int packedPoint,
+        String defaultNameOverride, String targetNpcName)
+    {
         super(owner, "Save waypoint", Dialog.ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         this.store = store;
         this.packedPoint = packedPoint;
+        this.targetNpcName = targetNpcName;
 
         JPanel content = (JPanel) getContentPane();
         content.setLayout(new BorderLayout(8, 8));
         content.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         content.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        String defaultName = capture.defaultName(packedPoint);
+        String defaultName = (defaultNameOverride != null && !defaultNameOverride.isEmpty())
+            ? defaultNameOverride : capture.defaultName(packedPoint);
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -114,7 +123,7 @@ public class CaptureDialog extends JDialog
         CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
         UUID categoryId = (sel == null || sel.isSentinel())
             ? store.getUncategorized().getId() : sel.id();
-        store.createWaypoint(packedPoint, trimmed, categoryId);
+        store.createWaypoint(packedPoint, trimmed, categoryId, targetNpcName);
         dispose();
     }
 
