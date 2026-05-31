@@ -120,6 +120,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
             dragHandle.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
             dragHandle.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
             dragHandle.setToolTipText("Drag to reorder");
+            dragHandle.getAccessibleContext().setAccessibleName("Reorder waypoint");
             add(dragHandle, BorderLayout.WEST);
         }
         else
@@ -149,6 +150,10 @@ public class WaypointRow extends JPanel implements DropIndicatable
             JButton play = new JButton("▶"); // black right-pointing triangle
             Styles.playIconButton(play, active);
             play.setToolTipText(active ? "Pathing here" : "Path to here");
+            play.getAccessibleContext().setAccessibleName(
+                waypoint.getName() == null || waypoint.getName().isEmpty()
+                    ? "Path to waypoint"
+                    : "Path to " + waypoint.getName());
             play.addActionListener(e -> onPlay.run());
 
             JLabel menuTrigger = new JLabel("⋮"); // vertical ellipsis
@@ -156,6 +161,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
             menuTrigger.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
             menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             menuTrigger.setToolTipText("More");
+            menuTrigger.getAccessibleContext().setAccessibleName("Waypoint options");
             menuTrigger.addMouseListener(new MouseAdapter()
             {
                 @Override public void mouseClicked(MouseEvent e)

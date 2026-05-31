@@ -170,6 +170,7 @@ public class WaypointerPanel extends PluginPanel
         markRow.add(markBtn, BorderLayout.CENTER);
         JButton overflowBtn = new JButton("⋮"); // U+22EE vertical ellipsis
         overflowBtn.setToolTipText("More");
+        overflowBtn.getAccessibleContext().setAccessibleName("More options");
         Styles.secondaryButton(overflowBtn);
         Dimension overflowSize = new Dimension(30, markBtn.getPreferredSize().height);
         overflowBtn.setPreferredSize(overflowSize);

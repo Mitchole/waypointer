@@ -70,6 +70,7 @@ public class InlineEditPanel extends JPanel
             closeBtn.setForeground(Color.LIGHT_GRAY);
             closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             closeBtn.setToolTipText("Close");
+            closeBtn.getAccessibleContext().setAccessibleName("Close editor");
             closeBtn.addMouseListener(new MouseAdapter()
             {
                 @Override public void mouseClicked(MouseEvent e)

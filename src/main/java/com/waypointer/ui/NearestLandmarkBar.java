@@ -141,6 +141,7 @@ public final class NearestLandmarkBar extends JPanel
         {
             JButton b = makeButton();
             b.addActionListener(e -> onPick(type));
+            b.getAccessibleContext().setAccessibleName("Path to nearest " + type.displayName());
             applySprite(b, type);
             primaryButtons.put(type, b);
             iconRow.add(b);
@@ -149,6 +150,7 @@ public final class NearestLandmarkBar extends JPanel
 
         overflowBtn = makeButton();
         overflowBtn.setText("⋮"); // U+22EE vertical ellipsis
+        overflowBtn.getAccessibleContext().setAccessibleName("Customize landmark bar");
         overflowBtn.addActionListener(e -> {
             picker.setVisible(!picker.isVisible());
             revalidate();

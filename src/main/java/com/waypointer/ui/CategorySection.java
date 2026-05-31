@@ -212,6 +212,7 @@ public class CategorySection extends JPanel
             menuTrigger.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 4));
             menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             menuTrigger.setToolTipText("Category options");
+            menuTrigger.getAccessibleContext().setAccessibleName("Category options");
             menuTrigger.addMouseListener(new MouseAdapter() {
                 @Override public void mouseClicked(MouseEvent e)
                 {

@@ -40,6 +40,7 @@ final class ActivePathBanner extends JPanel
         add(label, BorderLayout.CENTER);
 
         Styles.compactSecondaryButton(stop);
+        stop.getAccessibleContext().setAccessibleName("Stop pathing");
         stop.addActionListener(e -> pathfinder.clearPath());
         add(stop, BorderLayout.EAST);
 

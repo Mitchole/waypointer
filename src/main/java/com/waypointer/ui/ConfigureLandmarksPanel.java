@@ -96,6 +96,7 @@ final class ConfigureLandmarksPanel extends JPanel
         handle.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         handle.setFont(FontManager.getRunescapeFont());
         handle.setPreferredSize(new Dimension(10, ROW_HEIGHT));
+        handle.getAccessibleContext().setAccessibleName("Reorder " + type.displayName());
         row.add(handle);
 
         JCheckBox cb = new JCheckBox();

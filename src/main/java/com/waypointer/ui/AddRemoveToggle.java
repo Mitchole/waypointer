@@ -84,12 +84,14 @@ final class AddRemoveToggle extends JLabel
         {
             setText(ADD_GLYPH);
             setToolTipText("Add waypoint");
+            getAccessibleContext().setAccessibleName("Add to library");
             base = ColorScheme.PROGRESS_COMPLETE_COLOR;
         }
         else
         {
             setText(REMOVE_GLYPH);
             setToolTipText("Remove waypoint");
+            getAccessibleContext().setAccessibleName("Remove from library");
             base = ColorScheme.PROGRESS_ERROR_COLOR;
         }
         setForeground(hovering ? base.brighter() : base);
