@@ -373,6 +373,12 @@ public class WaypointerPanel extends PluginPanel
             iconId -> store.setCategoryIcon(c.getId(), iconId)).setVisible(true);
     }
 
+    private void promptSetCategoryColour(Category c, java.awt.Component anchor)
+    {
+        ColorPalettePopup.build(c.getColor(), rgb -> store.setCategoryColor(c.getId(), rgb))
+            .show(anchor, 0, anchor.getHeight());
+    }
+
     // Scrolls an already-open world map to the given packed tile. setWorldMapPositionTarget
     // hits the game-side WorldMap, so it must be invoked from the client thread. The map
     // itself isn't opened programmatically (no public RuneLite API for that); if the user
@@ -631,6 +637,7 @@ public class WaypointerPanel extends PluginPanel
                         () -> promptRenameCategory(c),
                         () -> promptDeleteCategory(c),
                         () -> promptSetCategoryIcon(c),
+                        () -> promptSetCategoryColour(c, this),
                         mode -> store.setCategorySortMode(c.getId(), mode)),
                     spriteManager,
                     selectMode,

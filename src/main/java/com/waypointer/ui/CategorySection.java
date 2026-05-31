@@ -168,6 +168,8 @@ public class CategorySection extends JPanel
             rename.addActionListener(e -> actions.onRename.run());
             JMenuItem setIcon = new JMenuItem("Set icon...");
             setIcon.addActionListener(e -> { if (actions.onSetIcon != null) actions.onSetIcon.run(); });
+            JMenuItem setColour = new JMenuItem("Set colour...");
+            setColour.addActionListener(e -> { if (actions.onSetColour != null) actions.onSetColour.run(); });
 
             javax.swing.JMenu sortBy = new javax.swing.JMenu("Sort by");
             com.waypointer.model.CategorySortMode active =
@@ -183,6 +185,7 @@ public class CategorySection extends JPanel
             delete.addActionListener(e -> actions.onDelete.run());
             menu.add(rename);
             menu.add(setIcon);
+            menu.add(setColour);
             menu.add(sortBy);
             menu.addSeparator();
             menu.add(delete);
@@ -351,14 +354,17 @@ public class CategorySection extends JPanel
         final Runnable onRename;
         final Runnable onDelete;
         final Runnable onSetIcon;
+        final Runnable onSetColour;
         final java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode;
 
         public Actions(Runnable onRename, Runnable onDelete, Runnable onSetIcon,
+            Runnable onSetColour,
             java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode)
         {
             this.onRename = onRename;
             this.onDelete = onDelete;
             this.onSetIcon = onSetIcon;
+            this.onSetColour = onSetColour;
             this.onSetSortMode = onSetSortMode;
         }
     }
