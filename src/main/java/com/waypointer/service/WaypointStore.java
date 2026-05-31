@@ -317,6 +317,11 @@ public class WaypointStore
 
     public Waypoint createWaypoint(int packed, String name, UUID categoryId)
     {
+        return createWaypoint(packed, name, categoryId, null);
+    }
+
+    public Waypoint createWaypoint(int packed, String name, UUID categoryId, String targetNpcName)
+    {
         lastUndo = null;
         Waypoint w = new Waypoint(
             UUID.randomUUID(),
@@ -330,6 +335,7 @@ public class WaypointStore
             false,
             null,
             false);
+        w.setTargetNpcName(targetNpcName);
         library.getWaypoints().add(w);
         notifyChanged();
         return w;

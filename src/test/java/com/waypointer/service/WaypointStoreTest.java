@@ -41,6 +41,14 @@ public class WaypointStoreTest
     }
 
     @Test
+    public void createWaypointWithNpcNameStoresIt()
+    {
+        Waypoint w = store.createWaypoint(99, "Banker", store.getUncategorized().getId(), "Banker");
+        assertEquals("Banker", w.getTargetNpcName());
+        assertEquals("Banker", store.getWaypointById(w.getId()).getTargetNpcName());
+    }
+
+    @Test
     public void deleteWaypointRemoves()
     {
         Waypoint w = store.createWaypoint(100, "Delete me", store.getUncategorized().getId());
