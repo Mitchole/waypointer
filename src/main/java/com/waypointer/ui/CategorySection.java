@@ -233,7 +233,7 @@ public class CategorySection extends JPanel
                 spriteManager,
                 /* originCategoryName */ null,
                 selectMode,
-                selection != null && selection.ids().contains(w.getId()),
+                selection.ids().contains(w.getId()),
                 shift -> onRowSelectClick.accept(w, shift));
             row.setAlignmentX(LEFT_ALIGNMENT);
             body.add(row);
