@@ -46,7 +46,10 @@ public class ProfileLibrarySwitcher
     /** One-time load at plugin startUp. Always bootstraps, even for the default slot. */
     public void initialize(String key)
     {
+        log.debug("Initialising library slot for profile {}", key);
         persistence.switchProfile(key);
+        // seedFromDefault() is a no-op for the default slot (null key); kept here so the
+        // startup sequence is identical to a runtime switch.
         persistence.seedFromDefault();
         store.bootstrap(persistence.loadOrEmpty());
         if (key != null)
@@ -70,6 +73,7 @@ public class ProfileLibrarySwitcher
         {
             return;
         }
+        log.debug("Switching library slot from {} to {}", persistence.getActiveProfileKey(), newKey);
         store.flushPendingSave();
         persistence.switchProfile(newKey);
         persistence.seedFromDefault();

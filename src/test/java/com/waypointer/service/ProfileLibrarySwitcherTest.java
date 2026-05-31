@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
 
 public class ProfileLibrarySwitcherTest
@@ -44,7 +45,8 @@ public class ProfileLibrarySwitcherTest
         o.verify(persistence).switchProfile("main");
         o.verify(persistence).seedFromDefault();
         o.verify(store).bootstrap(any(Library.class));
-        verify(configManager).setConfiguration("waypointer", "lastRsProfileKey", "main");
+        verify(configManager).setConfiguration(
+            ProfileLibrarySwitcher.CONFIG_GROUP, ProfileLibrarySwitcher.LAST_KEY, "main");
     }
 
     @Test
@@ -63,6 +65,7 @@ public class ProfileLibrarySwitcherTest
         switcher.switchToProfile("main");
         verify(store, never()).flushPendingSave();
         verify(store, never()).bootstrap(any(Library.class));
+        verify(persistence, never()).switchProfile(any());
     }
 
     @Test
@@ -75,14 +78,37 @@ public class ProfileLibrarySwitcherTest
         o.verify(persistence).switchProfile("iron");
         o.verify(persistence).seedFromDefault();
         o.verify(store).bootstrap(any(Library.class));
-        o.verify(configManager).setConfiguration("waypointer", "lastRsProfileKey", "iron");
+        o.verify(configManager).setConfiguration(
+            ProfileLibrarySwitcher.CONFIG_GROUP, ProfileLibrarySwitcher.LAST_KEY, "iron");
     }
 
     @Test
     public void resolveStartupKeyPrefersLiveThenStored()
     {
         assertEquals("live", switcher.resolveStartupKey("live"));
-        when(configManager.getConfiguration("waypointer", "lastRsProfileKey")).thenReturn("stored");
+        when(configManager.getConfiguration(
+            ProfileLibrarySwitcher.CONFIG_GROUP, ProfileLibrarySwitcher.LAST_KEY)).thenReturn("stored");
         assertEquals("stored", switcher.resolveStartupKey(null));
+    }
+
+    @Test
+    public void switchBetweenTwoAccountsFlushesOutgoing()
+    {
+        when(persistence.getActiveProfileKey()).thenReturn("main");
+        switcher.switchToProfile("iron");
+        InOrder o = inOrder(store, persistence, configManager);
+        o.verify(store).flushPendingSave();
+        o.verify(persistence).switchProfile("iron");
+        o.verify(persistence).seedFromDefault();
+        o.verify(store).bootstrap(any(Library.class));
+        o.verify(configManager).setConfiguration(
+            ProfileLibrarySwitcher.CONFIG_GROUP, ProfileLibrarySwitcher.LAST_KEY, "iron");
+    }
+
+    @Test
+    public void resolveStartupKeyNullWhenNoLiveAndNoStored()
+    {
+        // getConfiguration is unstubbed, so Mockito returns null -> no prior account.
+        assertNull(switcher.resolveStartupKey(null));
     }
 }
