@@ -28,6 +28,7 @@ public class WaypointStorePersistence
     private final Path dir;
     private final LibraryJsonCodec codec;
     private volatile boolean refuseSavesUntilReset = false;
+    private volatile String activeProfileKey = null; // null == default slot (library.json)
 
     @Inject
     public WaypointStorePersistence(LibraryJsonCodec codec)
@@ -44,8 +45,29 @@ public class WaypointStorePersistence
     }
 
     public Path getDir() { return dir; }
-    public Path libraryFile() { return dir.resolve(LIBRARY_FILENAME); }
-    public Path backupFile() { return dir.resolve(BACKUP_FILENAME); }
+    public String getActiveProfileKey() { return activeProfileKey; }
+    public Path libraryFile() { return dir.resolve(fileNameFor(activeProfileKey)); }
+    public Path backupFile() { return dir.resolve(fileNameFor(activeProfileKey) + ".bak"); }
+    private Path tmpFile() { return dir.resolve(fileNameFor(activeProfileKey) + ".tmp"); }
+
+    // Default slot keeps the legacy filename; per-account slots are library-<sanitized-key>.json.
+    static String fileNameFor(String key)
+    {
+        return key == null ? LIBRARY_FILENAME : "library-" + sanitizeKey(key) + ".json";
+    }
+
+    static String sanitizeKey(String key)
+    {
+        return key.replaceAll("[^A-Za-z0-9._-]", "_");
+    }
+
+    // Retarget which slot subsequent loads/saves use. Clears the corrupt-state freeze so a bad
+    // file in one slot never blocks saves in another; the new slot re-evaluates on its own load.
+    public void switchProfile(String key)
+    {
+        this.activeProfileKey = key;
+        this.refuseSavesUntilReset = false;
+    }
 
     public boolean isRefusingSaves() { return refuseSavesUntilReset; }
 
@@ -129,7 +151,7 @@ public class WaypointStorePersistence
             log.warn("Save refused: library files are in a corrupt state pending user reset");
             return false;
         }
-        Path tmp = dir.resolve(LIBRARY_FILENAME + ".tmp");
+        Path tmp = tmpFile();
         try
         {
             Files.writeString(tmp, json, StandardCharsets.UTF_8);

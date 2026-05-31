@@ -105,4 +105,48 @@ public class WaypointStorePersistenceTest
         assertEquals("garbage", Files.readString(tmpDir.resolve("library.json")));
         assertEquals("also garbage", Files.readString(tmpDir.resolve("library.json.bak")));
     }
+
+    @Test
+    public void fileNameForDefaultSlotIsLegacyName()
+    {
+        assertEquals("library.json", WaypointStorePersistence.fileNameFor(null));
+    }
+
+    @Test
+    public void fileNameForKeyedSlotUsesPrefix()
+    {
+        assertEquals("library-abc.STANDARD.json",
+            WaypointStorePersistence.fileNameFor("abc.STANDARD"));
+    }
+
+    @Test
+    public void sanitizeKeyReplacesUnsafeCharacters()
+    {
+        assertEquals("a_b_c_1", WaypointStorePersistence.sanitizeKey("a/b\\c:1"));
+    }
+
+    @Test
+    public void switchProfileTargetsKeyedFileForSaves() throws IOException
+    {
+        persistence.switchProfile("acct1");
+        Library lib = new Library();
+        lib.getCategories().add(new Category(UUID.randomUUID(), "Banks", 0, false, null, false));
+        persistence.saveBlocking(lib);
+
+        assertTrue(Files.exists(tmpDir.resolve("library-acct1.json")));
+        assertFalse(Files.exists(tmpDir.resolve("library.json")));
+    }
+
+    @Test
+    public void switchProfileClearsRefuseSavesFreeze() throws IOException
+    {
+        // Corrupt the default slot so loadOrEmpty freezes saves.
+        Files.writeString(tmpDir.resolve("library.json"), "garbage", StandardCharsets.UTF_8);
+        Files.writeString(tmpDir.resolve("library.json.bak"), "garbage", StandardCharsets.UTF_8);
+        persistence.loadOrEmpty();
+        assertTrue(persistence.isRefusingSaves());
+
+        persistence.switchProfile("acct1");
+        assertFalse(persistence.isRefusingSaves());
+    }
 }
