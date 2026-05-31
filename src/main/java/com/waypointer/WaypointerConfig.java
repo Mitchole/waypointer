@@ -17,6 +17,15 @@ public interface WaypointerConfig extends Config
     default boolean tileRightClickEnabled() { return false; }
 
     @ConfigItem(
+        keyName = "entityRightClickEnabled",
+        name = "Right-click NPCs and objects to save",
+        description = "Adds 'Save as Waypoint' to the right-click menu on NPCs and game objects. "
+            + "Requires holding Shift. The NPC's name and tile at click time are used as the default.",
+        position = 11
+    )
+    default boolean entityRightClickEnabled() { return false; }
+
+    @ConfigItem(
         keyName = "showNearestLandmarkBar",
         name = "Show 'nearest landmark' bar",
         description = "Adds a row of one-click shortcuts in the sidebar to path to the nearest "
