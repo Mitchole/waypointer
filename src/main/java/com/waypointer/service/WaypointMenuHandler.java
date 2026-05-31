@@ -67,7 +67,8 @@ public class WaypointMenuHandler
     public void onMenuEntryAdded(MenuEntryAdded event)
     {
         if (tryAddWorldMapEntry()) return;
-        tryAddTileEntry(event);
+        if (tryAddTileEntry(event)) return;
+        tryAddEntityEntry(event);
     }
 
     private boolean tryAddWorldMapEntry()
@@ -81,12 +82,43 @@ public class WaypointMenuHandler
         return true;
     }
 
-    private void tryAddTileEntry(MenuEntryAdded event)
+    private boolean tryAddTileEntry(MenuEntryAdded event)
     {
-        if (!config.tileRightClickEnabled()) return;
-        if (!client.isKeyPressed(KeyCode.KC_SHIFT)) return;
-        if (event.getType() != MenuAction.WALK.getId()) return;
+        if (!config.tileRightClickEnabled()) return false;
+        if (!client.isKeyPressed(KeyCode.KC_SHIFT)) return false;
+        if (event.getType() != MenuAction.WALK.getId()) return false;
         addEntry(1, this::onSaveFromTile);
+        return true;
+    }
+
+    private void tryAddEntityEntry(MenuEntryAdded event)
+    {
+        if (!config.entityRightClickEnabled()) return;
+        if (!client.isKeyPressed(KeyCode.KC_SHIFT)) return;
+
+        MenuEntry source = event.getMenuEntry();
+        net.runelite.api.NPC npc = source.getNpc();
+        if (npc != null)
+        {
+            addEntry(1, e -> onSaveFromNpc(npc));
+            return;
+        }
+        if (isObjectAction(source.getType()))
+        {
+            int sceneX = source.getParam0();
+            int sceneY = source.getParam1();
+            String name = net.runelite.client.util.Text.removeTags(source.getTarget());
+            addEntry(1, e -> onSaveFromObject(sceneX, sceneY, name));
+        }
+    }
+
+    private static boolean isObjectAction(MenuAction type)
+    {
+        return type == MenuAction.GAME_OBJECT_FIRST_OPTION
+            || type == MenuAction.GAME_OBJECT_SECOND_OPTION
+            || type == MenuAction.GAME_OBJECT_THIRD_OPTION
+            || type == MenuAction.GAME_OBJECT_FOURTH_OPTION
+            || type == MenuAction.GAME_OBJECT_FIFTH_OPTION;
     }
 
     private void addEntry(int idx, java.util.function.Consumer<MenuEntry> onClick)
@@ -128,12 +160,33 @@ public class WaypointMenuHandler
         openCaptureDialog(WorldPointPacker.pack(wp));
     }
 
+    private void onSaveFromNpc(net.runelite.api.NPC npc)
+    {
+        // Menu click callbacks run on the client thread, so reading the NPC location is safe.
+        WorldPoint wp = npc.getWorldLocation();
+        if (wp == null) return;
+        String npcName = npc.getName();
+        openCaptureDialog(WorldPointPacker.pack(wp), npcName, npcName);
+    }
+
+    private void onSaveFromObject(int sceneX, int sceneY, String name)
+    {
+        WorldPoint wp = WorldPoint.fromScene(client, sceneX, sceneY, client.getPlane());
+        if (wp == null) return;
+        openCaptureDialog(WorldPointPacker.pack(wp), name, null);
+    }
+
     private void openCaptureDialog(int packed)
+    {
+        openCaptureDialog(packed, null, null);
+    }
+
+    private void openCaptureDialog(int packed, String defaultName, String targetNpcName)
     {
         if (packed == WorldPointPacker.UNDEFINED) return;
         SwingUtilities.invokeLater(() -> {
             Window owner = SwingUtilities.getWindowAncestor(panel);
-            new CaptureDialog(owner, store, capture, packed).setVisible(true);
+            new CaptureDialog(owner, store, capture, packed, defaultName, targetNpcName).setVisible(true);
         });
     }
 

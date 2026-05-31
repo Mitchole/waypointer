@@ -50,6 +50,7 @@ public class WaypointMenuHandlerTest
         when(sourceEntry.getOption()).thenReturn("opt");
         when(sourceEntry.getTarget()).thenReturn("tgt");
         when(sourceEntry.getType()).thenReturn(MenuAction.WALK);
+        when(sourceEntry.getNpc()).thenReturn(null);
         handler = new WaypointMenuHandler(client, store, capture, config, panel);
     }
 
@@ -139,5 +140,59 @@ public class WaypointMenuHandlerTest
         handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
 
         verify(menu, never()).createMenuEntry(anyInt());
+    }
+
+    @Test
+    public void npcFlowAddsEntryWhenConfigEnabledAndShiftHeld()
+    {
+        when(config.entityRightClickEnabled()).thenReturn(true);
+        when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(null);
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(true);
+        net.runelite.api.NPC npc = mock(net.runelite.api.NPC.class);
+        when(sourceEntry.getNpc()).thenReturn(npc);
+
+        handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
+
+        verify(menu).createMenuEntry(anyInt());
+    }
+
+    @Test
+    public void npcFlowDoesNothingWithoutShift()
+    {
+        when(config.entityRightClickEnabled()).thenReturn(true);
+        when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(null);
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(false);
+        when(sourceEntry.getNpc()).thenReturn(mock(net.runelite.api.NPC.class));
+
+        handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
+
+        verify(menu, never()).createMenuEntry(anyInt());
+    }
+
+    @Test
+    public void entityFlowDoesNothingWhenConfigDisabled()
+    {
+        when(config.entityRightClickEnabled()).thenReturn(false);
+        when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(null);
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(true);
+        when(sourceEntry.getNpc()).thenReturn(mock(net.runelite.api.NPC.class));
+
+        handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
+
+        verify(menu, never()).createMenuEntry(anyInt());
+    }
+
+    @Test
+    public void objectFlowAddsEntryWhenConfigEnabledAndShiftHeld()
+    {
+        when(config.entityRightClickEnabled()).thenReturn(true);
+        when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(null);
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(true);
+        when(sourceEntry.getNpc()).thenReturn(null);
+        when(sourceEntry.getType()).thenReturn(MenuAction.GAME_OBJECT_FIRST_OPTION);
+
+        handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
+
+        verify(menu).createMenuEntry(anyInt());
     }
 }
