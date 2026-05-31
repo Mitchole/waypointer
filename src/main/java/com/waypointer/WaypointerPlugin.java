@@ -11,6 +11,7 @@ import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
 import com.waypointer.ui.AreaPreviewOverlay;
 import com.waypointer.ui.Icon;
+import com.waypointer.ui.NpcHighlightOverlay;
 import com.waypointer.ui.TabHost;
 import com.waypointer.ui.WaypointerPanel;
 import java.awt.image.BufferedImage;
@@ -52,6 +53,7 @@ public class WaypointerPlugin extends Plugin
     @Inject private LandmarkOverrides landmarkOverrides;
     @Inject private PresetOverrides presetOverrides;
     @Inject private AreaPreviewOverlay areaPreviewOverlay;
+    @Inject private NpcHighlightOverlay npcHighlightOverlay;
     @Inject private OverlayManager overlayManager;
 
     private NavigationButton navButton;
@@ -92,6 +94,7 @@ public class WaypointerPlugin extends Plugin
         tabHost.refreshScrollbarStyling();
 
         if (config.devModeEnabled()) overlayManager.add(areaPreviewOverlay);
+        overlayManager.add(npcHighlightOverlay);
 
         log.info("Waypointer started: {} waypoints loaded",
             store.getLibrary().getWaypoints().size());
@@ -118,6 +121,7 @@ public class WaypointerPlugin extends Plugin
         tabHost.dispose();
         store.flushPendingSave();
         overlayManager.remove(areaPreviewOverlay);
+        overlayManager.remove(npcHighlightOverlay);
         landmarkOverrides.flushBlocking();
         presetOverrides.flushBlocking();
         log.info("Waypointer stopped");
