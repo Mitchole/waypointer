@@ -60,12 +60,12 @@ final class WaypointPickerModel
         return Integer.compare(a.getSortOrder(), b.getSortOrder());
     }
 
-    List<Category> getOrderedCategories() { return orderedCategories; }
+    List<Category> getOrderedCategories() { return Collections.unmodifiableList(orderedCategories); }
 
     List<Waypoint> waypointsOf(UUID categoryId)
     {
         List<Waypoint> bucket = waypointsByCategory.get(categoryId);
-        return bucket == null ? Collections.emptyList() : bucket;
+        return bucket == null ? Collections.emptyList() : Collections.unmodifiableList(bucket);
     }
 
     boolean isWaypointChecked(UUID id) { return checkedWaypoints.contains(id); }
