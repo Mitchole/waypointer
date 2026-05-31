@@ -33,7 +33,7 @@ import net.runelite.client.ui.ColorScheme;
 /**
  * Row of clickable landmark icons in the panel header. Each button pathfinds to the nearest
  * landmark of its type from the player's current tile. The user-selected subset and order
- * is controlled by {@link LandmarkSelection}; the trailing {@code ▾} button toggles the
+ * is controlled by {@link LandmarkSelection}; the trailing {@code ⋮} button toggles the
  * inline {@link ConfigureLandmarksPanel} picker.
  */
 @Singleton
@@ -148,7 +148,7 @@ public final class NearestLandmarkBar extends JPanel
         }
 
         overflowBtn = makeButton();
-        overflowBtn.setText("▾"); // U+25BE BLACK DOWN-POINTING SMALL TRIANGLE
+        overflowBtn.setText("⋮"); // U+22EE vertical ellipsis
         overflowBtn.addActionListener(e -> {
             picker.setVisible(!picker.isVisible());
             revalidate();
