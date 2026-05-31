@@ -147,18 +147,11 @@ public class CategorySection extends JPanel
             sortBy.add(buildSortItem("Date added (newest first)",
                 com.waypointer.model.CategorySortMode.DATE_ADDED, active, actions));
 
-            JMenuItem exportCat = new JMenuItem("Export category");
-            exportCat.addActionListener(e -> actions.onExport.run());
-            JMenuItem exportFile = new JMenuItem("Export category to file...");
-            exportFile.addActionListener(e -> actions.onExportFile.run());
             JMenuItem delete = new JMenuItem("Delete category");
             delete.addActionListener(e -> actions.onDelete.run());
             menu.add(rename);
             menu.add(setIcon);
             menu.add(sortBy);
-            menu.addSeparator();
-            menu.add(exportCat);
-            menu.add(exportFile);
             menu.addSeparator();
             menu.add(delete);
             // Right-click on the label still opens the popup (legacy discoverability).
@@ -205,8 +198,6 @@ public class CategorySection extends JPanel
                 () -> onRowAction.accept(w, RowAction.EXPAND),
                 () -> onRowAction.accept(w, RowAction.TOGGLE_PIN),
                 () -> onRowAction.accept(w, RowAction.DELETE),
-                () -> onRowAction.accept(w, RowAction.EXPORT),
-                () -> onRowAction.accept(w, RowAction.EXPORT_FILE),
                 spriteManager,
                 /* originCategoryName */ null);
             row.setAlignmentX(LEFT_ALIGNMENT);
@@ -317,7 +308,7 @@ public class CategorySection extends JPanel
     }
 
     /** Row-level user actions plumbed up from {@link WaypointRow} to the panel. */
-    public enum RowAction { PLAY, EXPAND, DELETE, EXPORT, EXPORT_FILE, TOGGLE_PIN }
+    public enum RowAction { PLAY, EXPAND, DELETE, TOGGLE_PIN }
 
     /** The category-level menu actions, bundled so the constructor stays readable. */
     public static final class Actions
@@ -325,19 +316,14 @@ public class CategorySection extends JPanel
         final Runnable onRename;
         final Runnable onDelete;
         final Runnable onSetIcon;
-        final Runnable onExport;
-        final Runnable onExportFile;
         final java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode;
 
         public Actions(Runnable onRename, Runnable onDelete, Runnable onSetIcon,
-            Runnable onExport, Runnable onExportFile,
             java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode)
         {
             this.onRename = onRename;
             this.onDelete = onDelete;
             this.onSetIcon = onSetIcon;
-            this.onExport = onExport;
-            this.onExportFile = onExportFile;
             this.onSetSortMode = onSetSortMode;
         }
     }

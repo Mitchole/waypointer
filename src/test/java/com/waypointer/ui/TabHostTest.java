@@ -10,8 +10,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import com.waypointer.WaypointerConfig;
-import com.waypointer.codec.LibraryJsonCodec;
-import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.preset.PresetCatalog;
 import com.waypointer.service.BboxIndex;
@@ -167,13 +165,11 @@ public class TabHostTest
             pathfinder,
             config,
             new CollapseStateCodec(new Gson()),
-            mock(WaypointShareCodec.class),
             persistence,
             mock(SpriteManager.class),
             null,
             null,
             nearestLandmarkBar,
-            new LibraryJsonCodec(new Gson()),
             mock(Client.class),
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class));

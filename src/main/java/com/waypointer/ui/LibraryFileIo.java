@@ -2,7 +2,6 @@ package com.waypointer.ui;
 
 import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.model.Library;
-import com.waypointer.service.WaypointStore;
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -20,14 +19,12 @@ import javax.swing.JOptionPane;
  */
 final class LibraryFileIo
 {
-    private final WaypointStore store;
     private final LibraryJsonCodec codec;
     private final Component parent;
     private final Toasts toasts;
 
-    LibraryFileIo(WaypointStore store, LibraryJsonCodec codec, Component parent, Toasts toasts)
+    LibraryFileIo(LibraryJsonCodec codec, Component parent, Toasts toasts)
     {
-        this.store = store;
         this.codec = codec;
         this.parent = parent;
         this.toasts = toasts == null ? Toasts.NO_OP : toasts;

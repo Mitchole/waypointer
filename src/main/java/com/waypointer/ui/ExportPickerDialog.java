@@ -124,7 +124,7 @@ final class ExportPickerDialog extends JDialog
     {
         Library subset = buildSubset();
         String code = shareCodec.encodeLibrary(subset);
-        new LibraryFileIo(store, libraryCodec, this, toasts)
+        new LibraryFileIo(libraryCodec, this, toasts)
             .copyShareCodeToClipboard(code, subset.getWaypoints().size());
         dispose();
     }
@@ -132,7 +132,7 @@ final class ExportPickerDialog extends JDialog
     private void saveToFile()
     {
         Library subset = buildSubset();
-        new LibraryFileIo(store, libraryCodec, this, toasts)
+        new LibraryFileIo(libraryCodec, this, toasts)
             .exportLibraryToFile(subset, suggestedName(subset));
     }
 

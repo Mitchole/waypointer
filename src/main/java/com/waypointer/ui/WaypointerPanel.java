@@ -1,8 +1,6 @@
 package com.waypointer.ui;
 
 import com.waypointer.WaypointerConfig;
-import com.waypointer.codec.LibraryJsonCodec;
-import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
@@ -71,13 +69,11 @@ public class WaypointerPanel extends PluginPanel
     private final WaypointPathfinder pathfinder;
     private final WaypointerConfig config;
     private final CollapseStateCodec collapseCodec;
-    private final WaypointShareCodec shareCodec;
     private final WaypointStorePersistence persistence;
     private final SpriteManager spriteManager;
     private final IconCatalog iconCatalog;
     private final OverflowMenu overflowMenu;
     private final NearestLandmarkBar nearestLandmarkBar;
-    private final LibraryJsonCodec libraryCodec;
     private final Client client;
     private final ClientThread clientThread;
     private final WildernessConfirmGate wildernessGate;
@@ -110,10 +106,9 @@ public class WaypointerPanel extends PluginPanel
     @Inject
     public WaypointerPanel(WaypointStore store, WaypointCapture capture,
         WaypointPathfinder pathfinder, WaypointerConfig config, CollapseStateCodec collapseCodec,
-        WaypointShareCodec shareCodec,
         WaypointStorePersistence persistence, SpriteManager spriteManager,
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
-        NearestLandmarkBar nearestLandmarkBar, LibraryJsonCodec libraryCodec,
+        NearestLandmarkBar nearestLandmarkBar,
         Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate)
     {
         super(false);
@@ -122,13 +117,11 @@ public class WaypointerPanel extends PluginPanel
         this.pathfinder = pathfinder;
         this.config = config;
         this.collapseCodec = collapseCodec;
-        this.shareCodec = shareCodec;
         this.persistence = persistence;
         this.spriteManager = spriteManager;
         this.iconCatalog = iconCatalog;
         this.overflowMenu = overflowMenu;
         this.nearestLandmarkBar = nearestLandmarkBar;
-        this.libraryCodec = libraryCodec;
         this.client = client;
         this.clientThread = clientThread;
         this.wildernessGate = wildernessGate;
@@ -341,23 +334,6 @@ public class WaypointerPanel extends PluginPanel
             iconId -> store.setCategoryIcon(c.getId(), iconId)).setVisible(true);
     }
 
-    private Library waypointSubset(Waypoint w)
-    {
-        Library subset = new Library();
-        Category c = store.getCategoryById(w.getCategoryId());
-        if (c != null) subset.getCategories().add(c);
-        subset.getWaypoints().add(w);
-        return subset;
-    }
-
-    private Library categorySubset(Category c)
-    {
-        Library subset = new Library();
-        subset.getCategories().add(c);
-        subset.setWaypoints(new ArrayList<>(store.getWaypointsInCategory(c.getId())));
-        return subset;
-    }
-
     // Scrolls an already-open world map to the given packed tile. setWorldMapPositionTarget
     // hits the game-side WorldMap, so it must be invoked from the client thread. The map
     // itself isn't opened programmatically (no public RuneLite API for that); if the user
@@ -371,23 +347,6 @@ public class WaypointerPanel extends PluginPanel
             if (worldMap == null) return;
             worldMap.setWorldMapPositionTarget(WorldPointPacker.unpack(packed));
         });
-    }
-
-    private void exportCategory(Category c)
-    {
-        Library subset = categorySubset(c);
-        String code = shareCodec.encodeLibrary(subset);
-        new LibraryFileIo(store, libraryCodec, this, toastOverlay)
-            .copyShareCodeToClipboard(code, subset.getWaypoints().size());
-    }
-
-    private void exportCategoryToFile(Category c)
-    {
-        Library subset = categorySubset(c);
-        String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
-        String suggested = "waypointer-category-"
-            + Styles.sanitizeFilenameSegment(c.getName()) + "-" + stamp + ".json";
-        new LibraryFileIo(store, libraryCodec, this, toastOverlay).exportLibraryToFile(subset, suggested);
     }
 
     private JComponent buildSearchBar()
@@ -618,8 +577,6 @@ public class WaypointerPanel extends PluginPanel
                         () -> promptRenameCategory(c),
                         () -> promptDeleteCategory(c),
                         () -> promptSetCategoryIcon(c),
-                        () -> exportCategory(c),
-                        () -> exportCategoryToFile(c),
                         mode -> store.setCategorySortMode(c.getId(), mode)),
                     spriteManager);
                 if (prevWasSection) body.add(buildSectionDivider());
@@ -731,36 +688,6 @@ public class WaypointerPanel extends PluginPanel
                 if (!expandedWaypoints.add(w.getId())) expandedWaypoints.remove(w.getId());
                 rebuild();
                 break;
-            case EXPORT:
-            {
-                Category c = store.getCategoryById(w.getCategoryId());
-                if (c == null)
-                {
-                    JOptionPane.showMessageDialog(this,
-                        "Waypoint has no category - cannot export.",
-                        "Waypointer", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                String code = shareCodec.encodeSingle(w, c);
-                new LibraryFileIo(store, libraryCodec, this, toastOverlay).copyShareCodeToClipboard(code, 1);
-                break;
-            }
-            case EXPORT_FILE:
-            {
-                if (store.getCategoryById(w.getCategoryId()) == null)
-                {
-                    JOptionPane.showMessageDialog(this,
-                        "Waypoint has no category - cannot export.",
-                        "Waypointer", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                Library subset = waypointSubset(w);
-                String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
-                String suggested = "waypointer-waypoint-"
-                    + Styles.sanitizeFilenameSegment(w.getName()) + "-" + stamp + ".json";
-                new LibraryFileIo(store, libraryCodec, this, toastOverlay).exportLibraryToFile(subset, suggested);
-                break;
-            }
             case TOGGLE_PIN:
             {
                 boolean nowPinned = !w.isPinned();

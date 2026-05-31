@@ -36,7 +36,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
     public WaypointRow(Waypoint waypoint, boolean active,
         boolean isPinned, boolean isWilderness, boolean dragDisabled,
         Runnable onPlay, Runnable onClickBody, Runnable onTogglePin,
-        Runnable onDelete, Runnable onExport, Runnable onExportFile,
+        Runnable onDelete,
         SpriteManager spriteManager,
         String originCategoryName)
     {
@@ -48,21 +48,14 @@ public class WaypointRow extends JPanel implements DropIndicatable
         // Hover-clickable surface: body clicks expand the row.
         MouseAdapter ma = Cards.clickable(this, onClickBody);
 
-        // Right-click anywhere on the row body opens a popup with pin/export/delete items.
+        // Right-click anywhere on the row body opens a popup with pin/delete items.
         // Cross-platform popup-trigger handling is provided automatically by setComponentPopupMenu.
         JPopupMenu popup = new JPopupMenu();
         JMenuItem pinItem = new JMenuItem(isPinned ? "Unpin" : "Pin to top");
         pinItem.addActionListener(e -> onTogglePin.run());
-        JMenuItem exportItem = new JMenuItem("Export waypoint");
-        exportItem.addActionListener(e -> onExport.run());
-        JMenuItem exportFileItem = new JMenuItem("Export waypoint to file...");
-        exportFileItem.addActionListener(e -> onExportFile.run());
         JMenuItem deleteItem = new JMenuItem("Delete");
         deleteItem.addActionListener(e -> onDelete.run());
         popup.add(pinItem);
-        popup.addSeparator();
-        popup.add(exportItem);
-        popup.add(exportFileItem);
         popup.addSeparator();
         popup.add(deleteItem);
         setComponentPopupMenu(popup);
