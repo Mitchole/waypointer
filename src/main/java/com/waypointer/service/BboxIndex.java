@@ -78,6 +78,12 @@ public class BboxIndex
     private final com.waypointer.util.Listeners listeners = new com.waypointer.util.Listeners();
     private final List<Entry> bundled = new ArrayList<>();
     private int total;
+    // Held to honour the "always hold the subscription token" rule. BboxIndex and
+    // LandmarkOverrides are equal-lifetime @Singletons, so there is no shutDown to close
+    // it from -- the subscription lives as long as the injector. Kept in a field rather
+    // than discarded so the one place that ignored its token no longer does.
+    @SuppressWarnings("unused")
+    private final com.waypointer.util.Listeners.Subscription overridesSub;
 
     @Inject
     public BboxIndex(LandmarkOverrides overrides)
@@ -85,12 +91,13 @@ public class BboxIndex
         for (ResourceEntry res : RESOURCES) loadResource(res);
         log.info("BboxIndex loaded {} bbox entries across {} planes", total, byPlane.size());
         applyOverrides(overrides.getSnapshot());
-        overrides.subscribe(() -> reload(overrides.getSnapshot()));
+        overridesSub = overrides.subscribe(() -> reload(overrides.getSnapshot()));
     }
 
     private BboxIndex(boolean skipResourceLoad)
     {
-        // package-private; only used by forTesting()
+        // package-private; only used by forTesting() -- no overrides to subscribe to.
+        this.overridesSub = null;
     }
 
     public com.waypointer.util.Listeners.Subscription subscribe(Runnable r)
