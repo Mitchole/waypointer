@@ -65,4 +65,21 @@ public class CategoryComboControllerTest
         assertFalse(c.isSentinelSelected());
         assertEquals(a.getId(), c.resolveSelectedId());
     }
+
+    @Test
+    public void rebuildWithUnknownIdSelectsFirstItemAndLeavesLastNonSentinelNull()
+    {
+        WaypointStore store = freshStore();
+        store.createCategory("Alpha");
+        JComboBox<CategoryComboItem> combo = new JComboBox<>();
+        CategoryComboController c = new CategoryComboController(combo, store);
+
+        // An id that is not in the store: rebuild finds no match, so it selects nothing
+        // explicitly -- JComboBox defaults to index 0 -- and lastNonSentinel stays null.
+        c.rebuild(UUID.randomUUID());
+
+        assertEquals(0, combo.getSelectedIndex());
+        assertFalse("first item is a real category, not the sentinel", c.isSentinelSelected());
+        assertNull("no match means lastNonSentinel was never assigned", c.lastNonSentinel());
+    }
 }

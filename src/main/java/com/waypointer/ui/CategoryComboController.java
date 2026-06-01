@@ -55,7 +55,7 @@ class CategoryComboController
         return sel != null && sel.isSentinel();
     }
 
-    /** The last real (non-sentinel) selection, or null if none yet. */
+    /** The last real (non-sentinel) selection; null only until the first rebuild that matches a category. */
     CategoryComboItem lastNonSentinel()
     {
         return lastNonSentinel;
