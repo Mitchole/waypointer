@@ -7,6 +7,7 @@ import com.waypointer.preset.PresetWaypoint;
 import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.PresetOverridesSnapshot.Waypoint;
 import com.waypointer.service.WaypointCapture;
+import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.util.Listeners.Subscription;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -30,6 +31,7 @@ public class PresetEditorPanel extends JPanel
     private final PresetCatalog catalog;
     private final PresetOverrides overrides;
     private final WaypointCapture capture;
+    private final WaypointPathfinder pathfinder;
     private final JComboBox<String> categoryPicker = new JComboBox<>();
     private final PlaceholderTextField searchField = new PlaceholderTextField("Search by name");
     private final JButton addWaypointBtn = new JButton("+ Add waypoint");
@@ -45,11 +47,12 @@ public class PresetEditorPanel extends JPanel
 
     @Inject
     public PresetEditorPanel(PresetCatalog catalog, PresetOverrides overrides, WaypointCapture capture,
-        com.waypointer.codec.PresetOverridesCodec presetOverridesCodec)
+        WaypointPathfinder pathfinder, com.waypointer.codec.PresetOverridesCodec presetOverridesCodec)
     {
         this.catalog = catalog;
         this.overrides = overrides;
         this.capture = capture;
+        this.pathfinder = pathfinder;
         this.presetOverridesCodec = presetOverridesCodec;
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -133,7 +136,7 @@ public class PresetEditorPanel extends JPanel
         for (PresetWaypoint w : preset.getWaypoints())
         {
             if (!query.isEmpty() && !w.getName().toLowerCase().contains(query)) continue;
-            PresetWaypointRow row = new PresetWaypointRow(category, w, this::openEdit, this::onDelete);
+            PresetWaypointRow row = new PresetWaypointRow(category, w, this::navigateTo, this::openEdit, this::onDelete);
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
             body.add(row);
         }
@@ -206,6 +209,17 @@ public class PresetEditorPanel extends JPanel
         String category = (String) categoryPicker.getSelectedItem();
         if (category == null) return;
         overrides.deleteBundledWaypoint(category, w.getName(), w.getX(), w.getY(), w.getPlane());
+    }
+
+    // Path to the preset waypoint via the Shortest Path plugin.
+    void navigateTo(PresetWaypoint w)
+    {
+        if (!pathfinder.isAvailable())
+        {
+            showToast("Install the Shortest Path plugin to navigate.");
+            return;
+        }
+        pathfinder.requestPath(WorldPointPacker.pack(w.getX(), w.getY(), w.getPlane()), w.getName());
     }
 
     private void runImport()

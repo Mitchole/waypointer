@@ -1,9 +1,11 @@
 package com.waypointer.ui;
 
+import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkOverrides;
 import com.waypointer.service.LandmarkType;
 import com.waypointer.service.WaypointCapture;
+import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.util.Listeners.Subscription;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -25,6 +27,7 @@ public class LandmarkEditorPanel extends JPanel
     private final BboxIndex bboxIndex;
     private final LandmarkOverrides overrides;
     private final WaypointCapture capture;
+    private final WaypointPathfinder pathfinder;
     private final AreaPreviewOverlay areaOverlay;
     private final JComboBox<LandmarkType> typePicker = new JComboBox<>(LandmarkType.values());
     private final PlaceholderTextField searchField = new PlaceholderTextField("Search by name");
@@ -38,12 +41,13 @@ public class LandmarkEditorPanel extends JPanel
 
     @Inject
     public LandmarkEditorPanel(BboxIndex bboxIndex, LandmarkOverrides overrides,
-        WaypointCapture capture, AreaPreviewOverlay areaOverlay,
+        WaypointCapture capture, WaypointPathfinder pathfinder, AreaPreviewOverlay areaOverlay,
         com.waypointer.codec.LandmarkOverridesCodec landmarkOverridesCodec)
     {
         this.bboxIndex = bboxIndex;
         this.overrides = overrides;
         this.capture = capture;
+        this.pathfinder = pathfinder;
         this.areaOverlay = areaOverlay;
         this.landmarkOverridesCodec = landmarkOverridesCodec;
         setLayout(new BorderLayout());
@@ -105,7 +109,7 @@ public class LandmarkEditorPanel extends JPanel
         for (BboxIndex.Entry e : bboxIndex.bundledOfType(type))
         {
             if (!query.isEmpty() && !e.name.toLowerCase().contains(query)) continue;
-            LandmarkRow row = new LandmarkRow(type, e, this::openEdit, this::onDelete);
+            LandmarkRow row = new LandmarkRow(type, e, this::navigateTo, this::openEdit, this::onDelete);
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
             body.add(row);
         }
@@ -146,6 +150,20 @@ public class LandmarkEditorPanel extends JPanel
         activeInline = null;
         areaOverlay.setActive(false);
         rebuild();
+    }
+
+    // Path to the landmark via the Shortest Path plugin. Area entries path to their (x1, y1)
+    // corner -- good enough to walk the player to the landmark in the dev tools.
+    void navigateTo(BboxIndex.Entry e)
+    {
+        if (!pathfinder.isAvailable())
+        {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Install the Shortest Path plugin to navigate.", "Waypointer",
+                javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        pathfinder.requestPath(WorldPointPacker.pack(e.x1, e.y1, e.plane), e.name);
     }
 
     private void onDelete(BboxIndex.Entry e)

@@ -3,9 +3,6 @@ package com.waypointer.ui;
 import com.waypointer.preset.PresetWaypoint;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
@@ -16,6 +13,7 @@ import net.runelite.client.ui.FontManager;
 final class PresetWaypointRow extends JPanel
 {
     PresetWaypointRow(String category, PresetWaypoint wp,
+        Consumer<PresetWaypoint> onNavigate,
         Consumer<PresetWaypoint> onEdit, Consumer<PresetWaypoint> onDelete)
     {
         setLayout(new BorderLayout(6, 0));
@@ -29,27 +27,14 @@ final class PresetWaypointRow extends JPanel
         tile.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         tile.setFont(FontManager.getRunescapeSmallFont());
 
-        JLabel edit = link("Edit", ColorScheme.BRAND_ORANGE, () -> onEdit.accept(wp));
-        JLabel del = link("Delete", new Color(220, 80, 80), () -> onDelete.accept(wp));
-
         JPanel right = new JPanel();
         right.setOpaque(false);
-        right.add(edit);
-        right.add(del);
+        right.add(Styles.compactActionButton("Go", ColorScheme.BRAND_ORANGE, () -> onNavigate.accept(wp)));
+        right.add(Styles.compactActionButton("Edit", Color.WHITE, () -> onEdit.accept(wp)));
+        right.add(Styles.compactActionButton("Delete", new Color(220, 80, 80), () -> onDelete.accept(wp)));
 
         add(name, BorderLayout.WEST);
         add(tile, BorderLayout.CENTER);
         add(right, BorderLayout.EAST);
-    }
-
-    private static JLabel link(String text, Color color, Runnable r)
-    {
-        JLabel l = new JLabel(text);
-        l.setForeground(color);
-        l.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        l.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) { r.run(); }
-        });
-        return l;
     }
 }

@@ -3,9 +3,7 @@ package com.waypointer.ui;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkType;
 import java.awt.BorderLayout;
-import java.awt.Cursor;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.Color;
 import java.util.function.Consumer;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
@@ -16,6 +14,7 @@ import net.runelite.client.ui.FontManager;
 final class LandmarkRow extends JPanel
 {
     LandmarkRow(LandmarkType type, BboxIndex.Entry entry,
+        Consumer<BboxIndex.Entry> onNavigate,
         Consumer<BboxIndex.Entry> onEdit,
         Consumer<BboxIndex.Entry> onDelete)
     {
@@ -34,26 +33,11 @@ final class LandmarkRow extends JPanel
         tileLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         tileLabel.setFont(FontManager.getRunescapeSmallFont());
 
-        JLabel editLink = new JLabel("Edit");
-        editLink.setForeground(ColorScheme.BRAND_ORANGE);
-        editLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        editLink.addMouseListener(new MouseAdapter()
-        {
-            @Override public void mouseClicked(MouseEvent e) { onEdit.accept(entry); }
-        });
-
-        JLabel del = new JLabel("Delete");
-        del.setForeground(new java.awt.Color(220, 80, 80));
-        del.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        del.addMouseListener(new MouseAdapter()
-        {
-            @Override public void mouseClicked(MouseEvent e) { onDelete.accept(entry); }
-        });
-
         JPanel right = new JPanel();
         right.setOpaque(false);
-        right.add(editLink);
-        right.add(del);
+        right.add(Styles.compactActionButton("Go", ColorScheme.BRAND_ORANGE, () -> onNavigate.accept(entry)));
+        right.add(Styles.compactActionButton("Edit", Color.WHITE, () -> onEdit.accept(entry)));
+        right.add(Styles.compactActionButton("Delete", new Color(220, 80, 80), () -> onDelete.accept(entry)));
 
         add(name, BorderLayout.WEST);
         add(tileLabel, BorderLayout.CENTER);

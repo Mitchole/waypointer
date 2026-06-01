@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
@@ -43,6 +44,18 @@ final class Styles
         b.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1),
             BorderFactory.createEmptyBorder(2, 6, 2, 6)));
+    }
+
+    // Small text button for inline row actions (dev editors). Same dark chrome as
+    // compactSecondaryButton with a caller-chosen foreground so actions can be colour-coded.
+    static JButton compactActionButton(String text, Color fg, Runnable onClick)
+    {
+        JButton b = new JButton(text);
+        compactSecondaryButton(b);
+        b.setForeground(fg);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.addActionListener(e -> onClick.run());
+        return b;
     }
 
     static void primaryButton(JButton b)

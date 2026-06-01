@@ -1,53 +1,54 @@
 package com.waypointer.ui;
 
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 
-// Dev-tab root. Sub-tab strip plus CardLayout body swapping landmark/preset editors.
+// Dev-tab content: a single button that opens the standalone dev-tools window. The editors
+// themselves live in DevToolsWindow so they get a roomy resizable window instead of the sidebar.
 @Singleton
 public class DevPanel
 {
-    private static final String CARD_LANDMARKS = "landmarks";
-    private static final String CARD_PRESETS = "presets";
-
     private final JPanel root = new JPanel(new BorderLayout());
-    private final CardLayout cardLayout = new CardLayout();
-    private final JPanel cards = new JPanel(cardLayout);
-    private final DevSubTabStrip subTabs;
-    private final LandmarkEditorPanel landmarkEditor;
-    private final PresetEditorPanel presetEditor;
+    private final DevToolsWindow window;
 
     @Inject
-    public DevPanel(LandmarkEditorPanel landmarkEditor, PresetEditorPanel presetEditor)
+    public DevPanel(DevToolsWindow window)
     {
-        this.landmarkEditor = landmarkEditor;
-        this.presetEditor = presetEditor;
-        this.subTabs = new DevSubTabStrip(this::onSubTabSelected);
+        this.window = window;
 
         root.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        root.add(subTabs, BorderLayout.NORTH);
+        root.setBorder(BorderFactory.createEmptyBorder(12, 8, 12, 8));
 
-        cards.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        cards.add(landmarkEditor, CARD_LANDMARKS);
-        cards.add(presetEditor, CARD_PRESETS);
-        root.add(cards, BorderLayout.CENTER);
+        JPanel inner = new JPanel();
+        inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
+        inner.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+        JButton open = new JButton("Open dev tools");
+        Styles.secondaryButton(open);
+        open.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+        open.addActionListener(e -> window.open(root));
+
+        JLabel hint = new JLabel("<html><div style='color:#9b9b9b;'>Opens a separate window to "
+            + "edit and navigate landmark and preset data.</div></html>");
+        hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        hint.setFont(FontManager.getRunescapeSmallFont());
+        hint.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+        hint.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
+
+        inner.add(open);
+        inner.add(hint);
+        root.add(inner, BorderLayout.NORTH);
     }
 
     public JPanel getRoot() { return root; }
 
-    public void dispose()
-    {
-        landmarkEditor.dispose();
-        presetEditor.dispose();
-    }
-
-    private void onSubTabSelected(DevSubTabStrip.SubTab t)
-    {
-        subTabs.setActive(t);
-        cardLayout.show(cards, t == DevSubTabStrip.SubTab.LANDMARKS ? CARD_LANDMARKS : CARD_PRESETS);
-    }
+    public void dispose() { window.dispose(); }
 }
