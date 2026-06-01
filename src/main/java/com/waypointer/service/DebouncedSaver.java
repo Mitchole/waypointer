@@ -34,6 +34,12 @@ class DebouncedSaver<T>
         this.valueSupplier = valueSupplier;
     }
 
+    /**
+     * Snapshots the value to JSON on the calling thread (mutations happen here, so iteration is
+     * safe) and schedules the frozen bytes to be written after the debounce window, replacing any
+     * write still pending. Serializing off the scheduler thread avoids racing Gson iteration
+     * against a parallel mutation.
+     */
     void schedule()
     {
         cancelPending();
@@ -47,6 +53,7 @@ class DebouncedSaver<T>
             TimeUnit.MILLISECONDS);
     }
 
+    /** Cancels any pending debounced write, then writes the current value synchronously. */
     void flush()
     {
         cancelPending();
@@ -54,6 +61,7 @@ class DebouncedSaver<T>
         if (!ok) log.warn("Snapshot save failed");
     }
 
+    /** Cancels a pending debounced write if one is scheduled. Idempotent. */
     void cancelPending()
     {
         ScheduledFuture<?> p = pendingSave;
