@@ -18,7 +18,7 @@ import net.runelite.client.RuneLite;
 // does both back-to-back.
 @Slf4j
 @Singleton
-public class WaypointStorePersistence
+public class WaypointStorePersistence implements JsonSnapshotSink<Library>
 {
     static final String LIBRARY_FILENAME = "library.json";
     static final String BACKUP_FILENAME = "library.json.bak";

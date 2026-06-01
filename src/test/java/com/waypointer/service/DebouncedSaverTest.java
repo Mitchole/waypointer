@@ -38,7 +38,7 @@ public class DebouncedSaverTest
     {
         Library lib = new Library();
         when(persistence.saveBlocking(lib)).thenReturn(true);
-        DebouncedSaver saver = new DebouncedSaver(
+        DebouncedSaver<Library> saver = new DebouncedSaver<>(
             persistence, scheduler, Duration.ofMillis(500), () -> lib);
 
         saver.flush();
@@ -53,7 +53,7 @@ public class DebouncedSaverTest
         Library lib = new Library();
         when(persistence.serialize(lib)).thenReturn("JSON");
         when(persistence.writeBlocking("JSON")).thenReturn(true);
-        DebouncedSaver saver = new DebouncedSaver(
+        DebouncedSaver<Library> saver = new DebouncedSaver<>(
             persistence, scheduler, Duration.ofMillis(20), () -> lib);
 
         saver.schedule();
@@ -70,7 +70,7 @@ public class DebouncedSaverTest
         Library lib = new Library();
         when(persistence.serialize(lib)).thenReturn("A", "B", "C");
         when(persistence.writeBlocking(anyString())).thenReturn(true);
-        DebouncedSaver saver = new DebouncedSaver(
+        DebouncedSaver<Library> saver = new DebouncedSaver<>(
             persistence, scheduler, Duration.ofMillis(40), () -> lib);
 
         saver.schedule();
@@ -88,7 +88,7 @@ public class DebouncedSaverTest
     {
         Library lib = new Library();
         when(persistence.serialize(lib)).thenReturn("JSON");
-        DebouncedSaver saver = new DebouncedSaver(
+        DebouncedSaver<Library> saver = new DebouncedSaver<>(
             persistence, scheduler, Duration.ofMillis(60), () -> lib);
 
         saver.schedule();

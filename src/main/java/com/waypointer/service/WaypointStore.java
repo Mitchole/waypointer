@@ -622,7 +622,7 @@ public class WaypointStore
 
     // ---- Debounced persistence wiring ----
 
-    private DebouncedSaver saver;
+    private DebouncedSaver<Library> saver;
     private Listeners.Subscription saveSub;
 
     public void enableDebouncedPersistence(
@@ -633,7 +633,7 @@ public class WaypointStore
         if (saveSub != null) return;
         // The supplier reads the field live, so a later bootstrap() that swaps the library
         // (e.g. a profile switch) is picked up without re-wiring the saver.
-        this.saver = new DebouncedSaver(p, exec, debounceWindow, () -> library);
+        this.saver = new DebouncedSaver<>(p, exec, debounceWindow, () -> library);
         this.saveSub = listeners.subscribe(saver::schedule);
     }
 
