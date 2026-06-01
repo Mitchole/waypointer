@@ -18,7 +18,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -27,21 +26,16 @@ import javax.swing.JPopupMenu;
 import javax.swing.border.Border;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.FontManager;
 
 // Collapsible section: chevron header + body of WaypointRows. Header is a BorderLayout with
 // up to three children: optional 16x16 icon on the left, title label in the center (click
 // target for collapse, drag source for reorder), and a vertical ellipsis menu trigger on
 // the right (rename / delete / set-icon).
-public class CategorySection extends JPanel
+public class CategorySection extends CollapsibleSection
 {
     private static final int COLOUR_STRIPE_WIDTH = 3;
 
     private final Category category;
-    private final JPanel body = new JPanel();
-    private final JLabel headerLabel;
-    private boolean collapsed;
-    private final Consumer<Boolean> onCollapseChange;
 
     public CategorySection(Category category, List<Waypoint> waypoints, int activePathTarget,
         boolean collapsed,
@@ -56,10 +50,8 @@ public class CategorySection extends JPanel
         BiConsumer<Waypoint, Boolean> onRowSelectClick,
         BiConsumer<java.util.List<UUID>, Boolean> onHeaderSelectToggle)
     {
+        super(collapsed, onCollapseChange);
         this.category = category;
-        this.collapsed = collapsed;
-        this.onCollapseChange = onCollapseChange;
-        setLayout(new BorderLayout());
         Integer accent = category.getColor();
         if (accent != null)
         {
@@ -73,42 +65,10 @@ public class CategorySection extends JPanel
             // is set or cleared.
             setBorder(BorderFactory.createEmptyBorder(4, COLOUR_STRIPE_WIDTH, 4, 0));
         }
-        setBackground(ColorScheme.DARK_GRAY_COLOR);
-        // BoxLayout in the parent horizontal-stretches us to the column width, but must not
-        // centre us. Pin to the left edge.
-        setAlignmentX(LEFT_ALIGNMENT);
 
-        JPanel headerRow = new JPanel(new BorderLayout(4, 0));
-        headerRow.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        headerRow.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        JPanel headerRow = buildHeaderRow(waypoints.size());
         final Border restingHeaderBorder = headerRow.getBorder();
         final Color restingHeaderBg = headerRow.getBackground();
-
-        MouseAdapter collapseOnClick = new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) { toggleCollapse(); }
-        };
-
-        headerRow.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        headerRow.addMouseListener(collapseOnClick);
-
-        headerLabel = new JLabel(headerText());
-        headerLabel.setForeground(Color.WHITE);
-        headerLabel.setFont(headerLabel.getFont().deriveFont(Font.BOLD));
-        headerLabel.setOpaque(false);
-        headerLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        headerLabel.addMouseListener(collapseOnClick);
-
-        JLabel countLabel = new JLabel("(" + waypoints.size() + ")");
-        countLabel.setForeground(Color.LIGHT_GRAY);
-        countLabel.setFont(FontManager.getRunescapeSmallFont());
-
-        JPanel centerWrap = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        centerWrap.setOpaque(false);
-        centerWrap.addMouseListener(collapseOnClick);
-        countLabel.addMouseListener(collapseOnClick);
-        centerWrap.add(headerLabel);
-        centerWrap.add(countLabel);
-        headerRow.add(centerWrap, BorderLayout.CENTER);
 
         // Drag must come from the label only; on headerRow, a click on the menu trigger
         // would accidentally start a drag.
@@ -231,9 +191,6 @@ public class CategorySection extends JPanel
             && category.getSortMode() != com.waypointer.model.CategorySortMode.MANUAL;
         boolean dragDisabled = sortDisablesDrag || dnd == null;
 
-        body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        body.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        body.setAlignmentX(LEFT_ALIGNMENT);
         for (Waypoint w : waypoints)
         {
             boolean active = activePathTarget != WorldPointPacker.UNDEFINED
@@ -288,60 +245,16 @@ public class CategorySection extends JPanel
         add(body, BorderLayout.CENTER);
     }
 
-    // Cap vertical extent at preferred height so BoxLayout(Y_AXIS) in the parent stacks
-    // sections tight instead of stretching each one to fill leftover space.
     @Override
-    public Dimension getMaximumSize()
-    {
-        return Styles.capHeight(this);
-    }
-
-    private String headerText()
+    protected String headerText()
     {
         String chevron = collapsed ? "▶" : "▼";
         return chevron + " " + category.getName();
     }
 
-    private void toggleCollapse()
-    {
-        collapsed = !collapsed;
-        body.setVisible(!collapsed);
-        headerLabel.setText(headerText());
-        revalidate();
-        repaint();
-        onCollapseChange.accept(collapsed);
-    }
-
     public UUID getCategoryId()
     {
         return category.getId();
-    }
-
-    public boolean isCollapsed() { return collapsed; }
-
-    /**
-     * Flip collapsed state WITHOUT persisting (no {@code onCollapseChange} fired). Used by the
-     * spring-loaded auto-expand during a drag; persistence happens only via
-     * {@link #confirmTransientExpand()} when a drop confirms the expansion.
-     */
-    public void setExpandedTransient(boolean expanded)
-    {
-        if (collapsed == !expanded) return;
-        collapsed = !expanded;
-        body.setVisible(expanded);
-        headerLabel.setText(headerText());
-        revalidate();
-        repaint();
-    }
-
-    /**
-     * Promote a transient expansion to persistent: fire {@code onCollapseChange(false)} once
-     * so the panel's persisted collapse map (and config) reflects the new "user wants this open"
-     * state. No-op if the section is currently collapsed.
-     */
-    public void confirmTransientExpand()
-    {
-        if (!collapsed) onCollapseChange.accept(false);
     }
 
     private static JMenuItem buildSortItem(String label,
