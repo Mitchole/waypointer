@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -205,5 +206,20 @@ public class CaptureFormTest
         com.waypointer.model.Waypoint w = store.getLibrary().getWaypoints().get(0);
         assertEquals("Hans", w.getName());
         assertEquals("Hans", w.getTargetNpcName());
+    }
+
+    @Test
+    public void subsequentPlainShowClearsNpcLink()
+    {
+        form.show(packed, "Hans", "Hans");
+        form.clickSave(); // first save: NPC waypoint
+
+        int packed2 = WorldPointPacker.pack(3222, 3219, 0);
+        when(capture.defaultName(packed2)).thenReturn("Tile");
+        form.show(packed2); // plain show - no NPC
+        form.clickSave();   // second save: plain tile
+
+        com.waypointer.model.Waypoint second = store.getLibrary().getWaypoints().get(1);
+        assertNull("targetNpcName must not leak into a non-NPC capture", second.getTargetNpcName());
     }
 }
