@@ -79,12 +79,12 @@ public class WaypointerPanel extends PluginPanel
     private final WaypointShareCodec shareCodec;
     private final LibraryJsonCodec libraryCodec;
     private final CaptureForm captureForm;
+    private final BulkSelectController bulkSelect;
     private final JPanel body = new JPanel();
     private final JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
     private final JButton markBtn = new JButton("Mark current location");
     private final JButton selectToggleBtn = new JButton("Select");
-    private BulkActionBar bulkBar;
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
 
@@ -109,14 +109,6 @@ public class WaypointerPanel extends PluginPanel
         "Search by name or category",
     };
     private final int footerTipIndex = Math.floorMod(System.nanoTime(), FOOTER_TIPS.length);
-
-    // Bulk select mode. Dormant until the search-row toggle (added later) flips selectMode.
-    private boolean selectMode = false;
-    private final BulkSelection selection = new BulkSelection();
-    private UUID lastClickedId;
-    // Ordered ids of the waypoints currently rendered in real categories (Pinned excluded),
-    // rebuilt every render pass so shift-range select honours the active filter and sort.
-    private final java.util.List<UUID> visibleOrderedIds = new ArrayList<>();
 
     // Subscription tokens so the panel can deregister cleanly. Held even though the panel is
     // a Singleton today, in case shutdown ordering changes or the panel ever gets re-created.
@@ -242,13 +234,18 @@ public class WaypointerPanel extends PluginPanel
         add(northStack, BorderLayout.NORTH);
         add(toastOverlay, BorderLayout.CENTER);
 
-        this.bulkBar = new BulkActionBar(
-            store::getCategoriesOrdered,
-            this::bulkMoveTo,
-            this::bulkDelete,
-            this::bulkExport);
-        bulkBar.setVisible(false);
-        add(bulkBar, BorderLayout.SOUTH);
+        this.bulkSelect = new BulkSelectController(
+            store, toastOverlay, selectToggleBtn, shareCodec, libraryCodec,
+            new BulkSelectController.Host()
+            {
+                @Override public void rebuild() { scheduleRebuild(); }
+                @Override public void revalidateAndRepaint() { revalidate(); repaint(); }
+                @Override public Window windowAncestor()
+                {
+                    return SwingUtilities.getWindowAncestor(WaypointerPanel.this);
+                }
+            });
+        add(bulkSelect.bar(), BorderLayout.SOUTH);
 
         storeSub = store.subscribe(this::scheduleRebuild);
         pathSub = pathfinder.subscribe(this::scheduleRebuild);
@@ -416,7 +413,7 @@ public class WaypointerPanel extends PluginPanel
         Styles.secondaryButton(selectToggleBtn);
         Dimension toggleSize = new Dimension(58, searchField.getPreferredSize().height);
         selectToggleBtn.setPreferredSize(toggleSize);
-        selectToggleBtn.addActionListener(e -> toggleSelectMode());
+        selectToggleBtn.addActionListener(e -> bulkSelect.toggleSelectMode());
         JPanel east = new JPanel(new BorderLayout());
         east.setOpaque(false);
         east.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0));
@@ -517,8 +514,8 @@ public class WaypointerPanel extends PluginPanel
     public void rebuild()
     {
         body.removeAll();
-        visibleOrderedIds.clear();
         Library snap = store.getLibrary();
+        java.util.List<UUID> visibleIds = new ArrayList<>();
         // Lowercase once for the whole render pass; per-row matchers reuse this string.
         String loweredFilter = currentFilter.toLowerCase(Locale.ROOT);
         boolean isFiltering = !loweredFilter.isEmpty();
@@ -590,7 +587,7 @@ public class WaypointerPanel extends PluginPanel
         {
             // Disable drag-and-drop while filtering, or rows would reorder relative to
             // invisible neighbours.
-            DragAndDropHandler dnd = (isFiltering || selectMode) ? null
+            DragAndDropHandler dnd = (isFiltering || bulkSelect.isSelectMode()) ? null
                 : new DragAndDropHandler(store, this::rebuild);
             for (Category c : cats)
             {
@@ -602,7 +599,7 @@ public class WaypointerPanel extends PluginPanel
                 // Hide empty categories during search (when their name didn't match either).
                 if (isFiltering && ws.isEmpty()) continue;
 
-                for (Waypoint w : ws) visibleOrderedIds.add(w.getId());
+                for (Waypoint w : ws) visibleIds.add(w.getId());
 
                 // While filtering, force expanded so matches are visible.
                 boolean collapsed = isFiltering ? false
@@ -623,10 +620,10 @@ public class WaypointerPanel extends PluginPanel
                         () -> promptSetCategoryColour(c, this),
                         mode -> store.setCategorySortMode(c.getId(), mode)),
                     spriteManager,
-                    selectMode,
-                    selection,
-                    this::onRowSelectClicked,
-                    this::onHeaderSelectToggle);
+                    bulkSelect.isSelectMode(),
+                    bulkSelect.selection(),
+                    bulkSelect::onRowSelectClicked,
+                    bulkSelect::onHeaderSelectToggle);
                 if (prevWasSection) body.add(buildSectionDivider());
                 body.add(section);
                 rendered = true;
@@ -642,6 +639,8 @@ public class WaypointerPanel extends PluginPanel
             none.setForeground(Color.LIGHT_GRAY);
             body.add(none);
         }
+
+        bulkSelect.setVisibleOrderedIds(visibleIds);
 
         // Push remaining vertical space to the bottom so sections stack tight at the top.
         body.add(Box.createVerticalGlue());
@@ -761,97 +760,6 @@ public class WaypointerPanel extends PluginPanel
         return new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
             () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
             () -> focusWorldMap(w.getPackedWorldPoint()));
-    }
-
-    // A row was clicked in select mode: shift extends the range from the last click; a plain
-    // click toggles. Keyed by id so it is filter/sort independent.
-    private void onRowSelectClicked(Waypoint w, boolean shift)
-    {
-        UUID id = w.getId();
-        if (shift && lastClickedId != null)
-        {
-            selection.selectRange(visibleOrderedIds, lastClickedId, id);
-        }
-        else
-        {
-            selection.toggle(id);
-        }
-        lastClickedId = id;
-        afterSelectionChanged();
-    }
-
-    private void onHeaderSelectToggle(java.util.List<UUID> ids, boolean select)
-    {
-        selection.setCategory(ids, select);
-        afterSelectionChanged();
-    }
-
-    private void toggleSelectMode()
-    {
-        selectMode = !selectMode;
-        if (!selectMode)
-        {
-            selection.clear();
-            lastClickedId = null;
-        }
-        selectToggleBtn.setForeground(selectMode ? ColorScheme.BRAND_ORANGE : Color.WHITE);
-        selectToggleBtn.setText(selectMode ? "Done" : "Select");
-        rebuild();
-        refreshBulkBar();
-    }
-
-    private void refreshBulkBar()
-    {
-        if (bulkBar == null) return;
-        bulkBar.setVisible(selectMode);
-        if (selectMode)
-        {
-            bulkBar.setCount(selection.size());
-            bulkBar.setActionsEnabled(!selection.isEmpty());
-        }
-        revalidate();
-        repaint();
-    }
-
-    private void bulkMoveTo(UUID targetId)
-    {
-        if (selection.isEmpty()) return;
-        Category target = store.getCategoryById(targetId);
-        int n = selection.size();
-        store.moveWaypointsToCategory(selection.ids(), targetId);
-        selection.clear();
-        lastClickedId = null;
-        afterSelectionChanged();
-        toastOverlay.show("Moved " + n + " to " + (target == null ? "category" : target.getName()),
-            null, null);
-    }
-
-    private void bulkDelete()
-    {
-        if (selection.isEmpty()) return;
-        int n = selection.size();
-        store.deleteWaypoints(selection.ids());
-        selection.clear();
-        lastClickedId = null;
-        afterSelectionChanged();
-        toastOverlay.show(n + " deleted", "Undo", store::undoLast);
-    }
-
-    private void bulkExport()
-    {
-        if (selection.isEmpty()) return;
-        Window owner = SwingUtilities.getWindowAncestor(this);
-        new ExportPickerDialog(owner, store, shareCodec, libraryCodec, toastOverlay,
-            selection.ids()).setVisible(true);
-        // Selection is non-destructive for export; leave it intact.
-    }
-
-    // Re-render so checkbox states reflect the model, and sync the action bar's count + enabled
-    // state to the live selection.
-    private void afterSelectionChanged()
-    {
-        rebuild();
-        refreshBulkBar();
     }
 
     private void handleRowAction(Waypoint w, CategorySection.RowAction action)
