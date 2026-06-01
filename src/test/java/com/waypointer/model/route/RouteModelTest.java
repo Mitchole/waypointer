@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import com.waypointer.model.WorldPointPacker;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.UUID;
 import org.junit.Test;
 
@@ -43,8 +45,8 @@ public class RouteModelTest
     public void routeEqualityIsByIdentity()
     {
         UUID id = UUID.randomUUID();
-        Route a = new Route(id, "A", new java.util.ArrayList<>(), false, java.time.Instant.now(), 0);
-        Route b = new Route(id, "B", new java.util.ArrayList<>(), true, java.time.Instant.now(), 9);
+        Route a = new Route(id, "A", new ArrayList<>(), false, Instant.now(), 0);
+        Route b = new Route(id, "B", new ArrayList<>(), true, Instant.now(), 9);
         assertEquals(a, b);
     }
 
