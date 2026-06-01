@@ -23,8 +23,15 @@ import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Single-threaded in-memory CRUD over a {@link Library}. All mutations notify registered
- * listeners synchronously. Persistence is layered on by {@link WaypointStorePersistence}.
+ * In-memory CRUD over a {@link Library}. Mutations are confined to the EDT and notify
+ * registered listeners synchronously. Persistence is layered on by
+ * {@link WaypointStorePersistence}.
+ *
+ * <p>The {@code library} reference is {@code volatile} because the debounced-save supplier
+ * reads it off the EDT (the shutdown-hook flush runs on a JVM shutdown thread). The volatile
+ * guarantees safe publication of the reference; it does not make multi-step mutations atomic,
+ * and none is needed -- the flush only requires a consistent reference, not a transactional
+ * snapshot.
  */
 @Slf4j
 @Singleton
@@ -32,7 +39,7 @@ public class WaypointStore
 {
     private static final String UNCATEGORIZED_NAME = "Uncategorized";
 
-    private Library library = new Library();
+    private volatile Library library = new Library();
     private final Listeners listeners = new Listeners();
 
     // Memoized derived views; invalidated by every mutation via notifyChanged().

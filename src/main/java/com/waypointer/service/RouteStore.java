@@ -27,7 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class RouteStore
 {
-    private RouteLibrary library = new RouteLibrary();
+    // volatile: read off-EDT by the debounced-save supplier (the shutdown-hook flush thread).
+    private volatile RouteLibrary library = new RouteLibrary();
     private final Listeners listeners = new Listeners();
 
     @Inject
