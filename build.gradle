@@ -57,6 +57,21 @@ task run(type: JavaExec) {
     jvmArgs = ['-ea']
 }
 
+// Dev tool: bake an exported landmark override into the bundled .tsv resources.
+//   ./gradlew bakeLandmarks                  (reads the override JSON from the clipboard)
+//   ./gradlew bakeLandmarks -Pexport=x.json  (reads it from a file instead)
+task bakeLandmarks(type: JavaExec) {
+    group = 'waypointer'
+    description = 'Bake an exported landmark override (clipboard, or -Pexport=<file>) into src/main/resources TSVs.'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.waypointer.tools.LandmarkOverrideBaker'
+    systemProperty 'java.awt.headless', 'false'
+    systemProperty 'waypointer.landmarksDir', file('src/main/resources/com/waypointer/landmarks').absolutePath
+    if (project.hasProperty('export')) {
+        args = [project.property('export')]
+    }
+}
+
 task shadowJar(type: Jar) {
     archiveClassifier = 'all'
     from sourceSets.main.output
