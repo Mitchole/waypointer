@@ -83,17 +83,17 @@ public class DevToolsNavigationTest
     // (non-headless) test JVM, so it is exercised manually rather than in an automated test.
 
     @Test
-    public void landmarkEditorNavigateRequestsPathAtEntryCorner() throws Exception
+    public void landmarkEditorNavigateRequestsPathAtEntryCentre() throws Exception
     {
         when(bboxIndex.editableOfType(any(), any())).thenReturn(Collections.emptyList());
         when(pathfinder.isAvailable()).thenReturn(true);
         LandmarkEditorPanel panel = new LandmarkEditorPanel(
             bboxIndex, landmarkOverrides, capture, pathfinder, areaOverlay, landmarkCodec);
 
-        // Area entry: navigation targets the (x1, y1) corner.
-        panel.navigateTo(newEntry(3010, 3355, 3015, 3360, 1, "Edgeville Bank"));
+        // Area entry: navigation targets the bbox centre, not a corner.
+        panel.navigateTo(newEntry(3010, 3355, 3016, 3361, 1, "Edgeville Bank"));
 
-        verify(pathfinder).requestPath(WorldPointPacker.pack(3010, 3355, 1), "Edgeville Bank");
+        verify(pathfinder).requestPath(WorldPointPacker.pack(3013, 3358, 1), "Edgeville Bank");
     }
 
     @Test

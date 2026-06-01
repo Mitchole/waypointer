@@ -117,10 +117,11 @@ public class BboxIndexTest
     }
 
     @Test
-    public void nearest_clampsToBboxEdgeNotCentre()
+    public void nearest_distanceClampsToEdgeButTargetsCentre()
     {
-        // 5x5 bank at (3050..3054, 3050..3054). Player at (3056, 3052) is 2 tiles east of
-        // the bbox; nearest must be 2, not the distance to centre (~4).
+        // 5x5 bank at (3050..3054, 3050..3054). Player at (3056, 3052) is 2 tiles east of the
+        // bbox: distance ranks by the nearest edge (2), but the path target is the bbox CENTRE
+        // (3052, 3052) so quick-nav ends inside the bank, not on its boundary.
         BboxIndex idx = BboxIndex.forTesting(java.util.Collections.singletonList(
             new BboxIndex.Entry(3050, 3050, 3054, 3054, 0, "Test Bank", LandmarkType.BANK)));
 
@@ -128,8 +129,7 @@ public class BboxIndexTest
 
         assertNotNull(hit);
         assertEquals(2, hit.distance);
-        // Hit.packed is the bbox tile closest to the player: x clamped to 3054, y = 3052.
-        assertEquals(3054, WorldPointPacker.getX(hit.packed));
+        assertEquals(3052, WorldPointPacker.getX(hit.packed));
         assertEquals(3052, WorldPointPacker.getY(hit.packed));
         assertEquals(0, WorldPointPacker.getPlane(hit.packed));
     }

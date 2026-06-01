@@ -158,8 +158,8 @@ public class LandmarkEditorPanel extends JPanel
         rebuild();
     }
 
-    // Path to the landmark via the Shortest Path plugin. Area entries path to their (x1, y1)
-    // corner -- good enough to walk the player to the landmark in the dev tools.
+    // Path to the landmark via the Shortest Path plugin, targeting the bbox centre tile so the
+    // route ends in the middle of the landmark rather than at a corner of its bounding box.
     void navigateTo(BboxIndex.Entry e)
     {
         if (!pathfinder.isAvailable())
@@ -169,7 +169,8 @@ public class LandmarkEditorPanel extends JPanel
                 javax.swing.JOptionPane.WARNING_MESSAGE);
             return;
         }
-        pathfinder.requestPath(WorldPointPacker.pack(e.x1, e.y1, e.plane), e.name);
+        pathfinder.requestPath(
+            WorldPointPacker.pack((e.x1 + e.x2) / 2, (e.y1 + e.y2) / 2, e.plane), e.name);
     }
 
     private void onDelete(BboxIndex.Entry e)

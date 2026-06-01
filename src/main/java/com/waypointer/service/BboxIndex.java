@@ -171,9 +171,10 @@ public class BboxIndex
 
     /**
      * Returns the entry of the requested type whose bbox is closest to {@code fromPacked}
-     * in Chebyshev tile distance, plane-agnostic. The returned {@link Hit#packed} is the
-     * bbox tile nearest the player (clamped), carrying the bbox's plane. Returns null if
-     * the index holds no entries of that type.
+     * in Chebyshev tile distance, plane-agnostic. Distance ranks by the nearest part of the
+     * bbox (clamped), but the returned {@link Hit#packed} is the bbox CENTRE tile, carrying the
+     * bbox's plane -- quick-nav should walk you to the middle of the landmark, not to a corner
+     * of its bounding box. Returns null if the index holds no entries of that type.
      */
     @Nullable
     public Hit nearest(LandmarkType type, int fromPacked)
@@ -183,8 +184,6 @@ public class BboxIndex
 
         Entry best = null;
         int bestDist = Integer.MAX_VALUE;
-        int bestCx = 0;
-        int bestCy = 0;
 
         for (List<Entry> bucket : byPlane.values())
         {
@@ -200,13 +199,13 @@ public class BboxIndex
                 {
                     bestDist = d;
                     best = e;
-                    bestCx = cx;
-                    bestCy = cy;
                 }
             }
         }
         if (best == null) return null;
-        return new Hit(WorldPointPacker.pack(bestCx, bestCy, best.plane), best.name, bestDist);
+        int centreX = (best.x1 + best.x2) / 2;
+        int centreY = (best.y1 + best.y2) / 2;
+        return new Hit(WorldPointPacker.pack(centreX, centreY, best.plane), best.name, bestDist);
     }
 
     private void addEntry(Entry e)
