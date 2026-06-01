@@ -55,14 +55,43 @@ public class WaypointerPlugin extends Plugin
     @Inject private AreaPreviewOverlay areaPreviewOverlay;
     @Inject private NpcHighlightOverlay npcHighlightOverlay;
     @Inject private OverlayManager overlayManager;
+    @Inject private com.waypointer.service.RouteStore routeStore;
+    @Inject private com.waypointer.service.RouteStorePersistence routePersistence;
+    @Inject private com.waypointer.service.RoutePlaybackEngine routePlaybackEngine;
+    @Inject private com.waypointer.ui.RouteOverlay routeOverlay;
+    @Inject private net.runelite.api.Client client;
+    @Inject private net.runelite.client.input.KeyManager keyManager;
 
     private NavigationButton navButton;
     private Thread shutdownHook;
+    private net.runelite.client.input.KeyListener routeHotkeyListener;
 
     @Override
     protected void startUp() throws Exception
     {
         store.enableDebouncedPersistence(persistence, scheduler, Duration.ofMillis(500));
+        routeStore.enableDebouncedPersistence(routePersistence, scheduler, Duration.ofMillis(500));
+        routeStore.bootstrap(routePersistence.loadOrEmpty());
+        routePlaybackEngine.attach(client);
+        eventBus.register(routePlaybackEngine);
+        overlayManager.add(routeOverlay);
+
+        routeHotkeyListener = new net.runelite.client.input.KeyListener()
+        {
+            @Override public void keyTyped(java.awt.event.KeyEvent e) {}
+            @Override public void keyReleased(java.awt.event.KeyEvent e) {}
+            @Override public void keyPressed(java.awt.event.KeyEvent e)
+            {
+                if (!routePlaybackEngine.isActive()) return;
+                if (config.routeAdvanceHotkey().matches(e))
+                {
+                    routePlaybackEngine.advance();
+                    e.consume();
+                }
+            }
+        };
+        keyManager.registerKeyListener(routeHotkeyListener);
+
         profileLibrarySwitcher.initialize(
             profileLibrarySwitcher.resolveStartupKey(configManager.getRSProfileKey()));
 
@@ -103,6 +132,17 @@ public class WaypointerPlugin extends Plugin
     @Override
     protected void shutDown() throws Exception
     {
+        if (routeHotkeyListener != null)
+        {
+            keyManager.unregisterKeyListener(routeHotkeyListener);
+            routeHotkeyListener = null;
+        }
+        eventBus.unregister(routePlaybackEngine);
+        routePlaybackEngine.detach();
+        overlayManager.remove(routeOverlay);
+        routeStore.disableDebouncedPersistence();
+        routeStore.flushPendingSave();
+
         store.disableDebouncedPersistence();
         if (shutdownHook != null)
         {
