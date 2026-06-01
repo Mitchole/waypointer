@@ -19,6 +19,14 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 import net.runelite.client.ui.ColorScheme;
 
+/**
+ * Dev-tools inline editor for a single landmark. Commit contract: changes commit ONLY on the
+ * explicit Save or Recapture button (via {@code overrides.replaceEntry}); Cancel and any parent
+ * rebuild discard unsaved text. This is deliberate and differs from {@link InlineEditPanel},
+ * which flushes on focus-loss + removeNotify. A flush-on-removeNotify here would silently commit
+ * a half-typed rename whenever an unrelated bboxIndex/catalog subscription fire rebuilds the
+ * parent editor -- worse than losing the text. Keep the explicit-Save contract.
+ */
 final class InlineLandmarkEdit extends JPanel
 {
     // Slider bounds match AddLandmarkPanel so point/area capture behaves identically.

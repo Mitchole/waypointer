@@ -15,6 +15,12 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import net.runelite.client.ui.ColorScheme;
 
+/**
+ * Dev-tools inline editor for a single preset waypoint. Commit contract: changes commit ONLY on
+ * the explicit Save or Recapture button (via {@code overrides.upsertWaypoint}); Cancel and any
+ * parent rebuild discard unsaved text. Deliberately different from {@link InlineEditPanel}'s
+ * flush-on-blur -- see the note on {@link InlineLandmarkEdit}.
+ */
 final class InlinePresetWaypointEdit extends JPanel
 {
     InlinePresetWaypointEdit(String category, PresetWaypoint original,
