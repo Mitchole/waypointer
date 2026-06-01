@@ -1,8 +1,7 @@
 package com.waypointer.ui;
 
-import com.waypointer.model.Library;
-import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
+import java.util.Map;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import java.awt.Color;
@@ -44,29 +43,21 @@ public class NpcHighlightOverlay extends Overlay
     }
 
     /**
-     * The NPC name to highlight given the active path target, or null if there is no active
-     * path or its target is not an NPC waypoint. Pure; unit-tested.
+     * The NPC name to highlight given the active path target, or null if there is no active path
+     * or its target is not an NPC waypoint. Reads a pre-built packed->name snapshot, so it does no
+     * allocation on the render hot path. Pure; unit-tested.
      */
     @Nullable
-    static String activeNpcName(Library lib, int activeTarget)
+    static String activeNpcName(Map<Integer, String> npcNamesByPacked, int activeTarget)
     {
         if (activeTarget == WorldPointPacker.UNDEFINED) return null;
-        // Copy: render() runs on the client thread while WaypointStore is mutated from the EDT,
-        // so iterating the live list directly could throw ConcurrentModificationException.
-        for (Waypoint w : new java.util.ArrayList<>(lib.getWaypoints()))
-        {
-            if (w.getPackedWorldPoint() == activeTarget && w.getTargetNpcName() != null)
-            {
-                return w.getTargetNpcName();
-            }
-        }
-        return null;
+        return npcNamesByPacked.get(activeTarget);
     }
 
     @Override
     public Dimension render(Graphics2D g)
     {
-        String name = activeNpcName(store.getLibrary(), pathfinder.getActiveTarget());
+        String name = activeNpcName(store.npcNamesSnapshot(), pathfinder.getActiveTarget());
         if (name == null) return null;
 
         WorldView wv = client.getTopLevelWorldView();

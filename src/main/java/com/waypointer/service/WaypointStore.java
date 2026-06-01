@@ -50,6 +50,12 @@ public class WaypointStore
     private Map<UUID, Category> categoryIndex;
     private Map<UUID, Waypoint> waypointIndex;
 
+    // Packed-point -> NPC name for waypoints that target an NPC. Read from the client thread by
+    // NpcHighlightOverlay.render() (~50fps); rebuilt eagerly on every mutation in fireChanged().
+    // volatile so the eagerly-built reference publishes safely to the render thread without the
+    // overlay copying the live (EDT-mutated) waypoint list each frame.
+    private volatile Map<Integer, String> npcNamesByPacked = Collections.emptyMap();
+
     /**
      * Single-slot undo buffer. Holds the inverse of the most recent destructive op
      * ({@link #deleteWaypoint(UUID)}, {@link #deleteWaypoints(Collection)},
@@ -90,7 +96,26 @@ public class WaypointStore
         cachedCategoriesOrdered = null;
         cachedWaypointsByCategory = null;
         invalidateIndexes();
+        rebuildNpcNameSnapshot();
         listeners.fire();
+    }
+
+    // Eagerly rebuild the packed->NPC-name snapshot on the mutating thread (the live list is only
+    // touched here, where mutation is single-threaded). Most waypoints are plain tiles, so the map
+    // is typically tiny. Published via the volatile field for the render thread.
+    private void rebuildNpcNameSnapshot()
+    {
+        Map<Integer, String> snapshot = new HashMap<>();
+        for (Waypoint w : library.getWaypoints())
+        {
+            // If two NPC waypoints share a packed tile, last in list order wins. Duplicates are
+            // rare and either choice is arbitrary; this just avoids a surprised future reader.
+            if (w.getTargetNpcName() != null)
+            {
+                snapshot.put(w.getPackedWorldPoint(), w.getTargetNpcName());
+            }
+        }
+        npcNamesByPacked = Collections.unmodifiableMap(snapshot);
     }
 
     @Inject
@@ -110,6 +135,15 @@ public class WaypointStore
     // Live in-memory library. NOT a defensive copy; callers that mutate it bypass listeners
     // and risk corrupting state. Read-only outside of test fixtures.
     public Library getLibrary() { return library; }
+
+    /**
+     * Current packed-point -> NPC-name snapshot. Backed by a volatile reference rebuilt on every
+     * mutation, so it is safe to read from the client thread. Never mutated after publication.
+     */
+    public Map<Integer, String> npcNamesSnapshot()
+    {
+        return npcNamesByPacked;
+    }
 
     public Category getUncategorized()
     {
