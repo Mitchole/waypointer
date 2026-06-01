@@ -35,7 +35,7 @@ public class RoutePlaybackEngine
     private final WaypointPathfinder pathfinder;
     private final RouteStore store;
     private final Listeners listeners = new Listeners();
-    @Nullable private Client client;
+    @Nullable private volatile Client client;
     private Listeners.Subscription storeSub;
 
     private volatile Route active;
@@ -176,7 +176,8 @@ public class RoutePlaybackEngine
         }
     }
 
-    private void onStoreChanged()
+    // Package-private so tests can drive the store-deletion path without a live store subscription.
+    void onStoreChanged()
     {
         Route r = active;
         if (r != null && store.getRouteById(r.getId()) == null)

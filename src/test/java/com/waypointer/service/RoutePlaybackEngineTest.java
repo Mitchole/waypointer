@@ -141,4 +141,15 @@ public class RoutePlaybackEngineTest
         assertFalse(engine.isActive());
         verify(pathfinder).clearPath();
     }
+
+    @Test
+    public void storeDeletionOfActiveRouteStops()
+    {
+        Route r = route(false, RouteStep.manual("a"));
+        engine.start(r);
+        assertTrue(engine.isActive());
+        // The mock store returns null for getRouteById, i.e. the active route was deleted.
+        engine.onStoreChanged();
+        assertFalse(engine.isActive());
+    }
 }
