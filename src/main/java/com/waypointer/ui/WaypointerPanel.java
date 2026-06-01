@@ -296,6 +296,16 @@ public class WaypointerPanel extends PluginPanel
         });
     }
 
+    /**
+     * Show the inline capture form for an externally-supplied tile (right-click capture). Used by
+     * TabHost.openToCapture after it switches to this tab. {@code defaultName} prefills the
+     * name field when non-empty; {@code npcName} links the new waypoint to an NPC for highlighting.
+     */
+    public void showCaptureForm(int packed, String defaultName, String npcName)
+    {
+        captureForm.show(packed, defaultName, npcName);
+    }
+
     // Scrolls an already-open world map to the given packed tile. setWorldMapPositionTarget
     // hits the game-side WorldMap, so it must be invoked from the client thread. The map
     // itself isn't opened programmatically (no public RuneLite API for that); if the user
