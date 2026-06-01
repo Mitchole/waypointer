@@ -29,8 +29,8 @@ import net.runelite.client.ui.ColorScheme;
  * share JLabel's built-in vertical centering and align with the Play button.
  *
  * In select mode the left edge shows a checkbox instead of the drag handle, the right-side
- * Play / overflow buttons are hidden, and a body click toggles selection (shift = range)
- * instead of expanding the inline editor.
+ * Play button is hidden, and a body click toggles selection (shift = range) instead of
+ * expanding the inline editor.
  */
 public class WaypointRow extends JPanel implements DropIndicatable
 {
@@ -144,7 +144,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
 
         this.restingBackground = getBackground();
 
-        // EAST: Play + overflow controls, hidden in select mode.
+        // EAST: Play button, hidden in select mode. Pin / Delete are reached via right-click.
         if (!selectMode)
         {
             JButton play = new JButton("▶"); // black right-pointing triangle
@@ -156,40 +156,10 @@ public class WaypointRow extends JPanel implements DropIndicatable
                     : "Path to " + waypoint.getName());
             play.addActionListener(e -> onPlay.run());
 
-            JLabel menuTrigger = new JLabel("⋮"); // vertical ellipsis
-            menuTrigger.setFont(menuTrigger.getFont().deriveFont(Font.BOLD));
-            menuTrigger.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 4));
-            menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            menuTrigger.setToolTipText("More");
-            menuTrigger.getAccessibleContext().setAccessibleName("Waypoint options");
-            menuTrigger.addMouseListener(new MouseAdapter()
-            {
-                @Override public void mouseClicked(MouseEvent e)
-                {
-                    popup.show(menuTrigger, 0, menuTrigger.getHeight());
-                }
-            });
-
             JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
             eastPanel.setOpaque(false);
-            eastPanel.add(menuTrigger);
             eastPanel.add(play);
             add(eastPanel, BorderLayout.EAST);
-
-            // Pin the trigger's resting foreground to the row background so it's invisible until
-            // the row is hovered; the listener swaps in LIGHT_GRAY to reveal it.
-            menuTrigger.setForeground(restingBackground);
-            addMouseListener(new MouseAdapter()
-            {
-                @Override public void mouseEntered(MouseEvent e)
-                {
-                    menuTrigger.setForeground(Color.LIGHT_GRAY);
-                }
-                @Override public void mouseExited(MouseEvent e)
-                {
-                    menuTrigger.setForeground(restingBackground);
-                }
-            });
         }
     }
 

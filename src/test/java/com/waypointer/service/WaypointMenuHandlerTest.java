@@ -55,16 +55,31 @@ public class WaypointMenuHandlerTest
     }
 
     @Test
-    public void addsMenuEntryWhenCursorOverWorldMap()
+    public void addsMenuEntryWhenCursorOverWorldMapAndShiftHeld()
     {
         Widget map = mock(Widget.class);
         when(map.getBounds()).thenReturn(new Rectangle(0, 0, 800, 600));
         when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(map);
         when(client.getMouseCanvasPosition()).thenReturn(new Point(400, 300));
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(true);
 
         handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
 
         verify(menu).createMenuEntry(0);
+    }
+
+    @Test
+    public void doesNotAddWorldMapEntryWithoutShift()
+    {
+        Widget map = mock(Widget.class);
+        when(map.getBounds()).thenReturn(new Rectangle(0, 0, 800, 600));
+        when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(map);
+        when(client.getMouseCanvasPosition()).thenReturn(new Point(400, 300));
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(false);
+
+        handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
+
+        verify(menu, never()).createMenuEntry(anyInt());
     }
 
     @Test
@@ -74,6 +89,7 @@ public class WaypointMenuHandlerTest
         when(map.getBounds()).thenReturn(new Rectangle(0, 0, 800, 600));
         when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(map);
         when(client.getMouseCanvasPosition()).thenReturn(new Point(400, 300));
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(true);
 
         MenuEntry already = mock(MenuEntry.class);
         when(already.getOption()).thenReturn("Save as Waypoint");
@@ -92,6 +108,7 @@ public class WaypointMenuHandlerTest
         when(map.getBounds()).thenReturn(new Rectangle(0, 0, 800, 600));
         when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(map);
         when(client.getMouseCanvasPosition()).thenReturn(new Point(900, 100));
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(true);
 
         handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
 
@@ -102,6 +119,7 @@ public class WaypointMenuHandlerTest
     public void doesNotAddEntryWhenWorldMapWidgetMissing()
     {
         when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(null);
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(true);
         handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
         verify(menu, never()).createMenuEntry(anyInt());
     }

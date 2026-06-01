@@ -24,9 +24,9 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.api.worldmap.WorldMap;
 import net.runelite.client.eventbus.Subscribe;
 
-// Adds a "Save as Waypoint" right-click entry in two contexts:
+// Adds a "Save as Waypoint" right-click entry in two contexts, both gated on Shift being held:
 //   1. Over the world-map widget; converts cursor canvas position to a world tile.
-//   2. On a 3D-world tile when Shift is held AND the corresponding config is on.
+//   2. On a 3D-world tile when the corresponding config is on.
 // Mirrors the world-map coord math from shortest-path's ShortestPathPlugin#calculateMapPoint.
 @Slf4j
 @Singleton
@@ -73,6 +73,7 @@ public class WaypointMenuHandler
 
     private boolean tryAddWorldMapEntry()
     {
+        if (!client.isKeyPressed(KeyCode.KC_SHIFT)) return false;
         Widget map = client.getWidget(ComponentID.WORLD_MAP_MAPVIEW);
         if (map == null) return false;
         Point mouse = client.getMouseCanvasPosition();
