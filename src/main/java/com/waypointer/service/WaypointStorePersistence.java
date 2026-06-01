@@ -3,8 +3,6 @@ package com.waypointer.service;
 import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.model.Library;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -129,16 +127,13 @@ public class WaypointStorePersistence
 
     private LoadAttempt tryLoad(Path f)
     {
-        if (!Files.exists(f)) return LoadAttempt.missing();
+        // A missing or IO-unreadable file is non-corrupt: AtomicJsonFile.tryRead collapses both
+        // to null (it logs the IO case). Only a decode failure on present bytes is corruption.
+        String json = AtomicJsonFile.tryRead(f);
+        if (json == null) return LoadAttempt.unreadable();
         try
         {
-            String json = Files.readString(f, StandardCharsets.UTF_8);
             return LoadAttempt.ok(codec.decode(json));
-        }
-        catch (IOException e)
-        {
-            log.warn("IO failure reading {}", f, e);
-            return LoadAttempt.io();
         }
         catch (RuntimeException e)
         {
@@ -147,7 +142,7 @@ public class WaypointStorePersistence
         }
     }
 
-    private enum Outcome { OK, MISSING, IO_ERROR, CORRUPT }
+    private enum Outcome { OK, UNREADABLE, CORRUPT }
 
     private static final class LoadAttempt
     {
@@ -155,8 +150,7 @@ public class WaypointStorePersistence
         final Outcome outcome;
         private LoadAttempt(Library lib, Outcome outcome) { this.lib = lib; this.outcome = outcome; }
         static LoadAttempt ok(Library l) { return new LoadAttempt(l, Outcome.OK); }
-        static LoadAttempt missing() { return new LoadAttempt(null, Outcome.MISSING); }
-        static LoadAttempt io() { return new LoadAttempt(null, Outcome.IO_ERROR); }
+        static LoadAttempt unreadable() { return new LoadAttempt(null, Outcome.UNREADABLE); }
         static LoadAttempt corrupt() { return new LoadAttempt(null, Outcome.CORRUPT); }
     }
 
@@ -182,35 +176,7 @@ public class WaypointStorePersistence
         Path tmp = dir.resolve(fileNameFor(slotKey) + ".tmp");
         Path primary = dir.resolve(fileNameFor(slotKey));
         Path backup = dir.resolve(fileNameFor(slotKey) + ".bak");
-        try
-        {
-            Files.writeString(tmp, json, StandardCharsets.UTF_8);
-            try
-            {
-                Files.move(tmp, primary,
-                    StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            }
-            catch (AtomicMoveNotSupportedException e)
-            {
-                Files.move(tmp, primary, StandardCopyOption.REPLACE_EXISTING);
-            }
-            // Best-effort backup copy after successful primary write.
-            try
-            {
-                Files.copy(primary, backup, StandardCopyOption.REPLACE_EXISTING);
-            }
-            catch (IOException e)
-            {
-                log.warn("Could not refresh backup file", e);
-            }
-            return true;
-        }
-        catch (IOException e)
-        {
-            log.warn("Failed to save library", e);
-            try { Files.deleteIfExists(tmp); } catch (IOException ignored) {}
-            return false;
-        }
+        return AtomicJsonFile.write(tmp, primary, backup, json);
     }
 
     // Serialize + writeBlocking back-to-back. Only safe on the thread that owns the library.
