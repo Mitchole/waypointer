@@ -241,8 +241,7 @@ public class CategorySection extends CollapsibleSection
             body.add(tail);
             if (dnd != null) dnd.attachTailZone(tail, tail, category.getId());
         }
-        body.setVisible(!collapsed);
-        add(body, BorderLayout.CENTER);
+        attachBody();
     }
 
     @Override
