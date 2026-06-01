@@ -9,7 +9,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.function.Consumer;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -39,23 +38,59 @@ public class WaypointRow extends JPanel implements DropIndicatable
     private final java.awt.Color restingBackground;
     private Border prevBorder;
 
-    public WaypointRow(Waypoint waypoint, boolean active,
-        boolean isPinned, boolean isWilderness, boolean dragDisabled,
-        Runnable onPlay, Runnable onClickBody, Runnable onTogglePin,
-        Runnable onDelete,
-        SpriteManager spriteManager,
-        String originCategoryName,
-        boolean selectMode, boolean selected,
-        Consumer<Boolean> onSelectClick)
+    /** Start building a row for {@code waypoint}. Booleans default false; callbacks default no-op. */
+    public static Spec spec(Waypoint waypoint)
     {
-        this.waypoint = waypoint;
+        return new Spec(waypoint);
+    }
+
+    /** Named, defaulted parameter object for {@link WaypointRow}. */
+    public static final class Spec
+    {
+        private final Waypoint waypoint;
+        private boolean active;
+        private boolean isPinned;
+        private boolean isWilderness;
+        private boolean dragDisabled;
+        private Runnable onPlay = () -> {};
+        private Runnable onClickBody = () -> {};
+        private Runnable onTogglePin = () -> {};
+        private Runnable onDelete = () -> {};
+        private SpriteManager spriteManager;
+        private String originCategoryName;
+        private boolean selectMode;
+        private boolean selected;
+        private java.util.function.Consumer<Boolean> onSelectClick = sel -> {};
+
+        private Spec(Waypoint waypoint) { this.waypoint = waypoint; }
+
+        public Spec active(boolean v) { this.active = v; return this; }
+        public Spec pinned(boolean v) { this.isPinned = v; return this; }
+        public Spec wilderness(boolean v) { this.isWilderness = v; return this; }
+        public Spec dragDisabled(boolean v) { this.dragDisabled = v; return this; }
+        public Spec onPlay(Runnable r) { this.onPlay = r; return this; }
+        public Spec onClickBody(Runnable r) { this.onClickBody = r; return this; }
+        public Spec onTogglePin(Runnable r) { this.onTogglePin = r; return this; }
+        public Spec onDelete(Runnable r) { this.onDelete = r; return this; }
+        public Spec spriteManager(SpriteManager sm) { this.spriteManager = sm; return this; }
+        public Spec originCategoryName(String n) { this.originCategoryName = n; return this; }
+        public Spec selectMode(boolean v) { this.selectMode = v; return this; }
+        public Spec selected(boolean v) { this.selected = v; return this; }
+        public Spec onSelectClick(java.util.function.Consumer<Boolean> c) { this.onSelectClick = c; return this; }
+
+        public WaypointRow build() { return new WaypointRow(this); }
+    }
+
+    private WaypointRow(Spec s)
+    {
+        this.waypoint = s.waypoint;
         setLayout(new BorderLayout(8, 0));
         setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
         setOpaque(true);
 
         // Body click: in select mode toggle selection (shift = range); otherwise expand inline.
         final MouseAdapter ma;
-        if (selectMode)
+        if (s.selectMode)
         {
             setBackground(ColorScheme.DARKER_GRAY_COLOR);
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -78,32 +113,32 @@ public class WaypointRow extends JPanel implements DropIndicatable
                 }
                 @Override public void mouseClicked(MouseEvent e)
                 {
-                    if (SwingUtilities.isLeftMouseButton(e)) onSelectClick.accept(e.isShiftDown());
+                    if (SwingUtilities.isLeftMouseButton(e)) s.onSelectClick.accept(e.isShiftDown());
                 }
             };
             addMouseListener(ma);
         }
         else
         {
-            ma = Cards.clickable(this, onClickBody);
+            ma = Cards.clickable(this, s.onClickBody);
         }
 
         // Right-click popup (pin / delete) stays available in both modes.
         JPopupMenu popup = new JPopupMenu();
-        JMenuItem pinItem = new JMenuItem(isPinned ? "Unpin" : "Pin to top");
-        pinItem.addActionListener(e -> onTogglePin.run());
+        JMenuItem pinItem = new JMenuItem(s.isPinned ? "Unpin" : "Pin to top");
+        pinItem.addActionListener(e -> s.onTogglePin.run());
         JMenuItem deleteItem = new JMenuItem("Delete");
-        deleteItem.addActionListener(e -> onDelete.run());
+        deleteItem.addActionListener(e -> s.onDelete.run());
         popup.add(pinItem);
         popup.addSeparator();
         popup.add(deleteItem);
         setComponentPopupMenu(popup);
 
         // WEST: checkbox in select mode; drag handle otherwise (when draggable).
-        if (selectMode)
+        if (s.selectMode)
         {
             TriStateBox box = new TriStateBox();
-            box.setState(selected ? TriStateBox.State.CHECKED : TriStateBox.State.UNCHECKED);
+            box.setState(s.selected ? TriStateBox.State.CHECKED : TriStateBox.State.UNCHECKED);
             box.addMouseListener(ma);
             JPanel west = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
             west.setOpaque(false);
@@ -112,7 +147,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
             add(west, BorderLayout.WEST);
             dragHandle = null;
         }
-        else if (!dragDisabled)
+        else if (!s.dragDisabled)
         {
             dragHandle = new JLabel("⠿"); // braille pattern dots-123456
             dragHandle.setForeground(new Color(120, 120, 120));
@@ -129,38 +164,47 @@ public class WaypointRow extends JPanel implements DropIndicatable
         }
 
         // CENTER: bold name label, optionally prefixed with a 16x16 custom sprite.
-        String displayName = (isWilderness ? "☠ " : "") + waypoint.getName();
-        JLabel name = new JLabel(displayName);
-        name.setToolTipText(buildHoverTooltip(waypoint, originCategoryName));
-        name.setForeground(isWilderness ? new Color(220, 130, 130) : Color.WHITE);
-        name.setFont(name.getFont().deriveFont(Font.BOLD));
-        if (waypoint.getIconId() != null && spriteManager != null)
-        {
-            name.setIconTextGap(6);
-            SpriteIcons.apply(name, waypoint.getIconId(), spriteManager);
-        }
-        name.addMouseListener(ma);
+        JLabel name = buildNameLabel(s, ma);
         add(name, BorderLayout.CENTER);
 
         this.restingBackground = getBackground();
 
         // EAST: Play button, hidden in select mode. Pin / Delete are reached via right-click.
-        if (!selectMode)
-        {
-            JButton play = new JButton("▶"); // black right-pointing triangle
-            Styles.playIconButton(play, active);
-            play.setToolTipText(active ? "Pathing here" : "Path to here");
-            play.getAccessibleContext().setAccessibleName(
-                waypoint.getName() == null || waypoint.getName().isEmpty()
-                    ? "Path to waypoint"
-                    : "Path to " + waypoint.getName());
-            play.addActionListener(e -> onPlay.run());
+        buildEastControls(s);
+    }
 
-            JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-            eastPanel.setOpaque(false);
-            eastPanel.add(play);
-            add(eastPanel, BorderLayout.EAST);
+    private JLabel buildNameLabel(Spec s, MouseAdapter ma)
+    {
+        String displayName = (s.isWilderness ? "☠ " : "") + s.waypoint.getName();
+        JLabel name = new JLabel(displayName);
+        name.setToolTipText(buildHoverTooltip(s.waypoint, s.originCategoryName));
+        name.setForeground(s.isWilderness ? new Color(220, 130, 130) : Color.WHITE);
+        name.setFont(name.getFont().deriveFont(Font.BOLD));
+        if (s.waypoint.getIconId() != null && s.spriteManager != null)
+        {
+            name.setIconTextGap(6);
+            SpriteIcons.apply(name, s.waypoint.getIconId(), s.spriteManager);
         }
+        name.addMouseListener(ma);
+        return name;
+    }
+
+    private void buildEastControls(Spec s)
+    {
+        if (s.selectMode) return;
+        JButton play = new JButton("▶"); // black right-pointing triangle
+        Styles.playIconButton(play, s.active);
+        play.setToolTipText(s.active ? "Pathing here" : "Path to here");
+        play.getAccessibleContext().setAccessibleName(
+            s.waypoint.getName() == null || s.waypoint.getName().isEmpty()
+                ? "Path to waypoint"
+                : "Path to " + s.waypoint.getName());
+        play.addActionListener(e -> s.onPlay.run());
+
+        JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        eastPanel.setOpaque(false);
+        eastPanel.add(play);
+        add(eastPanel, BorderLayout.EAST);
     }
 
     public Waypoint getWaypoint() { return waypoint; }

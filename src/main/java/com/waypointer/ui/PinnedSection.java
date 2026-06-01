@@ -97,21 +97,18 @@ public class PinnedSection extends JPanel
                 && w.getPackedWorldPoint() == activePathTarget;
             Category origin = categoryLookup.apply(w);
             String originName = origin == null ? null : origin.getName();
-            WaypointRow row = new WaypointRow(
-                w,
-                active,
-                /* isPinned */ true,
-                Wilderness.isInWilderness(w.getPackedWorldPoint()),
-                /* dragDisabled */ true,
-                () -> onRowAction.accept(w, CategorySection.RowAction.PLAY),
-                () -> onRowAction.accept(w, CategorySection.RowAction.EXPAND),
-                () -> onRowAction.accept(w, CategorySection.RowAction.TOGGLE_PIN),
-                () -> onRowAction.accept(w, CategorySection.RowAction.DELETE),
-                spriteManager,
-                originName,
-                /* selectMode */ false,
-                /* selected */ false,
-                shift -> { });
+            WaypointRow row = WaypointRow.spec(w)
+                .active(active)
+                .pinned(true)
+                .wilderness(Wilderness.isInWilderness(w.getPackedWorldPoint()))
+                .dragDisabled(true)
+                .onPlay(() -> onRowAction.accept(w, CategorySection.RowAction.PLAY))
+                .onClickBody(() -> onRowAction.accept(w, CategorySection.RowAction.EXPAND))
+                .onTogglePin(() -> onRowAction.accept(w, CategorySection.RowAction.TOGGLE_PIN))
+                .onDelete(() -> onRowAction.accept(w, CategorySection.RowAction.DELETE))
+                .spriteManager(spriteManager)
+                .originCategoryName(originName)
+                .build();
             row.setAlignmentX(LEFT_ALIGNMENT);
             body.add(row);
             if (inlineProvider != null)

@@ -24,10 +24,13 @@ public class AccessibleNamesTest
             "", Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false);
         // selectMode=false so the row builds its Play button, which the accessibility
         // sweep names "Path to <name>". SpriteManager may be null (icon is unset).
-        WaypointRow row = new WaypointRow(wp, false, false, false, false,
-            () -> {}, () -> {}, () -> {}, () -> {},
-            null, null,
-            false, false, sel -> {});
+        WaypointRow row = WaypointRow.spec(wp)
+            .onPlay(() -> {})
+            .onClickBody(() -> {})
+            .onTogglePin(() -> {})
+            .onDelete(() -> {})
+            .onSelectClick(sel -> {})
+            .build();
         assertTrue("expected a 'Path to ...' accessible name on a row control",
             hasAccessibleNameStartingWith(row, "Path to"));
     }

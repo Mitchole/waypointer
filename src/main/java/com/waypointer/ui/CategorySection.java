@@ -238,21 +238,20 @@ public class CategorySection extends JPanel
         {
             boolean active = activePathTarget != WorldPointPacker.UNDEFINED
                 && w.getPackedWorldPoint() == activePathTarget;
-            WaypointRow row = new WaypointRow(
-                w,
-                active,
-                w.isPinned(),
-                com.waypointer.service.Wilderness.isInWilderness(w.getPackedWorldPoint()),
-                /* dragDisabled */ dragDisabled,
-                () -> onRowAction.accept(w, RowAction.PLAY),
-                () -> onRowAction.accept(w, RowAction.EXPAND),
-                () -> onRowAction.accept(w, RowAction.TOGGLE_PIN),
-                () -> onRowAction.accept(w, RowAction.DELETE),
-                spriteManager,
-                /* originCategoryName */ null,
-                selectMode,
-                selection.ids().contains(w.getId()),
-                shift -> onRowSelectClick.accept(w, shift));
+            WaypointRow row = WaypointRow.spec(w)
+                .active(active)
+                .pinned(w.isPinned())
+                .wilderness(com.waypointer.service.Wilderness.isInWilderness(w.getPackedWorldPoint()))
+                .dragDisabled(dragDisabled)
+                .onPlay(() -> onRowAction.accept(w, RowAction.PLAY))
+                .onClickBody(() -> onRowAction.accept(w, RowAction.EXPAND))
+                .onTogglePin(() -> onRowAction.accept(w, RowAction.TOGGLE_PIN))
+                .onDelete(() -> onRowAction.accept(w, RowAction.DELETE))
+                .spriteManager(spriteManager)
+                .selectMode(selectMode)
+                .selected(selection.ids().contains(w.getId()))
+                .onSelectClick(shift -> onRowSelectClick.accept(w, shift))
+                .build();
             row.setAlignmentX(LEFT_ALIGNMENT);
             body.add(row);
             if (dnd != null) dnd.attachWaypointRow(row, row.getDragHandle(),
