@@ -1,7 +1,6 @@
 package com.waypointer.ui;
 
 import com.waypointer.service.BboxIndex;
-import com.waypointer.service.LandmarkType;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.util.function.Consumer;
@@ -13,7 +12,7 @@ import net.runelite.client.ui.FontManager;
 
 final class LandmarkRow extends JPanel
 {
-    LandmarkRow(LandmarkType type, BboxIndex.Entry entry,
+    LandmarkRow(BboxIndex.Entry entry,
         Consumer<BboxIndex.Entry> onNavigate,
         Consumer<BboxIndex.Entry> onEdit,
         Consumer<BboxIndex.Entry> onDelete)

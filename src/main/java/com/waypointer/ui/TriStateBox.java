@@ -28,7 +28,6 @@ final class TriStateBox extends JComponent
     }
 
     void setState(State s) { this.state = s; repaint(); }
-    State getState() { return state; }
 
     @Override protected void paintComponent(Graphics g)
     {

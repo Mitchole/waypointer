@@ -43,7 +43,6 @@ public class AreaPreviewOverlay extends Overlay
 
     public void setActive(boolean active) { this.active = active; }
     public void setSize(int size) { this.size = size; }
-    public boolean isActive() { return active; }
 
     @Override
     public Dimension render(Graphics2D g)

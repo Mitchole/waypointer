@@ -136,7 +136,7 @@ public class PresetEditorPanel extends JPanel
         for (PresetWaypoint w : preset.getWaypoints())
         {
             if (!query.isEmpty() && !w.getName().toLowerCase().contains(query)) continue;
-            PresetWaypointRow row = new PresetWaypointRow(category, w, this::navigateTo, this::openEdit, this::onDelete);
+            PresetWaypointRow row = new PresetWaypointRow(w, this::navigateTo, this::openEdit, this::onDelete);
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
             body.add(row);
         }

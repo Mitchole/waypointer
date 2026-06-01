@@ -109,7 +109,7 @@ public class LandmarkEditorPanel extends JPanel
         for (BboxIndex.Entry e : bboxIndex.editableOfType(type, overrides.getSnapshot()))
         {
             if (!query.isEmpty() && !e.name.toLowerCase().contains(query)) continue;
-            LandmarkRow row = new LandmarkRow(type, e, this::navigateTo, this::openEdit, this::onDelete);
+            LandmarkRow row = new LandmarkRow(e, this::navigateTo, this::openEdit, this::onDelete);
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
             body.add(row);
         }

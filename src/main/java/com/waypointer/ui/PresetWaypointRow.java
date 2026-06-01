@@ -12,7 +12,7 @@ import net.runelite.client.ui.FontManager;
 
 final class PresetWaypointRow extends JPanel
 {
-    PresetWaypointRow(String category, PresetWaypoint wp,
+    PresetWaypointRow(PresetWaypoint wp,
         Consumer<PresetWaypoint> onNavigate,
         Consumer<PresetWaypoint> onEdit, Consumer<PresetWaypoint> onDelete)
     {

@@ -5,7 +5,6 @@ import com.waypointer.preset.PresetCatalog;
 import com.waypointer.preset.PresetWaypoint;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkOverrides;
-import com.waypointer.service.LandmarkType;
 import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointPathfinder;
@@ -42,7 +41,7 @@ public class DevToolsNavigationTest
     {
         PresetWaypoint wp = new PresetWaypoint("Edgeville", "", 3093, 3496, 0);
         PresetWaypoint[] navigated = new PresetWaypoint[1];
-        PresetWaypointRow row = new PresetWaypointRow("Banks", wp,
+        PresetWaypointRow row = new PresetWaypointRow(wp,
             w -> navigated[0] = w, w -> {}, w -> {});
 
         JButton go = findButton(row, "Go");
@@ -57,7 +56,7 @@ public class DevToolsNavigationTest
     {
         BboxIndex.Entry entry = newEntry(3200, 3200, 3200, 3200, 0, "Varrock West Bank");
         BboxIndex.Entry[] navigated = new BboxIndex.Entry[1];
-        LandmarkRow row = new LandmarkRow(LandmarkType.BANK, entry,
+        LandmarkRow row = new LandmarkRow(entry,
             e -> navigated[0] = e, e -> {}, e -> {});
 
         JButton go = findButton(row, "Go");

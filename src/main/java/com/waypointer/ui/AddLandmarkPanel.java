@@ -88,7 +88,4 @@ final class AddLandmarkPanel extends JPanel
         }));
         cancelBtn.addActionListener(e -> onClose.run());
     }
-
-    public boolean isAreaActive() { return areaBtn.isSelected(); }
-    public int currentSize() { return sizeSlider.getValue(); }
 }

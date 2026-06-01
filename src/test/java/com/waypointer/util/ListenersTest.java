@@ -11,8 +11,8 @@ public class ListenersTest
         Listeners listeners = new Listeners();
         AtomicInteger a = new AtomicInteger();
         AtomicInteger b = new AtomicInteger();
-        listeners.add(a::incrementAndGet);
-        listeners.add(b::incrementAndGet);
+        listeners.subscribe(a::incrementAndGet);
+        listeners.subscribe(b::incrementAndGet);
 
         listeners.fire();
         listeners.fire();
@@ -39,8 +39,8 @@ public class ListenersTest
     {
         Listeners listeners = new Listeners();
         AtomicInteger after = new AtomicInteger();
-        listeners.add(() -> { throw new RuntimeException("boom"); });
-        listeners.add(after::incrementAndGet);
+        listeners.subscribe(() -> { throw new RuntimeException("boom"); });
+        listeners.subscribe(after::incrementAndGet);
 
         listeners.fire();
 

@@ -298,8 +298,6 @@ public class CategorySection extends JPanel
         return new Dimension(Integer.MAX_VALUE, pref.height);
     }
 
-    public JLabel getHeaderLabel() { return headerLabel; }
-
     private String headerText()
     {
         String chevron = collapsed ? "▶" : "▼";
