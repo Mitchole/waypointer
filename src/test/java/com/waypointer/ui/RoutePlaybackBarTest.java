@@ -29,7 +29,7 @@ public class RoutePlaybackBarTest
     @Test
     public void hiddenWhenNoActiveRoute()
     {
-        when(engine.isActive()).thenReturn(false);
+        // getActiveRoute() returns null by default -> bar hides; no stub needed.
         RoutePlaybackBar bar = new RoutePlaybackBar(engine);
         bar.refresh();
         assertFalse(bar.isVisible());
@@ -38,7 +38,6 @@ public class RoutePlaybackBarTest
     @Test
     public void visibleAndLabelledWhenActive()
     {
-        when(engine.isActive()).thenReturn(true);
         when(engine.getActiveRoute()).thenReturn(route());
         when(engine.getCurrentIndex()).thenReturn(0);
         RoutePlaybackBar bar = new RoutePlaybackBar(engine);
@@ -50,7 +49,6 @@ public class RoutePlaybackBarTest
     @Test
     public void nextButtonCallsAdvance()
     {
-        when(engine.isActive()).thenReturn(true);
         when(engine.getActiveRoute()).thenReturn(route());
         RoutePlaybackBar bar = new RoutePlaybackBar(engine);
         bar.refresh();
@@ -61,7 +59,6 @@ public class RoutePlaybackBarTest
     @Test
     public void backButtonCallsBack()
     {
-        when(engine.isActive()).thenReturn(true);
         when(engine.getActiveRoute()).thenReturn(route());
         RoutePlaybackBar bar = new RoutePlaybackBar(engine);
         bar.refresh();
@@ -72,7 +69,6 @@ public class RoutePlaybackBarTest
     @Test
     public void stopButtonCallsStop()
     {
-        when(engine.isActive()).thenReturn(true);
         when(engine.getActiveRoute()).thenReturn(route());
         RoutePlaybackBar bar = new RoutePlaybackBar(engine);
         bar.refresh();
