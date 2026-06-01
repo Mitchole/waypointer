@@ -2,9 +2,7 @@ package com.waypointer.service;
 
 import com.waypointer.WaypointerConfig;
 import com.waypointer.model.WorldPointPacker;
-import com.waypointer.ui.CaptureDialog;
-import com.waypointer.ui.WaypointerPanel;
-import java.awt.Window;
+import com.waypointer.ui.TabHost;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.SwingUtilities;
@@ -39,22 +37,17 @@ public class WaypointMenuHandler
     private static final String TARGET = "<col=ff9040>Waypointer</col>";
 
     private final Client client;
-    private final WaypointStore store;
-    private final WaypointCapture capture;
     private final WaypointerConfig config;
-    private final WaypointerPanel panel;
+    private final TabHost tabHost;
 
     private Point lastMenuOpenedPoint;
 
     @Inject
-    public WaypointMenuHandler(Client client, WaypointStore store, WaypointCapture capture,
-        WaypointerConfig config, WaypointerPanel panel)
+    public WaypointMenuHandler(Client client, WaypointerConfig config, TabHost tabHost)
     {
         this.client = client;
-        this.store = store;
-        this.capture = capture;
         this.config = config;
-        this.panel = panel;
+        this.tabHost = tabHost;
     }
 
     @Subscribe
@@ -192,10 +185,7 @@ public class WaypointMenuHandler
     private void openCaptureDialog(int packed, String defaultName, String targetNpcName)
     {
         if (packed == WorldPointPacker.UNDEFINED) return;
-        SwingUtilities.invokeLater(() -> {
-            Window owner = SwingUtilities.getWindowAncestor(panel);
-            new CaptureDialog(owner, store, capture, packed, defaultName, targetNpcName).setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> tabHost.openToCapture(packed, defaultName, targetNpcName));
     }
 
     // Converts canvas (x, y) over the world map widget to a packed WorldPoint.

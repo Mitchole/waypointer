@@ -1,7 +1,7 @@
 package com.waypointer.service;
 
 import com.waypointer.WaypointerConfig;
-import com.waypointer.ui.WaypointerPanel;
+import com.waypointer.ui.TabHost;
 import java.awt.Rectangle;
 import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
@@ -22,10 +22,8 @@ public class WaypointMenuHandlerTest
 {
     private Client client;
     private net.runelite.api.Menu menu;
-    private WaypointStore store;
-    private WaypointCapture capture;
     private WaypointerConfig config;
-    private WaypointerPanel panel;
+    private TabHost tabHost;
     private WaypointMenuHandler handler;
     private MenuEntry sourceEntry;
 
@@ -34,10 +32,8 @@ public class WaypointMenuHandlerTest
     {
         client = mock(Client.class);
         menu = mock(net.runelite.api.Menu.class);
-        store = mock(WaypointStore.class);
-        capture = mock(WaypointCapture.class);
         config = mock(WaypointerConfig.class);
-        panel = mock(WaypointerPanel.class);
+        tabHost = mock(TabHost.class);
         when(client.getMenu()).thenReturn(menu);
         when(menu.getMenuEntries()).thenReturn(new MenuEntry[0]);
         MenuEntry stubEntry = mock(MenuEntry.class);
@@ -51,7 +47,7 @@ public class WaypointMenuHandlerTest
         when(sourceEntry.getTarget()).thenReturn("tgt");
         when(sourceEntry.getType()).thenReturn(MenuAction.WALK);
         when(sourceEntry.getNpc()).thenReturn(null);
-        handler = new WaypointMenuHandler(client, store, capture, config, panel);
+        handler = new WaypointMenuHandler(client, config, tabHost);
     }
 
     @Test
