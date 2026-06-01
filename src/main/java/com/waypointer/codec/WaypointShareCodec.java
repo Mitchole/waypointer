@@ -7,13 +7,6 @@ import com.google.gson.JsonParser;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 import javax.inject.Inject;
 
 /**
@@ -27,7 +20,6 @@ public class WaypointShareCodec
 {
     public static final String SINGLE_MAGIC = "WP1:";
     public static final String LIBRARY_MAGIC = "WPL1:";
-    static final int MAX_INFLATED_BYTES = 1024 * 1024;
 
     private final Gson gson;
     private final LibraryJsonCodec libraryJsonCodec;
@@ -41,8 +33,8 @@ public class WaypointShareCodec
 
     public SingleResult decodeSingle(String input)
     {
-        String body = stripMagic(input, SINGLE_MAGIC);
-        String json = ungzipBase64(body);
+        String body = ShareCodecSupport.stripMagic(input, SINGLE_MAGIC, MalformedCodeException::new);
+        String json = ShareCodecSupport.ungzipBase64(body, MalformedCodeException::new);
         JsonObject obj = parseObject(json);
         Waypoint w = gson.fromJson(obj.get("waypoint"), Waypoint.class);
         Category c = gson.fromJson(obj.get("category"), Category.class);
@@ -53,7 +45,7 @@ public class WaypointShareCodec
     public String encodeLibrary(Library lib)
     {
         JsonObject obj = gson.toJsonTree(lib).getAsJsonObject();
-        return LIBRARY_MAGIC + gzipBase64(obj.toString());
+        return LIBRARY_MAGIC + ShareCodecSupport.gzipBase64(obj.toString());
     }
 
     public Library decodeLibrary(String input)
@@ -68,8 +60,8 @@ public class WaypointShareCodec
             lib.getWaypoints().add(sr.waypoint);
             return lib;
         }
-        String body = stripMagic(input, LIBRARY_MAGIC);
-        String json = ungzipBase64(body);
+        String body = ShareCodecSupport.stripMagic(input, LIBRARY_MAGIC, MalformedCodeException::new);
+        String json = ShareCodecSupport.ungzipBase64(body, MalformedCodeException::new);
         // Share the file-load decode contract: schema-version guard, migrator, and field defaults.
         try
         {
@@ -86,56 +78,6 @@ public class WaypointShareCodec
     }
 
     // ---- helpers ----
-
-    private static String stripMagic(String input, String magic)
-    {
-        String trimmed = input.trim();
-        if (!trimmed.startsWith(magic))
-        {
-            throw new MalformedCodeException("Expected magic " + magic + " at start of code");
-        }
-        return trimmed.substring(magic.length());
-    }
-
-    private static String gzipBase64(String input)
-    {
-        try
-        {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try (GZIPOutputStream gz = new GZIPOutputStream(baos))
-            {
-                gz.write(input.getBytes(StandardCharsets.UTF_8));
-            }
-            return Base64.getEncoder().withoutPadding().encodeToString(baos.toByteArray());
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException("gzip+base64 encode failed", e);
-        }
-    }
-
-    private static String ungzipBase64(String input)
-    {
-        byte[] decoded;
-        try { decoded = Base64.getDecoder().decode(input); }
-        catch (IllegalArgumentException e) { throw new MalformedCodeException("Bad base64"); }
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try (GZIPInputStream gz = new GZIPInputStream(new ByteArrayInputStream(decoded)))
-        {
-            byte[] buf = new byte[4096];
-            int n;
-            while ((n = gz.read(buf)) > 0)
-            {
-                out.write(buf, 0, n);
-                if (out.size() > MAX_INFLATED_BYTES)
-                {
-                    throw new MalformedCodeException("Share payload exceeds 1 MiB cap");
-                }
-            }
-        }
-        catch (IOException e) { throw new MalformedCodeException("gzip decode failed: " + e.getMessage()); }
-        return new String(out.toByteArray(), StandardCharsets.UTF_8);
-    }
 
     private static JsonObject parseObject(String json)
     {
