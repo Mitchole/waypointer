@@ -23,8 +23,10 @@ public class SwingWildernessConfirmGate implements WildernessConfirmGate
         JCheckBox dontAsk = new JCheckBox("Don't ask again for this waypoint");
         msg.add(dontAsk);
 
-        int r = JOptionPane.showConfirmDialog(parent, msg, "Wilderness destination",
-            JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-        return new Result(r == JOptionPane.OK_OPTION, dontAsk.isSelected());
+        // Cancel is the default-focused button so a stray Enter does not start a Wilderness path.
+        String[] options = {"Path anyway", "Cancel"};
+        int choice = JOptionPane.showOptionDialog(parent, msg, "Wilderness destination",
+            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
+        return new Result(choice == 0, dontAsk.isSelected());
     }
 }

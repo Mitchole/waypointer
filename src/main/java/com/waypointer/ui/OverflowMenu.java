@@ -87,10 +87,14 @@ final class OverflowMenu
 
         JMenuItem reset = new JMenuItem("Reset library...");
         reset.addActionListener(e -> {
-            int ok = JOptionPane.showConfirmDialog(anchor,
+            // Custom options with Cancel as the default-focused button so a stray Enter
+            // can't wipe the whole library - there is no undo for this.
+            String[] options = {"Cancel", "Delete everything"};
+            int choice = JOptionPane.showOptionDialog(anchor,
                 "Delete ALL waypoints and categories? This cannot be undone.",
-                "Reset library", JOptionPane.OK_CANCEL_OPTION);
-            if (ok == JOptionPane.OK_OPTION) store.bootstrap(new Library());
+                "Reset library", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                null, options, options[0]);
+            if (choice == 1) store.bootstrap(new Library());
         });
         menu.add(reset);
 
