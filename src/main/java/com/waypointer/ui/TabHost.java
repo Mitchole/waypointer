@@ -129,6 +129,7 @@ public class TabHost extends PluginPanel
     {
         waypointerPanel.refreshScrollbarStyling();
         presetBrowserPanel.refreshScrollbarStyling();
+        routesPanel.refreshScrollbarStyling();
     }
 
     @Subscribe

@@ -38,6 +38,7 @@ public class RoutesPanel extends JPanel
     private final JPanel routeList = new JPanel();
     private final JPanel editorHost = new JPanel(new BorderLayout());
 
+    private final javax.swing.JScrollBar routeListScrollBar;
     private Listeners.Subscription storeSub;
     private Listeners.Subscription engineSub;
     private RouteEditorPanel openEditor;
@@ -58,7 +59,11 @@ public class RoutesPanel extends JPanel
         routeList.setBackground(ColorScheme.DARK_GRAY_COLOR);
         listCard.setBackground(ColorScheme.DARK_GRAY_COLOR);
         listCard.add(buildListHeader(), BorderLayout.NORTH);
-        listCard.add(Styles.pinnedScrollPane(routeList), BorderLayout.CENTER);
+        // The panel is built before RuneLiteLAF installs, so pin the dark scrollbar now and
+        // re-derive it from startUp() via refreshScrollbarStyling() once the LAF is live.
+        javax.swing.JScrollPane listScroll = Styles.pinnedScrollPane(routeList);
+        this.routeListScrollBar = listScroll.getVerticalScrollBar();
+        listCard.add(listScroll, BorderLayout.CENTER);
 
         editorHost.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
@@ -143,6 +148,12 @@ public class RoutesPanel extends JPanel
         JMenuItem item = new JMenuItem(text);
         item.addActionListener(e -> action.run());
         return item;
+    }
+
+    /** Re-derive the dark scrollbar styling once RuneLiteLAF is live (called from startUp). */
+    public void refreshScrollbarStyling()
+    {
+        SwingUtilities.invokeLater(() -> Styles.reapplyScrollbarPin(routeListScrollBar));
     }
 
     /** Called from the plugin shutDown to release subscriptions. */
