@@ -4,7 +4,6 @@ import com.waypointer.model.Category;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointStore;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -111,7 +110,7 @@ class CaptureForm extends JPanel
         newCategoryRow.add(newCategoryCancel, gn);
         stack.add(newCategoryRow);
 
-        errorLabel.setForeground(new Color(220, 90, 90));
+        errorLabel.setForeground(Styles.ERROR_RED);
         errorLabel.setAlignmentX(LEFT_ALIGNMENT);
         errorLabel.setVisible(false);
         stack.add(errorLabel);

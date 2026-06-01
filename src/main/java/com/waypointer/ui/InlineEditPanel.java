@@ -134,7 +134,7 @@ public class InlineEditPanel extends JPanel
         g.gridx = 1; g.weightx = 1; add(notesScroll, g);
 
         g.gridx = 0; g.gridy++; g.weightx = 0; add(Styles.fieldLabel("Tile"), g);
-        JLabel showOnMap = makeLink("Show on world map",
+        JLabel showOnMap = Styles.link("Show on world map", ColorScheme.BRAND_ORANGE,
             onShowOnMap == null ? () -> {} : onShowOnMap);
         g.gridx = 1; g.weightx = 1; add(showOnMap, g);
 
@@ -145,7 +145,7 @@ public class InlineEditPanel extends JPanel
         g.gridx = 0; g.gridy++; g.gridwidth = 2; g.weightx = 1;
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         footer.setOpaque(false);
-        JLabel recapture = makeLink("Recapture", () -> {
+        JLabel recapture = Styles.link("Recapture", ColorScheme.BRAND_ORANGE, () -> {
             // Flush any in-flight name/notes edits before swapping the tile under us.
             flushPending();
             capture.readCurrentLocation(packed -> {
@@ -157,7 +157,7 @@ public class InlineEditPanel extends JPanel
                 toasts.show("Recaptured '" + name + "'", "Undo", store::undoLast);
             });
         });
-        JLabel setIcon = makeLink("Set icon", () -> {
+        JLabel setIcon = Styles.link("Set icon", ColorScheme.BRAND_ORANGE, () -> {
             Waypoint cur = store.getWaypointById(waypointId);
             if (cur == null) return;
             Window owner = SwingUtilities.getWindowAncestor(this);
@@ -169,11 +169,10 @@ public class InlineEditPanel extends JPanel
         footer.add(makeSeparator());
         footer.add(setIcon);
         footer.add(makeSeparator());
-        JLabel delete = makeLink("Delete", () -> {
+        JLabel delete = Styles.link("Delete", Styles.DELETE_RED, () -> {
             flushPending();
             WaypointerPanel.softDeleteWithUndo(store, store.getWaypointById(waypointId), toasts);
         });
-        delete.setForeground(new Color(220, 80, 80));
         footer.add(delete);
         add(footer, g);
     }
@@ -225,8 +224,7 @@ public class InlineEditPanel extends JPanel
     @Override
     public Dimension getMaximumSize()
     {
-        Dimension pref = getPreferredSize();
-        return new Dimension(Integer.MAX_VALUE, pref.height);
+        return Styles.capHeight(this);
     }
 
     private static JPanel makeDivider()
@@ -247,14 +245,4 @@ public class InlineEditPanel extends JPanel
         return sep;
     }
 
-    private static JLabel makeLink(String text, Runnable onClick)
-    {
-        JLabel l = new JLabel("<html><a href=''>" + text + "</a></html>");
-        l.setForeground(ColorScheme.BRAND_ORANGE);
-        l.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        l.addMouseListener(new MouseAdapter() {
-            @Override public void mouseClicked(MouseEvent e) { onClick.run(); }
-        });
-        return l;
-    }
 }

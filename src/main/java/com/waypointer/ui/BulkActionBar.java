@@ -88,7 +88,6 @@ final class BulkActionBar extends JPanel
     // Cap height to preferred so the SOUTH dock stays a thin fixed-height strip.
     @Override public Dimension getMaximumSize()
     {
-        Dimension pref = getPreferredSize();
-        return new Dimension(Integer.MAX_VALUE, pref.height);
+        return Styles.capHeight(this);
     }
 }

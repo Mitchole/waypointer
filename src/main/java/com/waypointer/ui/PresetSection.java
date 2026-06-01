@@ -113,7 +113,7 @@ class PresetSection extends JPanel
     @Override
     public Dimension getMaximumSize()
     {
-        return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+        return Styles.capHeight(this);
     }
 
     private JPanel buildHeader()
@@ -215,7 +215,7 @@ class PresetSection extends JPanel
             @Override
             public Dimension getMaximumSize()
             {
-                return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+                return Styles.capHeight(this);
             }
         };
         row.setBackground(ColorScheme.DARK_GRAY_COLOR);

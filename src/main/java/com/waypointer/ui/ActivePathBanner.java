@@ -77,7 +77,6 @@ final class ActivePathBanner extends JPanel
     @Override
     public Dimension getMaximumSize()
     {
-        Dimension pref = getPreferredSize();
-        return new Dimension(Integer.MAX_VALUE, pref.height);
+        return Styles.capHeight(this);
     }
 }

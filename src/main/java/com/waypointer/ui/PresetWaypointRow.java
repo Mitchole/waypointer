@@ -31,7 +31,7 @@ final class PresetWaypointRow extends JPanel
         right.setOpaque(false);
         right.add(Styles.compactActionButton("Go", ColorScheme.BRAND_ORANGE, () -> onNavigate.accept(wp)));
         right.add(Styles.compactActionButton("Edit", Color.WHITE, () -> onEdit.accept(wp)));
-        right.add(Styles.compactActionButton("Delete", new Color(220, 80, 80), () -> onDelete.accept(wp)));
+        right.add(Styles.compactActionButton("Delete", Styles.DELETE_RED, () -> onDelete.accept(wp)));
 
         add(name, BorderLayout.WEST);
         add(tile, BorderLayout.CENTER);

@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -25,6 +26,11 @@ final class Styles
 
     private static final String CLIENT_PROP_ACTIVE = "waypointer.playActive";
     private static final String CLIENT_PROP_HOVER_ATTACHED = "waypointer.playHoverAttached";
+
+    // Destructive-action red used on delete row buttons and the delete link. ERROR_RED is the
+    // slightly lighter tint for inline form-validation messages.
+    static final Color DELETE_RED = new Color(220, 80, 80);
+    static final Color ERROR_RED = new Color(220, 90, 90);
 
     static void secondaryButton(JButton b)
     {
@@ -56,6 +62,20 @@ final class Styles
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         b.addActionListener(e -> onClick.run());
         return b;
+    }
+
+    // Clickable text styled as an HTML link: caller-chosen colour, hand cursor, click handler.
+    // Used for the inline edit panel's footer actions.
+    static JLabel link(String text, Color color, Runnable onClick)
+    {
+        JLabel l = new JLabel("<html><a href=''>" + text + "</a></html>");
+        l.setForeground(color);
+        l.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        l.addMouseListener(new MouseAdapter()
+        {
+            @Override public void mouseClicked(MouseEvent e) { onClick.run(); }
+        });
+        return l;
     }
 
     static void primaryButton(JButton b)
@@ -165,6 +185,14 @@ final class Styles
         JLabel l = new JLabel(text);
         l.setForeground(Color.WHITE);
         return l;
+    }
+
+    // Width-unbounded, height-pinned maximum size. Return this from a component's
+    // getMaximumSize() override so BoxLayout(Y_AXIS) stacks it at its preferred height
+    // instead of stretching it into leftover column space.
+    static Dimension capHeight(Component c)
+    {
+        return new Dimension(Integer.MAX_VALUE, c.getPreferredSize().height);
     }
 
     static DocumentListener documentListener(Runnable onChange)
