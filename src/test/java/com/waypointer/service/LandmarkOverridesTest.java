@@ -63,6 +63,40 @@ public class LandmarkOverridesTest
     }
 
     @Test
+    public void duplicateBundledDeletionRecordedOnce()
+    {
+        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        ov.deleteBundledEntry("BANK", "Bad bank", 1, 1, 1, 1, 0);
+        ov.deleteBundledEntry("BANK", "Bad bank", 1, 1, 1, 1, 0);
+        ov.deleteEntry("BANK", "Bad bank", 1, 1, 1, 1, 0);
+        assertEquals(1, ov.getSnapshot().getDeletions().size());
+    }
+
+    @Test
+    public void loadFromDiskDedupesExistingDuplicateDeletions() throws Exception
+    {
+        java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("lo-dedupe");
+        com.waypointer.codec.LandmarkOverridesCodec codec =
+            new com.waypointer.codec.LandmarkOverridesCodec(new com.google.gson.Gson());
+
+        java.util.List<LandmarkOverridesSnapshot.DeletedEntry> dels = new java.util.ArrayList<>();
+        dels.add(new LandmarkOverridesSnapshot.DeletedEntry("BANK", "Dup", 5, 5, 6, 6, 0));
+        dels.add(new LandmarkOverridesSnapshot.DeletedEntry("BANK", "Dup", 5, 5, 6, 6, 0));
+        dels.add(new LandmarkOverridesSnapshot.DeletedEntry("BANK", "Dup", 5, 5, 6, 6, 0));
+        LandmarkOverridesSnapshot withDups = new LandmarkOverridesSnapshot(
+            1, new java.util.LinkedHashMap<>(), dels);
+        java.nio.file.Files.write(dir.resolve("landmark-overrides.json"),
+            codec.encode(withDups).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        LandmarkOverrides reread = LandmarkOverrides.forTesting(dir, codec);
+        reread.loadFromDisk();
+        assertEquals(1, reread.getSnapshot().getDeletions().size());
+
+        java.nio.file.Files.walk(dir).sorted(java.util.Comparator.reverseOrder())
+            .forEach(p -> { try { java.nio.file.Files.deleteIfExists(p); } catch (Exception ignored) {} });
+    }
+
+    @Test
     public void listenersFireOnMutation()
     {
         LandmarkOverrides ov = LandmarkOverrides.forTesting();

@@ -66,6 +66,7 @@ public class LandmarkOverrides
     public void loadFromDisk()
     {
         snapshot = codec.decode(persistence.loadOrEmpty());
+        dedupeDeletions(snapshot);
         listeners.fire();
     }
 
@@ -144,7 +145,10 @@ public class LandmarkOverrides
     public void deleteBundledEntry(String type, String name, int x1, int y1, int x2, int y2, int plane)
     {
         undoBuffer = deepCopy(snapshot);
-        snapshot.getDeletions().add(new DeletedEntry(type, name, x1, y1, x2, y2, plane));
+        if (!deletionExists(type, name, x1, y1, x2, y2, plane))
+        {
+            snapshot.getDeletions().add(new DeletedEntry(type, name, x1, y1, x2, y2, plane));
+        }
         listeners.fire();
         scheduleSave();
     }
@@ -167,9 +171,33 @@ public class LandmarkOverrides
             scheduleSave();
             return;
         }
-        snapshot.getDeletions().add(new DeletedEntry(type, name, x1, y1, x2, y2, plane));
+        if (!deletionExists(type, name, x1, y1, x2, y2, plane))
+        {
+            snapshot.getDeletions().add(new DeletedEntry(type, name, x1, y1, x2, y2, plane));
+        }
         listeners.fire();
         scheduleSave();
+    }
+
+    private boolean deletionExists(String type, String name, int x1, int y1, int x2, int y2, int plane)
+    {
+        for (DeletedEntry d : snapshot.getDeletions())
+        {
+            if (d.getX1() == x1 && d.getY1() == y1 && d.getX2() == x2 && d.getY2() == y2
+                && d.getPlane() == plane && d.getType().equals(type)
+                && Objects.equals(d.getName(), name)) return true;
+        }
+        return false;
+    }
+
+    // Drops duplicate deletion tuples (same type+name+bbox+plane), keeping first occurrence.
+    // Cleans files written before the delete paths guarded against duplicates.
+    private static void dedupeDeletions(LandmarkOverridesSnapshot s)
+    {
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        s.getDeletions().removeIf(d -> !seen.add(
+            d.getType() + "|" + d.getName() + "|" + d.getX1() + "," + d.getY1()
+                + "," + d.getX2() + "," + d.getY2() + "," + d.getPlane()));
     }
 
     public boolean undoLast()
