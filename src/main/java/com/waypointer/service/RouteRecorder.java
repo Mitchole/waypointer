@@ -90,6 +90,21 @@ public class RouteRecorder
         listeners.fire();
     }
 
+    /**
+     * Append the player's current tile as a waypoint step to an arbitrary route. Used by the
+     * editor's "mark current location" action (independent of recording). Reads Client on the
+     * client thread; the store mutation drives the UI refresh, so no recorder listener fire here.
+     */
+    public void addCurrentLocationTo(java.util.UUID routeId)
+    {
+        if (routeId == null) return;
+        clientThreadRunner.accept(() -> {
+            WorldPoint wp = playerLocation.get();
+            if (wp == null) return;
+            store.addWaypointStep(routeId, WorldPointPacker.pack(wp), "Waypoint", null);
+        });
+    }
+
     public void stopAndSave()
     {
         draftRouteId = null;
