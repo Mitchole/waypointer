@@ -1,7 +1,9 @@
 package com.waypointer.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import javax.swing.JButton;
+import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -77,5 +79,40 @@ public class StylesTest
         JButton b = new JButton("▶");
         Styles.playIconButton(b, false);
         assertEquals(Boolean.FALSE, b.getClientProperty("waypointer.playActive"));
+    }
+
+    @Test
+    public void editableMetaRow_placesNameWestDetailCenterButtonsEast()
+    {
+        JPanel row = new JPanel();
+        Styles.editableMetaRow(row, "Vorkath", "(1, 2) p0", () -> {}, () -> {}, () -> {});
+
+        java.awt.BorderLayout layout = (java.awt.BorderLayout) row.getLayout();
+        assertEquals("Vorkath",
+            ((javax.swing.JLabel) layout.getLayoutComponent(java.awt.BorderLayout.WEST)).getText());
+        assertEquals("(1, 2) p0",
+            ((javax.swing.JLabel) layout.getLayoutComponent(java.awt.BorderLayout.CENTER)).getText());
+        JPanel east = (JPanel) layout.getLayoutComponent(java.awt.BorderLayout.EAST);
+        assertEquals(3, east.getComponentCount());
+        assertEquals("Go",     ((JButton) east.getComponent(0)).getText());
+        assertEquals("Edit",   ((JButton) east.getComponent(1)).getText());
+        assertEquals("Delete", ((JButton) east.getComponent(2)).getText());
+    }
+
+    @Test
+    public void editableMetaRow_buttonsInvokeSuppliedCallbacks()
+    {
+        JPanel row = new JPanel();
+        boolean[] fired = new boolean[3];
+        Styles.editableMetaRow(row, "n", "d",
+            () -> fired[0] = true, () -> fired[1] = true, () -> fired[2] = true);
+        JPanel east = (JPanel) ((java.awt.BorderLayout) row.getLayout())
+            .getLayoutComponent(java.awt.BorderLayout.EAST);
+        ((JButton) east.getComponent(0)).doClick();
+        ((JButton) east.getComponent(1)).doClick();
+        ((JButton) east.getComponent(2)).doClick();
+        assertEquals(true, fired[0]);
+        assertEquals(true, fired[1]);
+        assertEquals(true, fired[2]);
     }
 }

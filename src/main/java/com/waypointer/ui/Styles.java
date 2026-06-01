@@ -1,5 +1,6 @@
 package com.waypointer.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -11,6 +12,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -20,6 +22,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.ScrollBarUI;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.laf.RuneLiteScrollBarUI;
 
 // Styling helpers for panel + dialogs. Vanilla Swing components default to system LAF which
@@ -278,6 +281,35 @@ final class Styles
         bar.setPreferredSize(new Dimension(SCROLLBAR_PIN_WIDTH, 0));
         bar.putClientProperty(CP_SCROLLBAR_WIDTH, SCROLLBAR_PIN_WIDTH);
         bar.putClientProperty(CP_SCROLLBAR_BUTTONS, Boolean.FALSE);
+    }
+
+    // Populates `target` as a one-line editable metadata row: name on the WEST, a coordinate/
+    // detail string in the CENTER, and Go / Edit / Delete action buttons on the EAST. Used by
+    // LandmarkRow and PresetWaypointRow, which keep their typed constructors and delegate here.
+    static void editableMetaRow(JPanel target, String name, String detail,
+        Runnable onGo, Runnable onEdit, Runnable onDelete)
+    {
+        target.setLayout(new BorderLayout(6, 0));
+        target.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        target.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+
+        JLabel nameLabel = new JLabel(name);
+        nameLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        nameLabel.setFont(FontManager.getRunescapeSmallFont());
+
+        JLabel detailLabel = new JLabel(detail);
+        detailLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        detailLabel.setFont(FontManager.getRunescapeSmallFont());
+
+        JPanel right = new JPanel();
+        right.setOpaque(false);
+        right.add(compactActionButton("Go", ColorScheme.BRAND_ORANGE, onGo));
+        right.add(compactActionButton("Edit", Color.WHITE, onEdit));
+        right.add(compactActionButton("Delete", DELETE_RED, onDelete));
+
+        target.add(nameLabel, BorderLayout.WEST);
+        target.add(detailLabel, BorderLayout.CENTER);
+        target.add(right, BorderLayout.EAST);
     }
 
     // Escapes s for embedding in HTML. Handles <, >, &, ", and '. Returns "" when s is null.
