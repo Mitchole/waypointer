@@ -27,14 +27,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.plaf.ScrollBarUI;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
-import net.runelite.client.ui.laf.RuneLiteScrollBarUI;
 
 // Singleton preset browser. Lives for the lifetime of the plugin and reacts to store
 // mutations from any source so the per-row "+" / "added" toggles stay in sync.
@@ -81,16 +78,8 @@ public class PresetBrowserPanel extends PluginPanel
         // vertical scrollbar's UI delegate picks up Metal defaults unless we pin width
         // + showButtons + install RuneLiteScrollBarUI here, then call
         // refreshScrollbarStyling() from startUp() once LAF is live.
-        JScrollPane scroll = new JScrollPane(bodyHolder);
-        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
-        JScrollBar vBar = scroll.getVerticalScrollBar();
-        vBar.putClientProperty("JScrollBar.width", 7);
-        vBar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
-        vBar.setPreferredSize(new Dimension(7, 0));
-        vBar.setUI((ScrollBarUI) RuneLiteScrollBarUI.createUI(vBar));
-        this.bodyScrollBar = vBar;
+        JScrollPane scroll = Styles.pinnedScrollPane(bodyHolder);
+        this.bodyScrollBar = scroll.getVerticalScrollBar();
         toastOverlay = new ToastOverlay(scroll);
         add(toastOverlay, BorderLayout.CENTER);
 
@@ -118,14 +107,7 @@ public class PresetBrowserPanel extends PluginPanel
     /** Called from {@link com.waypointer.WaypointerPlugin#startUp()} after LAF init. */
     public void refreshScrollbarStyling()
     {
-        if (bodyScrollBar == null) return;
-        SwingUtilities.invokeLater(() ->
-        {
-            bodyScrollBar.updateUI();
-            bodyScrollBar.setPreferredSize(new Dimension(7, 0));
-            bodyScrollBar.putClientProperty("JScrollBar.width", 7);
-            bodyScrollBar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
-        });
+        SwingUtilities.invokeLater(() -> Styles.reapplyScrollbarPin(bodyScrollBar));
     }
 
     public void dispose()

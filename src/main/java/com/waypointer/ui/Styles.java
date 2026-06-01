@@ -11,11 +11,16 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.ScrollBarUI;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.laf.RuneLiteScrollBarUI;
 
 // Styling helpers for panel + dialogs. Vanilla Swing components default to system LAF which
 // clashes with RuneLite's dark theme; each entry applies the RuneLite palette while letting
@@ -238,6 +243,37 @@ final class Styles
             result = result.substring(start, end);
         } while (!result.equals(prev));
         return result.isEmpty() ? "untitled" : result;
+    }
+
+    // Builds a JScrollPane themed to match the dark plugin panel: no border, no horizontal bar,
+    // and a thin (7-px) vertical bar with arrow buttons hidden. These panels are constructed
+    // during loadCorePlugins() - before ClientUI.init() installs RuneLiteLAF - so the scrollbar's
+    // UI delegate would otherwise inherit Metal defaults; the caller stores the bar and passes it
+    // to reapplyScrollbarPin(...) from startUp() once the LAF is live.
+    static JScrollPane pinnedScrollPane(Component view)
+    {
+        JScrollPane scroll = new JScrollPane(view);
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        JScrollBar vBar = scroll.getVerticalScrollBar();
+        vBar.putClientProperty("JScrollBar.width", 7);
+        vBar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
+        vBar.setPreferredSize(new Dimension(7, 0));
+        vBar.setUI((ScrollBarUI) RuneLiteScrollBarUI.createUI(vBar));
+        return scroll;
+    }
+
+    // Re-derives and re-pins a vertical scrollbar's UI delegate after RuneLiteLAF is installed.
+    // updateUI() resets the preferred size and client properties, so they are re-applied here.
+    // Null-safe so callers can invoke it unconditionally from startUp().
+    static void reapplyScrollbarPin(JScrollBar bar)
+    {
+        if (bar == null) return;
+        bar.updateUI();
+        bar.setPreferredSize(new Dimension(7, 0));
+        bar.putClientProperty("JScrollBar.width", 7);
+        bar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
     }
 
     // Escapes s for embedding in HTML. Handles <, >, &, ", and '. Returns "" when s is null.

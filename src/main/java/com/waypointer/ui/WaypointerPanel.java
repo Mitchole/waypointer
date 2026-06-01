@@ -43,13 +43,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.plaf.ScrollBarUI;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.worldmap.WorldMap;
@@ -60,7 +58,6 @@ import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.PluginPanel;
-import net.runelite.client.ui.laf.RuneLiteScrollBarUI;
 
 @Slf4j
 @Singleton
@@ -225,16 +222,8 @@ public class WaypointerPanel extends PluginPanel
         // Metal L&F, and anything UI-delegate-derived (scrollbar colors, scroll-pane border)
         // picks up Metal's defaults. Pin width + zero out the border explicitly here, then
         // WaypointerPlugin.startUp() calls refreshScrollbarStyling() once the LAF is live.
-        JScrollPane bodyScroll = new JScrollPane(bodyHolder);
-        bodyScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        bodyScroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
-        bodyScroll.setBorder(BorderFactory.createEmptyBorder());
-        JScrollBar vBar = bodyScroll.getVerticalScrollBar();
-        vBar.putClientProperty("JScrollBar.width", 7);
-        vBar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
-        vBar.setPreferredSize(new Dimension(7, 0));
-        vBar.setUI((ScrollBarUI) RuneLiteScrollBarUI.createUI(vBar));
-        this.bodyScrollBar = vBar;
+        JScrollPane bodyScroll = Styles.pinnedScrollPane(bodyHolder);
+        this.bodyScrollBar = bodyScroll.getVerticalScrollBar();
         this.toastOverlay = new ToastOverlay(bodyScroll);
         nearestLandmarkBar.setToasts(toastOverlay);
         overflowBtn.addActionListener(e -> overflowMenu.show(overflowBtn, this, toastOverlay));
@@ -285,14 +274,7 @@ public class WaypointerPanel extends PluginPanel
     // so the 7-px pin is re-applied afterwards.
     public void refreshScrollbarStyling()
     {
-        if (bodyScrollBar == null) return;
-        SwingUtilities.invokeLater(() ->
-        {
-            bodyScrollBar.updateUI();
-            bodyScrollBar.setPreferredSize(new Dimension(7, 0));
-            bodyScrollBar.putClientProperty("JScrollBar.width", 7);
-            bodyScrollBar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
-        });
+        SwingUtilities.invokeLater(() -> Styles.reapplyScrollbarPin(bodyScrollBar));
     }
 
     // PluginPanel.getPreferredSize / getMinimumSize pass the JPanel's layout-computed
