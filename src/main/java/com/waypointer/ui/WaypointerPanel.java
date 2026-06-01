@@ -410,7 +410,7 @@ public class WaypointerPanel extends PluginPanel
         }
         collapsedByCategory.put(PINNED_COLLAPSE_KEY, !expanded);
         config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
-        rebuild();
+        scheduleRebuild();
     }
 
     /**
@@ -460,7 +460,7 @@ public class WaypointerPanel extends PluginPanel
 
         if (!pathfinder.isAvailable() && !config.shortestPathBannerDismissed())
         {
-            body.add(PanelBanners.shortestPathMissing(config, this::rebuild));
+            body.add(PanelBanners.shortestPathMissing(config, this::scheduleRebuild));
         }
         if (persistence.isRefusingSaves())
         {
@@ -526,7 +526,7 @@ public class WaypointerPanel extends PluginPanel
             // Disable drag-and-drop while filtering, or rows would reorder relative to
             // invisible neighbours.
             DragAndDropHandler dnd = (isFiltering || bulkSelect.isSelectMode()) ? null
-                : new DragAndDropHandler(store, this::rebuild);
+                : new DragAndDropHandler(store, this::scheduleRebuild);
             for (Category c : cats)
             {
                 List<Waypoint> all = store.getWaypointsInCategory(c.getId());
@@ -670,7 +670,7 @@ public class WaypointerPanel extends PluginPanel
                 break;
             case EXPAND:
                 if (!expandedWaypoints.add(w.getId())) expandedWaypoints.remove(w.getId());
-                rebuild();
+                scheduleRebuild();
                 break;
             case TOGGLE_PIN:
             {
