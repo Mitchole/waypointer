@@ -189,6 +189,47 @@ public class NearestLandmarkBarTest
         assertEquals("expected only the overflow button when nothing is selected", 1, buttonCount);
     }
 
+    @Test
+    public void iconRowPreferredHeightFitsEveryButtonWhenWrapped()
+    {
+        // Select every landmark type so the icon row (one 34 px button per type plus the
+        // overflow toggle) cannot fit on a single row at the panel width. The row must report
+        // a preferred height tall enough for the wrapped rows; otherwise the parent BoxLayout
+        // allocates only one row's worth of height and the wrapped buttons -- including the
+        // overflow toggle -- are clipped out of view and become unclickable.
+        com.google.gson.Gson realGson = new com.google.gson.Gson();
+        LandmarkSelection all = LandmarkSelection.canonicalDefault();
+        for (LandmarkType t : LandmarkType.values())
+        {
+            all = all.withSelected(t, true);
+        }
+        when(config.landmarkSelectionJson()).thenReturn(all.toJson(realGson));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, realGson);
+
+        bar.setSize(net.runelite.client.ui.PluginPanel.PANEL_WIDTH, 600);
+        bar.doLayout(); // BoxLayout sizes the icon row to the bar width
+
+        Container iconRow = (Container) bar.getComponent(0);
+        iconRow.doLayout(); // FlowLayout wraps the buttons within that width
+        int rowWidth = iconRow.getWidth();
+        assertTrue("icon row should have been laid out with a real width", rowWidth > 0);
+
+        int maxBottom = 0;
+        int buttonCount = 0;
+        for (Component c : iconRow.getComponents())
+        {
+            if (!(c instanceof JButton)) continue;
+            buttonCount++;
+            maxBottom = Math.max(maxBottom, c.getY() + c.getHeight());
+        }
+        assertEquals("expected 11 type buttons + overflow", 12, buttonCount);
+        assertTrue("buttons must have wrapped past one row for this test to be meaningful",
+            maxBottom > 34);
+        assertTrue("icon row preferred height (" + iconRow.getPreferredSize().height
+                + ") must accommodate the lowest button (bottom " + maxBottom + ")",
+            iconRow.getPreferredSize().height >= maxBottom);
+    }
+
     // Returns only the landmark buttons in the icon row (all buttons except the trailing overflow).
     private static List<JButton> findLandmarkButtons(NearestLandmarkBar bar)
     {

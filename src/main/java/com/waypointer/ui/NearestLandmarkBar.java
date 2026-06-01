@@ -6,9 +6,12 @@ import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkType;
 import com.waypointer.service.WaypointPathfinder;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.util.EnumMap;
 import java.util.Map;
@@ -29,6 +32,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.PluginPanel;
 
 /**
  * Row of clickable landmark icons in the panel header. Each button pathfinds to the nearest
@@ -97,7 +101,11 @@ public final class NearestLandmarkBar extends JPanel
         setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
         setAlignmentX(LEFT_ALIGNMENT);
 
-        iconRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 2, 0));
+        // WrapLayout (not stock FlowLayout) so the row reports a tall-enough preferred height
+        // when the selected icons plus the overflow toggle spill onto a second row. With plain
+        // FlowLayout the parent BoxLayout sizes the row for one row only and clips the wrapped
+        // buttons -- including the overflow toggle, leaving the picker with no close affordance.
+        iconRow = new JPanel(new WrapLayout(FlowLayout.CENTER, 2, 0));
         iconRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
         iconRow.setAlignmentX(LEFT_ALIGNMENT);
         add(iconRow);
@@ -108,6 +116,9 @@ public final class NearestLandmarkBar extends JPanel
             selection,
             this::onPickerToggle,
             this::onPickerReorder);
+        // Match the icon row's left alignment; a mismatched alignmentX makes BoxLayout narrow
+        // the icon row when the picker is shown, forcing the bar to wrap earlier than it should.
+        picker.setAlignmentX(LEFT_ALIGNMENT);
         add(picker);
 
         rebuildBar();
@@ -288,5 +299,90 @@ public final class NearestLandmarkBar extends JPanel
         m.put(LandmarkType.FAIRY_RING,     1504);  // MAP_ICON_TRANSPORTATION
         m.put(LandmarkType.SLAYER_MASTER,  1499);  // MAP_ICON_SLAYER_MASTER
         return m;
+    }
+
+    /**
+     * FlowLayout that measures every wrapped row instead of assuming a single one. Stock
+     * FlowLayout lays out wrapped rows in {@code layoutContainer} but still reports a one-row
+     * preferred height, so a {@code BoxLayout} parent allocates one row and clips the rest.
+     */
+    private static final class WrapLayout extends FlowLayout
+    {
+        WrapLayout(int align, int hgap, int vgap)
+        {
+            super(align, hgap, vgap);
+        }
+
+        @Override
+        public Dimension preferredLayoutSize(Container target)
+        {
+            return wrappedSize(target, true);
+        }
+
+        @Override
+        public Dimension minimumLayoutSize(Container target)
+        {
+            return wrappedSize(target, false);
+        }
+
+        private Dimension wrappedSize(Container target, boolean preferred)
+        {
+            synchronized (target.getTreeLock())
+            {
+                Insets insets = target.getInsets();
+                int maxRowWidth = availableWidth(target)
+                    - insets.left - insets.right - getHgap() * 2;
+                if (maxRowWidth <= 0) maxRowWidth = Integer.MAX_VALUE;
+
+                int widest = 0;
+                int totalHeight = 0;
+                int rowWidth = 0;
+                int rowHeight = 0;
+                for (Component c : target.getComponents())
+                {
+                    if (!c.isVisible()) continue;
+                    Dimension d = preferred ? c.getPreferredSize() : c.getMinimumSize();
+                    if (rowWidth > 0 && rowWidth + getHgap() + d.width > maxRowWidth)
+                    {
+                        widest = Math.max(widest, rowWidth);
+                        totalHeight += rowHeight + getVgap();
+                        rowWidth = 0;
+                        rowHeight = 0;
+                    }
+                    rowWidth += (rowWidth == 0 ? 0 : getHgap()) + d.width;
+                    rowHeight = Math.max(rowHeight, d.height);
+                }
+                widest = Math.max(widest, rowWidth);
+                totalHeight += rowHeight;
+
+                return new Dimension(
+                    widest + insets.left + insets.right + getHgap() * 2,
+                    totalHeight + insets.top + insets.bottom + getVgap() * 2);
+            }
+        }
+
+        // Width available to the row. Once the row has been laid out we use its own width; before
+        // that (the first preferred-size query, while widths are still zero) we climb to the first
+        // sized ancestor and back out the insets we passed through, so the wrap count is correct on
+        // the very first layout pass rather than after a later revalidate. The fixed sidebar width
+        // is the last-resort fallback if nothing is sized yet.
+        private static int availableWidth(Container target)
+        {
+            int reserved = 0;
+            Container c = target;
+            while (c != null && c.getWidth() <= 0)
+            {
+                Container parent = c.getParent();
+                if (parent != null)
+                {
+                    Insets in = parent.getInsets();
+                    reserved += in.left + in.right;
+                }
+                c = parent;
+            }
+            if (c == null) return PluginPanel.PANEL_WIDTH;
+            if (c == target) return target.getWidth();
+            return Math.max(0, c.getWidth() - reserved);
+        }
     }
 }
