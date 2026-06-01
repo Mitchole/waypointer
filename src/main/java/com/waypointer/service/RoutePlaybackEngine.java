@@ -38,6 +38,12 @@ public class RoutePlaybackEngine
     @Nullable private volatile Client client;
     private Listeners.Subscription storeSub;
 
+    // Volatile for cross-thread visibility: these three fields are mutated from both the EDT
+    // (playback-bar buttons -> start/advance/back/stop) and the client thread (tick auto-advance
+    // via handleTick). They are not updated as an atomic group, so a reader (the playback bar)
+    // can briefly observe a transitional combination during a button-vs-tick race; that is
+    // visually benign and corrected on the next listeners.fire(). Fully closing the race would
+    // mean confining all mutation to one thread (deferred).
     private volatile Route active;
     private volatile int currentIndex;
     private volatile int lap;

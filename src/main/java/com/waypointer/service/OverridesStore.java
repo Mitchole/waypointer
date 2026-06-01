@@ -6,6 +6,7 @@ import com.waypointer.util.Listeners.Subscription;
 import java.nio.file.Path;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 // Generic in-memory working set of dev-mode overrides backed by a single JSON file, with
 // debounced persistence and pub/sub on mutation. Subclasses hold the domain mutators and
@@ -19,7 +20,7 @@ abstract class OverridesStore<S>
     private final OverridePersistence persistence;
     private final SnapshotCodec<S> codec;
     private final ScheduledExecutorService scheduler;
-    private volatile boolean dirty = false;
+    private final AtomicBoolean dirty = new AtomicBoolean(false);
 
     OverridesStore(Path dir, String fileName, SnapshotCodec<S> codec,
         ScheduledExecutorService scheduler, S empty)
@@ -77,10 +78,11 @@ abstract class OverridesStore<S>
 
     protected void scheduleSave()
     {
-        if (dirty) return;
-        dirty = true;
+        // compareAndSet coalesces a burst into a single scheduled flush without a check-then-act
+        // race: the scheduler callback (which may run off the calling thread) clears the flag.
+        if (!dirty.compareAndSet(false, true)) return;
         scheduler.schedule(() -> {
-            dirty = false;
+            dirty.set(false);
             flushBlocking();
         }, 500, TimeUnit.MILLISECONDS);
     }

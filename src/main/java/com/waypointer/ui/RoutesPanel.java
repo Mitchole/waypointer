@@ -7,6 +7,7 @@ import com.waypointer.model.route.StepType;
 import com.waypointer.service.RoutePlaybackEngine;
 import com.waypointer.service.RouteRecorder;
 import com.waypointer.service.RouteStore;
+import com.waypointer.service.RouteStorePersistence;
 import com.waypointer.util.Listeners;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -39,6 +40,7 @@ public class RoutesPanel extends JPanel
     private final RouteRecorder recorder;
     private final RouteShareCodec shareCodec;
     private final com.waypointer.service.WaypointStore waypointStore;
+    private final RouteStorePersistence persistence;
     private final RoutePlaybackBar playbackBar;
     private final JPanel recordingBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
 
@@ -56,13 +58,15 @@ public class RoutesPanel extends JPanel
 
     @Inject
     public RoutesPanel(RouteStore store, RoutePlaybackEngine engine, RouteRecorder recorder,
-        RouteShareCodec shareCodec, com.waypointer.service.WaypointStore waypointStore)
+        RouteShareCodec shareCodec, com.waypointer.service.WaypointStore waypointStore,
+        RouteStorePersistence persistence)
     {
         this.store = store;
         this.engine = engine;
         this.recorder = recorder;
         this.shareCodec = shareCodec;
         this.waypointStore = waypointStore;
+        this.persistence = persistence;
         this.playbackBar = new RoutePlaybackBar(engine);
 
         setLayout(new BorderLayout());
@@ -182,6 +186,10 @@ public class RoutesPanel extends JPanel
     private void rebuildList()
     {
         routeList.removeAll();
+        if (persistence.isRefusingSaves())
+        {
+            routeList.add(PanelBanners.routeLoadFailedReset(persistence, store, this));
+        }
         for (Route r : store.getRoutesOrdered())
         {
             UUID id = r.getId();
