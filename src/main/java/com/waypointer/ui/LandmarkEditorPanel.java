@@ -122,17 +122,7 @@ public class LandmarkEditorPanel extends JPanel
         closeInline();
         activeInline = new AddLandmarkPanel(capture, overrides,
             () -> (LandmarkType) typePicker.getSelectedItem(),
-            size -> {
-                if (size <= 0)
-                {
-                    areaOverlay.setActive(false);
-                }
-                else
-                {
-                    areaOverlay.setSize(size);
-                    areaOverlay.setActive(true);
-                }
-            },
+            this::applyOverlaySize,
             this::closeInline);
         rebuild();
     }
@@ -141,8 +131,24 @@ public class LandmarkEditorPanel extends JPanel
     {
         closeInline();
         LandmarkType type = (LandmarkType) typePicker.getSelectedItem();
-        activeInline = new InlineLandmarkEdit(type, e, overrides, capture, this::closeInline);
+        activeInline = new InlineLandmarkEdit(type, e, overrides, capture,
+            this::applyOverlaySize, this::closeInline);
         rebuild();
+    }
+
+    // Drives the in-scene area-preview overlay: size 0 hides it (point capture), n shows an
+    // NxN preview at the player tile. Shared by the add and edit inline panels.
+    private void applyOverlaySize(int size)
+    {
+        if (size <= 0)
+        {
+            areaOverlay.setActive(false);
+        }
+        else
+        {
+            areaOverlay.setSize(size);
+            areaOverlay.setActive(true);
+        }
     }
 
     private void closeInline()
