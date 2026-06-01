@@ -133,8 +133,10 @@ public class WaypointerPlugin extends Plugin
         if (!"waypointer".equals(e.getGroup())) return;
         if ("devModeEnabled".equals(e.getKey()))
         {
+            // remove() first so a repeated "on" event can't stack a second copy --
+            // OverlayManager.add does not dedupe, and startUp() may already have added it.
+            overlayManager.remove(areaPreviewOverlay);
             if (config.devModeEnabled()) overlayManager.add(areaPreviewOverlay);
-            else overlayManager.remove(areaPreviewOverlay);
         }
     }
 
