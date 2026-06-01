@@ -3,8 +3,7 @@ package com.waypointer.ui;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.awt.GraphicsEnvironment;
-import org.junit.Assume;
+import com.waypointer.testsupport.Headless;
 import org.junit.Test;
 
 public class LandmarkHoverPopoverTest
@@ -12,7 +11,7 @@ public class LandmarkHoverPopoverTest
 	@Test
 	public void newPopoverIsNotVisibleAndHasEmptyLabel()
 	{
-		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		Headless.assumeDisplay();
 		LandmarkHoverPopover popover = new LandmarkHoverPopover();
 		assertFalse("a freshly-constructed popover must not be visible",
 			popover.visibleIntentForTest());
@@ -23,7 +22,7 @@ public class LandmarkHoverPopoverTest
 	@Test
 	public void mouseEnterShowsPopoverWithSupplierText()
 	{
-		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		Headless.assumeDisplay();
 		LandmarkHoverPopover popover = new LandmarkHoverPopover();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);
@@ -42,7 +41,7 @@ public class LandmarkHoverPopoverTest
 	@Test
 	public void mouseExitHidesPopover()
 	{
-		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		Headless.assumeDisplay();
 		LandmarkHoverPopover popover = new LandmarkHoverPopover();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);
@@ -62,7 +61,7 @@ public class LandmarkHoverPopoverTest
 	@Test
 	public void mouseEnterRereadsSupplierEachTime()
 	{
-		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		Headless.assumeDisplay();
 		LandmarkHoverPopover popover = new LandmarkHoverPopover();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);
@@ -88,7 +87,7 @@ public class LandmarkHoverPopoverTest
 	@Test
 	public void disposeIsIdempotent()
 	{
-		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		Headless.assumeDisplay();
 		LandmarkHoverPopover popover = new LandmarkHoverPopover();
 		popover.dispose();
 		assertFalse("dispose must leave visibleIntent false",
@@ -101,7 +100,7 @@ public class LandmarkHoverPopoverTest
 	@Test
 	public void afterDisposeMouseEnterIsNoOp()
 	{
-		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		Headless.assumeDisplay();
 		LandmarkHoverPopover popover = new LandmarkHoverPopover();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);
@@ -121,7 +120,7 @@ public class LandmarkHoverPopoverTest
 	@Test
 	public void disposeWhileShowingHidesTheWindow()
 	{
-		Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+		Headless.assumeDisplay();
 		LandmarkHoverPopover popover = new LandmarkHoverPopover();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);

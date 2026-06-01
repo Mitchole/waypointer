@@ -8,10 +8,9 @@ import com.waypointer.model.Category;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
 import com.waypointer.service.WaypointStore;
-import java.awt.GraphicsEnvironment;
+import com.waypointer.testsupport.Headless;
 import java.time.Instant;
 import java.util.UUID;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -64,7 +63,7 @@ public class ImportPickerDialogTest
     @Test
     public void codeSourceDecodesAndPopulatesTree()
     {
-        Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+        Headless.assumeDisplay();
         String code = shareCodec.encodeLibrary(oneWaypointLibrary());
 
         WaypointStore store = new WaypointStore();
@@ -80,7 +79,7 @@ public class ImportPickerDialogTest
     @Test
     public void fileSourceDecodesAndPopulatesTree() throws Exception
     {
-        Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+        Headless.assumeDisplay();
         String json = libraryCodec.encode(oneWaypointLibrary());
         java.io.File tmp = java.io.File.createTempFile("waypointer-import", ".json");
         tmp.deleteOnExit();
@@ -100,7 +99,7 @@ public class ImportPickerDialogTest
     @Test
     public void malformedSourceLeavesTreeEmpty() throws Exception
     {
-        Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+        Headless.assumeDisplay();
         WaypointStore store = new WaypointStore();
         store.bootstrap(new Library());
         ImportPickerDialog d = newDialog(store);
@@ -118,7 +117,7 @@ public class ImportPickerDialogTest
     @Test
     public void importBuildsSelectedSubsetAndMergesOnce()
     {
-        Assume.assumeFalse("Swing widgets require a display", GraphicsEnvironment.isHeadless());
+        Headless.assumeDisplay();
         String code = shareCodec.encodeLibrary(oneWaypointLibrary());
 
         WaypointStore store = mock(WaypointStore.class);
