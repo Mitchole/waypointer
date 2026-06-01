@@ -76,6 +76,35 @@ public interface WaypointerConfig extends Config
     )
     default boolean newestPinAtTop() { return true; }
 
+    @ConfigItem(
+        keyName = "routesEnabled",
+        name = "Enable Routes",
+        description = "Show the Routes tab for building and running guided multi-step routes "
+            + "(farm runs, agility laps). Off hides the feature entirely.",
+        position = 40
+    )
+    default boolean routesEnabled() { return true; }
+
+    @ConfigItem(
+        keyName = "routeAdvanceHotkey",
+        name = "Route: next step hotkey",
+        description = "Key that advances (or skips) the current route step while a route is "
+            + "running. Only fires while a route is active.",
+        position = 41
+    )
+    default net.runelite.client.config.Keybind routeAdvanceHotkey()
+    {
+        return net.runelite.client.config.Keybind.NOT_SET;
+    }
+
+    @ConfigItem(
+        keyName = "showRouteOverlay",
+        name = "Show in-game route box",
+        description = "Draw a read-only step box in the game window while a route is running.",
+        position = 42
+    )
+    default boolean showRouteOverlay() { return true; }
+
     // Hidden:JSON-encoded map of categoryId -> collapsed boolean. Empty = all expanded.
     @ConfigItem(
         keyName = "categoryCollapsedJson",
