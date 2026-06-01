@@ -1,6 +1,5 @@
 package com.waypointer.service;
 
-import com.waypointer.model.Library;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -9,60 +8,57 @@ import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Write-behind buffer for the waypoint library. A mutation calls {@link #schedule()}, which
- * snapshots the library to JSON on the calling thread and defers the disk write by a fixed
- * window; a burst of mutations collapses into a single write. {@link #flush()} forces an
- * immediate synchronous write of the current state.
- *
- * <p>Collaborator of {@link WaypointStore}, which owns the listener subscription that drives
- * {@link #schedule()}. This class is not wired to the EventBus and holds no listener tokens.
+ * Write-behind buffer. A mutation calls {@link #schedule()}, which snapshots the value to JSON on
+ * the calling thread and defers the disk write by a fixed window; a burst collapses into a single
+ * write. {@link #flush()} forces an immediate synchronous write. Generic over a
+ * {@link JsonSnapshotSink} so the same buffer serves the waypoint library and the route library.
  */
 @Slf4j
-class DebouncedSaver
+class DebouncedSaver<T>
 {
-    private final WaypointStorePersistence persistence;
+    private final JsonSnapshotSink<T> sink;
     private final ScheduledExecutorService scheduler;
     private final Duration debounce;
-    private final Supplier<Library> librarySupplier;
+    private final Supplier<T> valueSupplier;
     private volatile ScheduledFuture<?> pendingSave;
 
     DebouncedSaver(
-        WaypointStorePersistence persistence,
+        JsonSnapshotSink<T> sink,
         ScheduledExecutorService scheduler,
         Duration debounce,
-        Supplier<Library> librarySupplier)
+        Supplier<T> valueSupplier)
     {
-        this.persistence = persistence;
+        this.sink = sink;
         this.scheduler = scheduler;
         this.debounce = debounce;
-        this.librarySupplier = librarySupplier;
+        this.valueSupplier = valueSupplier;
     }
 
     /**
-     * Snapshots the library to JSON on the calling thread (mutations happen here, so iteration is
+     * Snapshots the value to JSON on the calling thread (mutations happen here, so iteration is
      * safe) and schedules the frozen bytes to be written after the debounce window, replacing any
-     * write still pending. Serializing off the scheduler thread avoids racing gson iteration
+     * write still pending. Serializing off the scheduler thread avoids racing Gson iteration
      * against a parallel mutation.
      */
     void schedule()
     {
         cancelPending();
-        final String json = persistence.serialize(librarySupplier.get());
+        final String json = sink.serialize(valueSupplier.get());
         pendingSave = scheduler.schedule(
             () -> {
-                boolean ok = persistence.writeBlocking(json);
-                if (!ok) log.warn("Library save failed");
+                boolean ok = sink.writeBlocking(json);
+                if (!ok) log.warn("Snapshot save failed");
             },
             debounce.toMillis(),
             TimeUnit.MILLISECONDS);
     }
 
-    /** Cancels any pending debounced write, then writes the current library synchronously. */
+    /** Cancels any pending debounced write, then writes the current value synchronously. */
     void flush()
     {
         cancelPending();
-        boolean ok = persistence.saveBlocking(librarySupplier.get());
-        if (!ok) log.warn("Library save failed");
+        boolean ok = sink.saveBlocking(valueSupplier.get());
+        if (!ok) log.warn("Snapshot save failed");
     }
 
     /** Cancels a pending debounced write if one is scheduled. Idempotent. */

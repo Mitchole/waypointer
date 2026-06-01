@@ -15,6 +15,9 @@ import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.preset.PresetCatalog;
 import com.waypointer.service.BboxIndex;
+import com.waypointer.service.RoutePlaybackEngine;
+import com.waypointer.service.RouteRecorder;
+import com.waypointer.service.RouteStore;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
@@ -122,21 +125,20 @@ public class TabHostTest
         host.onConfigChanged(event); // should not throw; should not call banner.refresh()
     }
 
-    private static TabHost buildHost()
+    @Test
+    public void routesTabHiddenWhenDisabled()
+    {
+        TabHost host = buildHost();
+        // buildHost stubs routesEnabled=false, devModeEnabled=false -> 2 tabs
+        assertEquals(2, host.visibleTabCountForTest());
+    }
+
+    @Test
+    public void routesTabShownWhenEnabled()
     {
         WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
         when(pathfinder.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
-        return buildHostWithPathfinder(pathfinder);
-    }
 
-    // Mocking WaypointerPanel directly is not viable: Mockito's subclass mock-maker
-    // produces a JPanel subclass whose Container fields are uninitialized, and adding
-    // such an instance to a real Container blows up inside Container.addImpl. So the
-    // test uses a real WaypointerPanel built from mocks (same pattern as
-    // WaypointerPanelTest.newPanel) — the inner panel's behaviour isn't under test
-    // here; TabHost's tab/card wiring and subscription lifecycle are.
-    private static TabHost buildHostWithPathfinder(WaypointPathfinder pathfinder)
-    {
         WaypointStore store = new WaypointStore();
         store.bootstrap(new Library());
 
@@ -148,6 +150,8 @@ public class TabHostTest
         when(config.categoryCollapsedJson()).thenReturn("{}");
         when(config.shortestPathBannerDismissed()).thenReturn(true);
         when(config.landmarkSelectionJson()).thenReturn("");
+        when(config.routesEnabled()).thenReturn(true);
+        when(config.devModeEnabled()).thenReturn(false);
 
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
@@ -183,6 +187,89 @@ public class TabHostTest
         DevPanel devPanel = mock(DevPanel.class);
         when(devPanel.getRoot()).thenReturn(new javax.swing.JPanel());
 
-        return new TabHost(waypointerPanel, presetPanel, devPanel, pathfinder, config);
+        RouteStore routeStore = mock(RouteStore.class);
+        when(routeStore.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        when(routeStore.getRoutesOrdered()).thenReturn(Collections.emptyList());
+        RoutePlaybackEngine routeEngine = mock(RoutePlaybackEngine.class);
+        when(routeEngine.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        RouteRecorder routeRecorder = mock(RouteRecorder.class);
+        RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class));
+
+        TabHost host = new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config);
+        assertEquals(3, host.visibleTabCountForTest());
+    }
+
+    private static TabHost buildHost()
+    {
+        WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
+        when(pathfinder.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        return buildHostWithPathfinder(pathfinder);
+    }
+
+    // Mocking WaypointerPanel directly is not viable: Mockito's subclass mock-maker
+    // produces a JPanel subclass whose Container fields are uninitialized, and adding
+    // such an instance to a real Container blows up inside Container.addImpl. So the
+    // test uses a real WaypointerPanel built from mocks (same pattern as
+    // WaypointerPanelTest.newPanel) — the inner panel's behaviour isn't under test
+    // here; TabHost's tab/card wiring and subscription lifecycle are.
+    private static TabHost buildHostWithPathfinder(WaypointPathfinder pathfinder)
+    {
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+
+        PresetCatalog catalog = mock(PresetCatalog.class);
+        when(catalog.getPresets()).thenReturn(Collections.emptyList());
+
+        WaypointerConfig config = mock(WaypointerConfig.class);
+        when(config.showPathingBanner()).thenReturn(true);
+        when(config.categoryCollapsedJson()).thenReturn("{}");
+        when(config.shortestPathBannerDismissed()).thenReturn(true);
+        when(config.landmarkSelectionJson()).thenReturn("");
+        when(config.routesEnabled()).thenReturn(false);
+        when(config.devModeEnabled()).thenReturn(false);
+
+        WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
+        when(persistence.isRefusingSaves()).thenReturn(false);
+
+        NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
+            mock(BboxIndex.class),
+            pathfinder,
+            mock(Client.class),
+            mock(ClientThread.class),
+            mock(SpriteManager.class),
+            config,
+            new Gson());
+
+        WaypointerPanel waypointerPanel = new WaypointerPanel(
+            store,
+            mock(WaypointCapture.class),
+            pathfinder,
+            config,
+            new CollapseStateCodec(new Gson()),
+            persistence,
+            mock(SpriteManager.class),
+            null,
+            null,
+            nearestLandmarkBar,
+            mock(Client.class),
+            mock(ClientThread.class),
+            mock(WildernessConfirmGate.class),
+            mock(WaypointShareCodec.class),
+            mock(LibraryJsonCodec.class));
+        PresetBrowserPanel presetPanel =
+            new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
+
+        DevPanel devPanel = mock(DevPanel.class);
+        when(devPanel.getRoot()).thenReturn(new javax.swing.JPanel());
+
+        RouteStore routeStore = mock(RouteStore.class);
+        when(routeStore.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        when(routeStore.getRoutesOrdered()).thenReturn(Collections.emptyList());
+        RoutePlaybackEngine routeEngine = mock(RoutePlaybackEngine.class);
+        when(routeEngine.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        RouteRecorder routeRecorder = mock(RouteRecorder.class);
+        RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class));
+
+        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config);
     }
 }
