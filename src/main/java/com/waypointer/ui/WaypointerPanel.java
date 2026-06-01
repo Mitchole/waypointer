@@ -237,7 +237,7 @@ public class WaypointerPanel extends PluginPanel
         this.footer = new FooterStrip(store);
 
         storeSub = store.subscribe(this::scheduleRebuild);
-        pathSub = pathfinder.subscribe(this::scheduleRebuild);
+        pathSub = pathfinder.subscribe(this::onActivePathChanged);
         rebuild();
     }
 
@@ -360,6 +360,41 @@ public class WaypointerPanel extends PluginPanel
             rebuildPending = false;
             rebuild();
         });
+    }
+
+    /**
+     * A path-target change only affects the active row's Play tint here -- the ActivePathBanner is
+     * refreshed separately by TabHost. Retint rows in place rather than rebuilding the whole body
+     * tree (which would reallocate every section/row and lose transient state). See issue #67.
+     */
+    private void onActivePathChanged()
+    {
+        // If a store-driven rebuild is also pending, it runs first on the EDT and rebuilds rows
+        // with the correct tint from the current target; this retint then no-ops (playIconButton
+        // is idempotent). The reverse order can't happen -- a path change never fires storeSub.
+        SwingUtilities.invokeLater(() -> {
+            int target = pathfinder.getActiveTarget();
+            retintRows(body, target);
+        });
+    }
+
+    // Walk the live body tree and set each WaypointRow's active state from the current target.
+    // Switching from row A to row B retints both naturally. Cheap relative to a full rebuild.
+    private void retintRows(java.awt.Container parent, int target)
+    {
+        for (Component child : parent.getComponents())
+        {
+            if (child instanceof WaypointRow)
+            {
+                WaypointRow row = (WaypointRow) child;
+                row.setActive(row.getPackedWorldPoint() == target
+                    && target != WorldPointPacker.UNDEFINED);
+            }
+            else if (child instanceof java.awt.Container)
+            {
+                retintRows((java.awt.Container) child, target);
+            }
+        }
     }
 
     @Subscribe

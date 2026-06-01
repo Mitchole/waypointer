@@ -37,6 +37,9 @@ public class WaypointRow extends JPanel implements DropIndicatable
     private final JLabel dragHandle;
     private final java.awt.Color restingBackground;
     private Border prevBorder;
+    // Non-null only outside select mode (select mode hides the Play button). Held so the panel can
+    // retint it in place on a path-target change instead of rebuilding the whole body tree (#67).
+    private JButton playButton;
 
     /** Start building a row for {@code waypoint}. Booleans default false; callbacks default no-op. */
     public static Spec spec(Waypoint waypoint)
@@ -204,6 +207,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
     {
         if (s.selectMode) return;
         JButton play = new JButton("▶"); // black right-pointing triangle
+        this.playButton = play;
         Styles.playIconButton(play, s.active);
         play.setToolTipText(s.active ? "Pathing here" : "Path to here");
         play.getAccessibleContext().setAccessibleName(
@@ -216,6 +220,25 @@ public class WaypointRow extends JPanel implements DropIndicatable
         eastPanel.setOpaque(false);
         eastPanel.add(play);
         add(eastPanel, BorderLayout.EAST);
+    }
+
+    /** Packed world point this row represents; used by the panel to find the active row. */
+    public int getPackedWorldPoint()
+    {
+        return waypoint.getPackedWorldPoint();
+    }
+
+    /**
+     * Retint the Play button to reflect whether this row is the active path target, in place.
+     * No-op in select mode, where the Play button is hidden. Lets the panel respond to a
+     * path-target change without rebuilding the body tree (#67).
+     */
+    public void setActive(boolean active)
+    {
+        if (playButton == null) return;
+        Styles.playIconButton(playButton, active);
+        playButton.setToolTipText(active ? "Pathing here" : "Path to here");
+        playButton.repaint();
     }
 
     public Waypoint getWaypoint() { return waypoint; }
