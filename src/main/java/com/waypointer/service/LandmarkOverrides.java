@@ -1,114 +1,82 @@
 package com.waypointer.service;
 
+import com.waypointer.codec.LandmarkOverridesCodec;
 import com.waypointer.service.LandmarkOverridesSnapshot.DeletedEntry;
 import com.waypointer.service.LandmarkOverridesSnapshot.Entry;
 import com.waypointer.service.LandmarkOverridesSnapshot.TypeOverride;
-import com.waypointer.util.Listeners;
-import com.waypointer.util.Listeners.Subscription;
+import com.google.gson.Gson;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import lombok.extern.slf4j.Slf4j;
+import net.runelite.client.RuneLite;
 
 // In-memory working set of dev-mode landmark overrides with pub/sub on mutation.
-// BboxIndex and the dev tab editors subscribe to react to edits.
-@Slf4j
+// BboxIndex and the dev tab editors subscribe to react to edits. Scaffolding (persistence,
+// debounce, undo, listeners) lives in OverridesStore.
 @Singleton
-public class LandmarkOverrides
+public class LandmarkOverrides extends OverridesStore<LandmarkOverridesSnapshot>
 {
-    private LandmarkOverridesSnapshot snapshot = LandmarkOverridesSnapshot.empty();
-    private final Listeners listeners = new Listeners();
-    private LandmarkOverridesSnapshot undoBuffer = null;
-    private final OverridePersistence persistence;
-    private final com.waypointer.codec.LandmarkOverridesCodec codec;
-    private volatile boolean dirty = false;
-    private final java.util.concurrent.ScheduledExecutorService scheduler;
-
     @Inject
-    public LandmarkOverrides(com.waypointer.codec.LandmarkOverridesCodec codec)
+    public LandmarkOverrides(LandmarkOverridesCodec codec)
     {
-        this(net.runelite.client.RuneLite.RUNELITE_DIR.toPath().resolve("waypointer"), codec,
-            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+        this(RuneLite.RUNELITE_DIR.toPath().resolve("waypointer"), codec,
+            Executors.newSingleThreadScheduledExecutor(
                 r -> { Thread t = new Thread(r, "waypointer-landmark-overrides"); t.setDaemon(true); return t; }));
         loadFromDisk();
     }
 
-    LandmarkOverrides(java.nio.file.Path dir, com.waypointer.codec.LandmarkOverridesCodec codec,
-        java.util.concurrent.ScheduledExecutorService scheduler)
+    LandmarkOverrides(Path dir, LandmarkOverridesCodec codec, ScheduledExecutorService scheduler)
     {
-        this.persistence = new OverridePersistence(dir, "landmark-overrides.json");
-        this.codec = codec;
-        this.scheduler = scheduler;
+        super(dir, "landmark-overrides.json", codec, scheduler, LandmarkOverridesSnapshot.empty());
     }
 
-    public static LandmarkOverrides forTesting(com.google.gson.Gson gson)
+    public static LandmarkOverrides forTesting(Gson gson)
     {
         try
         {
-            return forTesting(java.nio.file.Files.createTempDirectory("lo-mem"),
-                new com.waypointer.codec.LandmarkOverridesCodec(gson));
+            return forTesting(Files.createTempDirectory("lo-mem"), new LandmarkOverridesCodec(gson));
         }
-        catch (java.io.IOException e) { throw new RuntimeException(e); }
+        catch (IOException e) { throw new RuntimeException(e); }
     }
 
-    public static LandmarkOverrides forTesting(java.nio.file.Path dir,
-        com.waypointer.codec.LandmarkOverridesCodec codec)
+    public static LandmarkOverrides forTesting(Path dir, LandmarkOverridesCodec codec)
     {
         return new LandmarkOverrides(dir, codec,
-            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+            Executors.newSingleThreadScheduledExecutor(
                 r -> { Thread t = new Thread(r, "waypointer-landmark-overrides-test"); t.setDaemon(true); return t; }));
     }
 
-    public void loadFromDisk()
-    {
-        snapshot = codec.decode(persistence.loadOrEmpty());
-        dedupeDeletions(snapshot);
-        listeners.fire();
-    }
-
-    public boolean flushBlocking()
-    {
-        return persistence.writeBlocking(codec.encode(snapshot));
-    }
-
-    private void scheduleSave()
-    {
-        if (dirty) return;
-        dirty = true;
-        scheduler.schedule(() -> {
-            dirty = false;
-            flushBlocking();
-        }, 500, java.util.concurrent.TimeUnit.MILLISECONDS);
-    }
-
-    public LandmarkOverridesSnapshot getSnapshot() { return snapshot; }
-
-    public Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
-
     public void addEntry(String type, Entry e)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         TypeOverride t = snapshot.getByType().computeIfAbsent(type,
             k -> new TypeOverride(new ArrayList<>()));
         t.getEntries().add(e);
-        listeners.fire();
+        fire();
         scheduleSave();
     }
 
     public void replaceEntry(String type, Entry original, Entry updated)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         TypeOverride t = snapshot.getByType().get(type);
         if (t == null)
         {
             TypeOverride created = new TypeOverride(new ArrayList<>());
             created.getEntries().add(updated);
             snapshot.getByType().put(type, created);
-            listeners.fire();
+            fire();
             scheduleSave();
             return;
         }
@@ -117,7 +85,7 @@ public class LandmarkOverrides
             if (sameTuple(t.getEntries().get(i), original))
             {
                 t.getEntries().set(i, updated);
-                listeners.fire();
+                fire();
                 scheduleSave();
                 return;
             }
@@ -128,28 +96,28 @@ public class LandmarkOverrides
         TypeOverride tt = snapshot.getByType().computeIfAbsent(type,
             k -> new TypeOverride(new ArrayList<>()));
         tt.getEntries().add(updated);
-        listeners.fire();
+        fire();
         scheduleSave();
     }
 
     public void deleteOverrideEntry(String type, Entry e)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         TypeOverride t = snapshot.getByType().get(type);
         if (t == null) return;
         t.getEntries().removeIf(x -> sameTuple(x, e));
-        listeners.fire();
+        fire();
         scheduleSave();
     }
 
     public void deleteBundledEntry(String type, String name, int x1, int y1, int x2, int y2, int plane)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         if (!deletionExists(type, name, x1, y1, x2, y2, plane))
         {
             snapshot.getDeletions().add(new DeletedEntry(type, name, x1, y1, x2, y2, plane));
         }
-        listeners.fire();
+        fire();
         scheduleSave();
     }
 
@@ -161,13 +129,13 @@ public class LandmarkOverrides
      */
     public void deleteEntry(String type, String name, int x1, int y1, int x2, int y2, int plane)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         TypeOverride t = snapshot.getByType().get(type);
         if (t != null && t.getEntries().removeIf(x ->
             x.getX1() == x1 && x.getY1() == y1 && x.getX2() == x2 && x.getY2() == y2
                 && x.getPlane() == plane && Objects.equals(x.getName(), name)))
         {
-            listeners.fire();
+            fire();
             scheduleSave();
             return;
         }
@@ -175,7 +143,7 @@ public class LandmarkOverrides
         {
             snapshot.getDeletions().add(new DeletedEntry(type, name, x1, y1, x2, y2, plane));
         }
-        listeners.fire();
+        fire();
         scheduleSave();
     }
 
@@ -190,27 +158,24 @@ public class LandmarkOverrides
         return false;
     }
 
+    @Override
+    protected void afterDecode(LandmarkOverridesSnapshot decoded)
+    {
+        dedupeDeletions(decoded);
+    }
+
     // Drops duplicate deletion tuples (same type+name+bbox+plane), keeping first occurrence.
     // Cleans files written before the delete paths guarded against duplicates.
     private static void dedupeDeletions(LandmarkOverridesSnapshot s)
     {
-        java.util.Set<String> seen = new java.util.HashSet<>();
+        Set<String> seen = new HashSet<>();
         s.getDeletions().removeIf(d -> !seen.add(
             d.getType() + "|" + d.getName() + "|" + d.getX1() + "," + d.getY1()
                 + "," + d.getX2() + "," + d.getY2() + "," + d.getPlane()));
     }
 
-    public boolean undoLast()
-    {
-        if (undoBuffer == null) return false;
-        snapshot = undoBuffer;
-        undoBuffer = null;
-        listeners.fire();
-        scheduleSave();
-        return true;
-    }
-
-    private static LandmarkOverridesSnapshot deepCopy(LandmarkOverridesSnapshot src)
+    @Override
+    protected LandmarkOverridesSnapshot deepCopy(LandmarkOverridesSnapshot src)
     {
         Map<String, TypeOverride> by = new LinkedHashMap<>();
         for (Map.Entry<String, TypeOverride> e : src.getByType().entrySet())

@@ -94,6 +94,7 @@ public class LandmarkOverridesTest
         reread.loadFromDisk();
         assertEquals(1, reread.getSnapshot().getDeletions().size());
 
+        reread.close();
         java.nio.file.Files.walk(dir).sorted(java.util.Comparator.reverseOrder())
             .forEach(p -> { try { java.nio.file.Files.deleteIfExists(p); } catch (Exception ignored) {} });
     }
@@ -146,6 +147,8 @@ public class LandmarkOverridesTest
         assertEquals(1, reread.getSnapshot().getByType().get("BANK").getEntries().size());
 
         // cleanup
+        ov.close();
+        reread.close();
         java.nio.file.Files.walk(dir).sorted(java.util.Comparator.reverseOrder())
             .forEach(p -> { try { java.nio.file.Files.deleteIfExists(p); } catch (Exception ignored) {} });
     }

@@ -95,6 +95,8 @@ public class PresetOverridesTest
         reread.loadFromDisk();
         assertEquals(1, reread.getSnapshot().getByCategory().get("Bosses").getWaypoints().size());
 
+        ov.close();
+        reread.close();
         java.nio.file.Files.walk(dir).sorted(java.util.Comparator.reverseOrder())
             .forEach(p -> { try { java.nio.file.Files.deleteIfExists(p); } catch (Exception ignored) {} });
     }

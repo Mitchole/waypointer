@@ -7,7 +7,7 @@ import javax.inject.Singleton;
 
 /** Gson-backed encode/decode for {@link LandmarkOverridesSnapshot}. */
 @Singleton
-public class LandmarkOverridesCodec
+public class LandmarkOverridesCodec implements SnapshotCodec<LandmarkOverridesSnapshot>
 {
     private final Gson gson;
 
@@ -17,26 +17,20 @@ public class LandmarkOverridesCodec
         this.gson = gson;
     }
 
+    @Override
     public String encode(LandmarkOverridesSnapshot snapshot)
     {
         return gson.toJson(snapshot);
     }
 
+    @Override
     public LandmarkOverridesSnapshot decode(String json)
     {
-        if (json == null || json.isEmpty()) return LandmarkOverridesSnapshot.empty();
-        try
-        {
-            LandmarkOverridesSnapshot decoded = gson.fromJson(json, LandmarkOverridesSnapshot.class);
-            if (decoded == null) return LandmarkOverridesSnapshot.empty();
-            return new LandmarkOverridesSnapshot(
+        return SnapshotCodec.decodeWithDefaults(gson, json, LandmarkOverridesSnapshot.class,
+            LandmarkOverridesSnapshot::empty,
+            decoded -> new LandmarkOverridesSnapshot(
                 decoded.getVersion() == 0 ? LandmarkOverridesSnapshot.CURRENT_SCHEMA_VERSION : decoded.getVersion(),
                 decoded.getByType() == null ? new java.util.LinkedHashMap<>() : decoded.getByType(),
-                decoded.getDeletions() == null ? new java.util.ArrayList<>() : decoded.getDeletions());
-        }
-        catch (com.google.gson.JsonParseException e)
-        {
-            return LandmarkOverridesSnapshot.empty();
-        }
+                decoded.getDeletions() == null ? new java.util.ArrayList<>() : decoded.getDeletions()));
     }
 }

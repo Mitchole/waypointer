@@ -1,96 +1,64 @@
 package com.waypointer.service;
 
+import com.waypointer.codec.PresetOverridesCodec;
 import com.waypointer.service.PresetOverridesSnapshot.CategoryOverride;
 import com.waypointer.service.PresetOverridesSnapshot.DeletedWaypoint;
 import com.waypointer.service.PresetOverridesSnapshot.Waypoint;
-import com.waypointer.util.Listeners;
-import com.waypointer.util.Listeners.Subscription;
+import com.google.gson.Gson;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import lombok.extern.slf4j.Slf4j;
+import net.runelite.client.RuneLite;
 
 // In-memory working set of dev-mode preset overrides with pub/sub on mutation.
-// PresetCatalog and the dev tab editors subscribe to react to edits.
-@Slf4j
+// PresetCatalog and the dev tab editors subscribe to react to edits. Scaffolding
+// (persistence, debounce, undo, listeners) lives in OverridesStore.
 @Singleton
-public class PresetOverrides
+public class PresetOverrides extends OverridesStore<PresetOverridesSnapshot>
 {
-    private PresetOverridesSnapshot snapshot = PresetOverridesSnapshot.empty();
-    private PresetOverridesSnapshot undoBuffer = null;
-    private final Listeners listeners = new Listeners();
-    private final OverridePersistence persistence;
-    private final com.waypointer.codec.PresetOverridesCodec codec;
-    private volatile boolean dirty = false;
-    private final java.util.concurrent.ScheduledExecutorService scheduler;
-
     @Inject
-    public PresetOverrides(com.waypointer.codec.PresetOverridesCodec codec)
+    public PresetOverrides(PresetOverridesCodec codec)
     {
-        this(net.runelite.client.RuneLite.RUNELITE_DIR.toPath().resolve("waypointer"), codec,
-            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+        this(RuneLite.RUNELITE_DIR.toPath().resolve("waypointer"), codec,
+            Executors.newSingleThreadScheduledExecutor(
                 r -> { Thread t = new Thread(r, "waypointer-preset-overrides"); t.setDaemon(true); return t; }));
         loadFromDisk();
     }
 
-    PresetOverrides(java.nio.file.Path dir, com.waypointer.codec.PresetOverridesCodec codec,
-        java.util.concurrent.ScheduledExecutorService scheduler)
+    PresetOverrides(Path dir, PresetOverridesCodec codec, ScheduledExecutorService scheduler)
     {
-        this.persistence = new OverridePersistence(dir, "preset-overrides.json");
-        this.codec = codec;
-        this.scheduler = scheduler;
+        super(dir, "preset-overrides.json", codec, scheduler, PresetOverridesSnapshot.empty());
     }
 
-    public static PresetOverrides forTesting(com.google.gson.Gson gson)
+    public static PresetOverrides forTesting(Gson gson)
     {
         try
         {
-            return forTesting(java.nio.file.Files.createTempDirectory("po-mem"),
-                new com.waypointer.codec.PresetOverridesCodec(gson));
+            return forTesting(Files.createTempDirectory("po-mem"), new PresetOverridesCodec(gson));
         }
-        catch (java.io.IOException e) { throw new RuntimeException(e); }
+        catch (IOException e) { throw new RuntimeException(e); }
     }
 
-    public static PresetOverrides forTesting(java.nio.file.Path dir,
-        com.waypointer.codec.PresetOverridesCodec codec)
+    public static PresetOverrides forTesting(Path dir, PresetOverridesCodec codec)
     {
         return new PresetOverrides(dir, codec,
-            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
+            Executors.newSingleThreadScheduledExecutor(
                 r -> { Thread t = new Thread(r, "waypointer-preset-overrides-test"); t.setDaemon(true); return t; }));
     }
-
-    public void loadFromDisk()
-    {
-        snapshot = codec.decode(persistence.loadOrEmpty());
-        listeners.fire();
-    }
-
-    public boolean flushBlocking()
-    {
-        return persistence.writeBlocking(codec.encode(snapshot));
-    }
-
-    private void scheduleSave()
-    {
-        if (dirty) return;
-        dirty = true;
-        scheduler.schedule(() -> {
-            dirty = false;
-            flushBlocking();
-        }, 500, java.util.concurrent.TimeUnit.MILLISECONDS);
-    }
-
-    public PresetOverridesSnapshot getSnapshot() { return snapshot; }
-    public Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
 
     // If original is null, append. Otherwise replace the entry matching the original tuple.
     public void upsertWaypoint(String category, Waypoint original, Waypoint updated)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         CategoryOverride co = snapshot.getByCategory().computeIfAbsent(category,
             k -> new CategoryOverride(k, null, null, new ArrayList<>()));
         if (original != null)
@@ -100,70 +68,61 @@ public class PresetOverrides
                 if (sameTuple(co.getWaypoints().get(i), original))
                 {
                     co.getWaypoints().set(i, updated);
-                    listeners.fire();
+                    fire();
                     scheduleSave();
                     return;
                 }
             }
         }
         co.getWaypoints().add(updated);
-        listeners.fire();
+        fire();
         scheduleSave();
     }
 
     public void deleteOverrideWaypoint(String category, Waypoint w)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         CategoryOverride co = snapshot.getByCategory().get(category);
         if (co == null) return;
         co.getWaypoints().removeIf(x -> sameTuple(x, w));
-        listeners.fire();
+        fire();
         scheduleSave();
     }
 
     public void deleteBundledWaypoint(String category, String name, int x, int y, int plane)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         snapshot.getDeletedWaypoints().add(new DeletedWaypoint(category, name, x, y, plane));
-        listeners.fire();
+        fire();
         scheduleSave();
     }
 
     public boolean addCategory(CategoryOverride co)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         if (snapshot.getByCategory().containsKey(co.getCategory())) return false;
         for (CategoryOverride existing : snapshot.getAddedCategories())
         {
             if (Objects.equals(existing.getCategory(), co.getCategory())) return false;
         }
         snapshot.getAddedCategories().add(co);
-        listeners.fire();
+        fire();
         scheduleSave();
         return true;
     }
 
     public void deleteCategory(String name)
     {
-        undoBuffer = deepCopy(snapshot);
+        beginMutation();
         snapshot.getDeletedCategories().add(name);
         snapshot.getByCategory().remove(name);
         snapshot.getAddedCategories().removeIf(c -> Objects.equals(c.getCategory(), name));
-        listeners.fire();
+        fire();
         scheduleSave();
     }
 
-    public boolean undoLast()
-    {
-        if (undoBuffer == null) return false;
-        snapshot = undoBuffer;
-        undoBuffer = null;
-        listeners.fire();
-        scheduleSave();
-        return true;
-    }
-
-    private static PresetOverridesSnapshot deepCopy(PresetOverridesSnapshot src)
+    @Override
+    protected PresetOverridesSnapshot deepCopy(PresetOverridesSnapshot src)
     {
         Map<String, CategoryOverride> by = new LinkedHashMap<>();
         for (Map.Entry<String, CategoryOverride> e : src.getByCategory().entrySet())
