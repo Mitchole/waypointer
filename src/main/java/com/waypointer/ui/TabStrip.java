@@ -10,7 +10,7 @@ import net.runelite.client.ui.FontManager;
 // host include the Dev tab only when dev mode is on.
 final class TabStrip extends EnumTabStrip<TabStrip.Tab>
 {
-    enum Tab { MY_WAYPOINTS, PRESETS, DEV }
+    enum Tab { MY_WAYPOINTS, PRESETS, ROUTES, DEV }
 
     TabStrip(Consumer<Tab> onSelect)
     {
@@ -29,6 +29,7 @@ final class TabStrip extends EnumTabStrip<TabStrip.Tab>
         {
             case MY_WAYPOINTS: return "My waypoints";
             case PRESETS:      return "Presets";
+            case ROUTES:       return "Routes";
             case DEV:          return "Dev";
         }
         return t.name();
