@@ -133,8 +133,9 @@ public class WaypointerPlugin extends Plugin
         if (!"waypointer".equals(e.getGroup())) return;
         if ("devModeEnabled".equals(e.getKey()))
         {
-            // remove() first so a repeated "on" event can't stack a second copy --
-            // OverlayManager.add does not dedupe, and startUp() may already have added it.
+            // remove() first so the toggle path is symmetric and self-evidently single-copy,
+            // regardless of whether startUp() already added it. (OverlayManager.add is itself
+            // idempotent -- it ignores an overlay it already holds -- so this is belt-and-braces.)
             overlayManager.remove(areaPreviewOverlay);
             if (config.devModeEnabled()) overlayManager.add(areaPreviewOverlay);
         }
