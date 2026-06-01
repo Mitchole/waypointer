@@ -139,8 +139,8 @@ public class TabHost extends PluginPanel
 
     /**
      * Right-click capture entry point: open the sidebar (if not already), switch to the Waypoints
-     * tab, and pop the inline capture form prefilled for {@code packed}. Replaces the old modal
-     * CaptureDialog so saving a waypoint never steals focus from the game canvas.
+     * tab, and pop the inline capture form prefilled for {@code packed}. The form stays inline
+     * rather than modal so saving a waypoint never steals focus from the game canvas.
      */
     public void openToCapture(int packed, String defaultName, String npcName)
     {

@@ -26,8 +26,8 @@ import javax.swing.KeyStroke;
 import net.runelite.client.ui.ColorScheme;
 
 /**
- * Inline capture form parked at the top of the body. Replaces the application-modal
- * CaptureDialog for the panel's Mark button so saving a waypoint never steals focus
+ * Inline capture form parked at the top of the body, shown by the panel's Mark button and by
+ * right-click capture. Kept inline rather than modal so saving a waypoint never steals focus
  * from the game canvas.
  */
 class CaptureForm extends JPanel

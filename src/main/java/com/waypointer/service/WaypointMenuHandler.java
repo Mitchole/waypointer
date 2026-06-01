@@ -147,7 +147,7 @@ public class WaypointMenuHandler
         if (p == null) return;
         int packed = calculateMapPoint(p.getX(), p.getY());
         if (packed == WorldPointPacker.UNDEFINED) return;
-        openCaptureDialog(packed);
+        openCapture(packed);
     }
 
     private void onSaveFromTile(MenuEntry entry)
@@ -158,7 +158,7 @@ public class WaypointMenuHandler
         if (local == null) return;
         WorldPoint wp = WorldPoint.fromLocalInstance(client, local);
         if (wp == null) return;
-        openCaptureDialog(WorldPointPacker.pack(wp));
+        openCapture(WorldPointPacker.pack(wp));
     }
 
     private void onSaveFromNpc(net.runelite.api.NPC npc)
@@ -167,22 +167,22 @@ public class WaypointMenuHandler
         WorldPoint wp = npc.getWorldLocation();
         if (wp == null) return;
         String npcName = npc.getName();
-        openCaptureDialog(WorldPointPacker.pack(wp), npcName, npcName);
+        openCapture(WorldPointPacker.pack(wp), npcName, npcName);
     }
 
     private void onSaveFromObject(int sceneX, int sceneY, int plane, String name)
     {
         WorldPoint wp = WorldPoint.fromScene(client, sceneX, sceneY, plane);
         if (wp == null) return;
-        openCaptureDialog(WorldPointPacker.pack(wp), name, null);
+        openCapture(WorldPointPacker.pack(wp), name, null);
     }
 
-    private void openCaptureDialog(int packed)
+    private void openCapture(int packed)
     {
-        openCaptureDialog(packed, null, null);
+        openCapture(packed, null, null);
     }
 
-    private void openCaptureDialog(int packed, String defaultName, String targetNpcName)
+    private void openCapture(int packed, String defaultName, String targetNpcName)
     {
         if (packed == WorldPointPacker.UNDEFINED) return;
         SwingUtilities.invokeLater(() -> tabHost.openToCapture(packed, defaultName, targetNpcName));

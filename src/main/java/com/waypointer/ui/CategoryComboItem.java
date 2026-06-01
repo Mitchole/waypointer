@@ -4,7 +4,7 @@ import com.waypointer.model.Category;
 import java.util.UUID;
 
 // JComboBox item wrapping a Category. A sentinel item (null category) carries a plain label
-// instead - used by CaptureDialog for its "+ New category..." row. The combo box renders
+// instead - used by CaptureForm for its "+ New category..." row. The combo box renders
 // items via toString().
 final class CategoryComboItem
 {

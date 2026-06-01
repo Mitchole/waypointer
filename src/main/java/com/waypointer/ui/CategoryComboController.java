@@ -10,8 +10,8 @@ import javax.swing.JComboBox;
  * Shared category-combo machinery for the capture forms. Owns populating the combo with the
  * ordered categories plus the "+ New category..." sentinel, tracking the last real selection,
  * and resolving the selected id at save time. The "+ New category" reaction itself stays with
- * each host (modal prompt in CaptureDialog, inline row in CaptureForm) -- only the mechanical
- * rebuild + resolution are shared.
+ * the host -- CaptureForm's inline row -- while only the mechanical rebuild + resolution are
+ * shared here.
  */
 class CategoryComboController
 {
