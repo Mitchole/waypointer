@@ -232,7 +232,16 @@ public class RoutesPanel extends JPanel
             if (name != null && !name.trim().isEmpty()) store.renameRoute(routeId, name.trim());
         }));
         menu.add(menuItem("Duplicate", () -> store.duplicateRoute(routeId)));
-        menu.add(menuItem("Delete", () -> store.deleteRoute(routeId)));
+        menu.add(menuItem("Delete", () -> {
+            Route r = store.getRouteById(routeId);
+            String name = r == null ? "this route" : "'" + r.getName() + "'";
+            String[] options = {"Cancel", "Delete"};
+            int choice = JOptionPane.showOptionDialog(this,
+                "Delete " + name + "? This cannot be undone.",
+                "Delete route", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                null, options, options[0]);
+            if (choice == 1) store.deleteRoute(routeId);
+        }));
         menu.show(this, getWidth() / 2, 40);
     }
 
