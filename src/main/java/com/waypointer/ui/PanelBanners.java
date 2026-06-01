@@ -2,6 +2,9 @@ package com.waypointer.ui;
 
 import com.waypointer.WaypointerConfig;
 import com.waypointer.model.Library;
+import com.waypointer.model.route.RouteLibrary;
+import com.waypointer.service.RouteStore;
+import com.waypointer.service.RouteStorePersistence;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
 import java.awt.BorderLayout;
@@ -18,10 +21,10 @@ import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
 
 /**
- * Static factories for the two transient body banners the panel can show above its category list:
- * the "Shortest Path missing" notice (with a dismiss-forever button) and the "library load failed"
- * reset banner. Both are height-capped via {@link Styles#cappedHeightPanel} so the body's
- * {@code BoxLayout(Y_AXIS)} does not stretch them.
+ * Static factories for the transient body banners panels can show above their content lists:
+ * the "Shortest Path missing" notice (with a dismiss-forever button), the waypoint "library load
+ * failed" reset banner, and its routes-tab equivalent. All are height-capped via
+ * {@link Styles#cappedHeightPanel} so the containing {@code BoxLayout(Y_AXIS)} does not stretch them.
  */
 final class PanelBanners
 {
@@ -82,6 +85,44 @@ final class PanelBanners
             catch (IOException ignored) {}
             persistence.allowSavesAfterReset();
             store.bootstrap(new Library());
+        });
+        p.add(reset, BorderLayout.EAST);
+        return p;
+    }
+
+    /**
+     * Routes-tab equivalent of {@link #loadFailedReset}: shown when routes.json and its backup
+     * both failed to load and the route store is refusing saves. Reset confirms, deletes the
+     * unreadable files, clears the freeze, and bootstraps an empty route library; the store's
+     * own listeners drive the subsequent rebuild. {@code dialogParent} owns the confirm dialog.
+     */
+    static JComponent routeLoadFailedReset(RouteStorePersistence persistence, RouteStore store,
+        Component dialogParent)
+    {
+        JPanel p = Styles.cappedHeightPanel(new BorderLayout(4, 4));
+        p.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        p.setAlignmentX(Component.LEFT_ALIGNMENT);
+        p.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(180, 40, 40)),
+            BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+        JLabel resetMsg = new JLabel("<html>Routes failed to load - backup also unreadable.<br>"
+            + "Click Reset to start fresh, or fix the file at:<br><tt>"
+            + persistence.routesFile() + "</tt></html>");
+        resetMsg.setForeground(Color.WHITE);
+        p.add(resetMsg, BorderLayout.CENTER);
+        JButton reset = new JButton("Reset routes");
+        Styles.secondaryButton(reset);
+        reset.addActionListener(e -> {
+            int ok = JOptionPane.showConfirmDialog(dialogParent,
+                "This will discard the unreadable route files. Continue?",
+                "Reset routes", JOptionPane.OK_CANCEL_OPTION);
+            if (ok != JOptionPane.OK_OPTION) return;
+            try { Files.deleteIfExists(persistence.routesFile()); }
+            catch (IOException ignored) {}
+            try { Files.deleteIfExists(persistence.backupFile()); }
+            catch (IOException ignored) {}
+            persistence.allowSavesAfterReset();
+            store.bootstrap(new RouteLibrary());
         });
         p.add(reset, BorderLayout.EAST);
         return p;

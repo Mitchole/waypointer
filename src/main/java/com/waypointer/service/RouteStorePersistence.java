@@ -45,7 +45,7 @@ public class RouteStorePersistence implements JsonSnapshotSink<RouteLibrary>
 
     public boolean isRefusingSaves() { return refuseSavesUntilReset; }
 
-    /** Clears the corrupt-state freeze so the next save proceeds; used by a future reset action. */
+    /** Clears the corrupt-state freeze so the next save proceeds; driven by the Routes reset banner. */
     public void allowSavesAfterReset() { refuseSavesUntilReset = false; }
 
     // tryLoad returns null for an absent OR transiently-unreadable file (a clean miss) and only

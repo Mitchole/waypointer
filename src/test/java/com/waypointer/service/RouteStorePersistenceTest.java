@@ -1,5 +1,6 @@
 package com.waypointer.service;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import com.google.gson.Gson;
@@ -80,5 +81,23 @@ public class RouteStorePersistenceTest
         Files.write(p.routesFile(), "{ not json".getBytes());
         RouteLibrary loaded = p.loadOrEmpty();
         assertEquals(1, loaded.getRoutes().size());   // recovered from backup
+    }
+
+    @Test
+    public void refusesSavesWhenBothFilesCorruptThenAllowsAfterReset() throws Exception
+    {
+        RouteStorePersistence p = newPersistence();
+        p.saveBlocking(oneRoute());                          // create primary + backup
+        Files.write(p.routesFile(), "{ not json".getBytes());
+        Files.write(p.backupFile(), "{ also not json".getBytes());
+
+        RouteLibrary loaded = p.loadOrEmpty();               // both unreadable -> empty + freeze
+        assertEquals(0, loaded.getRoutes().size());
+        assertTrue(p.isRefusingSaves());
+        assertFalse(p.saveBlocking(oneRoute()));             // frozen: save refused
+
+        p.allowSavesAfterReset();                            // the path the reset banner now drives
+        assertFalse(p.isRefusingSaves());
+        assertTrue(p.saveBlocking(oneRoute()));              // save proceeds again
     }
 }
