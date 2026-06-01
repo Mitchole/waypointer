@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.LayoutManager;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
@@ -205,6 +206,22 @@ final class Styles
     static Dimension capHeight(Component c)
     {
         return new Dimension(Integer.MAX_VALUE, c.getPreferredSize().height);
+    }
+
+    /**
+     * A {@link JPanel} whose maximum height is pinned to its preferred height, so a
+     * {@code BoxLayout(Y_AXIS)} parent does not stretch it vertically. Used for banners,
+     * the footer, and the empty-state block.
+     */
+    public static JPanel cappedHeightPanel(LayoutManager lm)
+    {
+        return new JPanel(lm)
+        {
+            @Override public Dimension getMaximumSize()
+            {
+                return Styles.capHeight(this);
+            }
+        };
     }
 
     static DocumentListener documentListener(Runnable onChange)

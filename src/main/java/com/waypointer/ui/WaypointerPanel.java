@@ -18,12 +18,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.LayoutManager;
 import java.awt.Window;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -81,6 +78,7 @@ public class WaypointerPanel extends PluginPanel
     private final CaptureForm captureForm;
     private final BulkSelectController bulkSelect;
     private final CategoryMenuController categoryMenu;
+    private final FooterStrip footer;
     private final JPanel body = new JPanel();
     private final JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
@@ -96,20 +94,6 @@ public class WaypointerPanel extends PluginPanel
 
     private final ClearableTextField searchField = new ClearableTextField("Search waypoints...");
     private String currentFilter = "";
-
-    // Footer (#23): one static tip chosen once per panel instance (one plugin-enable). No timer,
-    // no rotation at runtime. Index varies across restarts via the nanoTime seed. The tips are
-    // verified against current features (export lives on the overflow menu since #36).
-    private static final String[] FOOTER_TIPS = {
-        "Drag the dot-grip to reorder",
-        "Click a row to edit it inline",
-        "Open the ⋮ menu to import or export",
-        "Pin a waypoint to keep it up top",
-        "Use Select for bulk move and delete",
-        "Right-click a waypoint for quick actions",
-        "Search by name or category",
-    };
-    private final int footerTipIndex = Math.floorMod(System.nanoTime(), FOOTER_TIPS.length);
 
     // Subscription tokens so the panel can deregister cleanly. Held even though the panel is
     // a Singleton today, in case shutdown ordering changes or the panel ever gets re-created.
@@ -250,6 +234,8 @@ public class WaypointerPanel extends PluginPanel
 
         this.categoryMenu = new CategoryMenuController(store, spriteManager, iconCatalog,
             toastOverlay, this);
+
+        this.footer = new FooterStrip(store);
 
         storeSub = store.subscribe(this::scheduleRebuild);
         pathSub = pathfinder.subscribe(this::scheduleRebuild);
@@ -474,11 +460,11 @@ public class WaypointerPanel extends PluginPanel
 
         if (!pathfinder.isAvailable() && !config.shortestPathBannerDismissed())
         {
-            body.add(buildShortestPathMissingBanner());
+            body.add(PanelBanners.shortestPathMissing(config, this::rebuild));
         }
         if (persistence.isRefusingSaves())
         {
-            body.add(buildResetBanner());
+            body.add(PanelBanners.loadFailedReset(persistence, store, this));
         }
 
         // Synthetic Pinned section: render before normal categories. Honors the active filter
@@ -599,7 +585,8 @@ public class WaypointerPanel extends PluginPanel
         // Footer (#23) sits below the glue: pinned to the viewport bottom on a short list,
         // scrolls in after the last section on a long one. Divider separates it from the list.
         body.add(buildSectionDivider());
-        body.add(buildFooter());
+        footer.refresh();
+        body.add(footer);
         body.revalidate();
         body.repaint();
     }
@@ -618,7 +605,7 @@ public class WaypointerPanel extends PluginPanel
 
     private void renderEmpty()
     {
-        JPanel wrap = newCappedHeightPanel(new BorderLayout());
+        JPanel wrap = Styles.cappedHeightPanel(new BorderLayout());
         wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
         wrap.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -650,57 +637,6 @@ public class WaypointerPanel extends PluginPanel
         divider.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
         divider.setAlignmentX(Component.LEFT_ALIGNMENT);
         return divider;
-    }
-
-    // Pure count-line formatter for the footer (#23). Package-private so it is unit-testable
-    // without constructing the Swing panel. Separator is U+00B7 (middle dot).
-    static String footerCountText(int waypoints, int categories)
-    {
-        return waypoints + (waypoints == 1 ? " waypoint" : " waypoints")
-            + " · "
-            + categories + (categories == 1 ? " category" : " categories");
-    }
-
-    // Footer strip (#23): centered count line + one static tip. Appended as the last body child
-    // after the vertical glue, so on a short list the glue pins it to the bottom of the viewport
-    // and on a long list it scrolls in after the last section. Height-capped like the banners so
-    // the body's BoxLayout(Y_AXIS) does not stretch it. Never hidden — renders in every state.
-    // The waypoint count is the full library total; the category count is non-empty categories
-    // only (an empty category, including a freshly created one, contributes 0). Neither count
-    // changes with the active search filter.
-    private JComponent buildFooter()
-    {
-        int waypoints = store.getLibrary().getWaypoints().size();
-        int categories = 0;
-        for (Category c : store.getCategoriesOrdered())
-        {
-            if (!store.getWaypointsInCategory(c.getId()).isEmpty()) categories++;
-        }
-
-        JPanel footer = newCappedHeightPanel(new BorderLayout());
-        footer.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        footer.setAlignmentX(Component.LEFT_ALIGNMENT);
-        footer.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
-
-        JLabel label = new JLabel("<html><div style='text-align:center;'>"
-            + "<span style='color:#9b9b9b;'>" + footerCountText(waypoints, categories) + "</span><br>"
-            + "<span style='color:#6e6e6e;font-style:italic;'>" + FOOTER_TIPS[footerTipIndex] + "</span>"
-            + "</div></html>", SwingConstants.CENTER);
-        footer.add(label, BorderLayout.CENTER);
-        return footer;
-    }
-
-    // JPanel whose maximum height collapses to its preferred height, so banners don't get
-    // stretched vertically by the body's BoxLayout(Y_AXIS).
-    private static JPanel newCappedHeightPanel(LayoutManager lm)
-    {
-        return new JPanel(lm)
-        {
-            @Override public Dimension getMaximumSize()
-            {
-                return Styles.capHeight(this);
-            }
-        };
     }
 
     // Shared inline-edit provider used by Pinned and real-category sections.
@@ -746,55 +682,6 @@ public class WaypointerPanel extends PluginPanel
                 break;
             }
         }
-    }
-
-    private JComponent buildShortestPathMissingBanner()
-    {
-        JPanel p = newCappedHeightPanel(new BorderLayout(4, 4));
-        p.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(140, 100, 0)),
-            BorderFactory.createEmptyBorder(6, 8, 6, 8)));
-        JLabel msg = new JLabel("<html>Install the Shortest Path plugin to use Play.</html>");
-        msg.setForeground(Color.WHITE);
-        p.add(msg, BorderLayout.CENTER);
-        JButton dismiss = new JButton("Don't show again");
-        Styles.secondaryButton(dismiss);
-        dismiss.addActionListener(e -> { config.setShortestPathBannerDismissed(true); rebuild(); });
-        p.add(dismiss, BorderLayout.EAST);
-        return p;
-    }
-
-    private JComponent buildResetBanner()
-    {
-        JPanel p = newCappedHeightPanel(new BorderLayout(4, 4));
-        p.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(180, 40, 40)),
-            BorderFactory.createEmptyBorder(6, 8, 6, 8)));
-        JLabel resetMsg = new JLabel("<html>Library failed to load - backup also unreadable.<br>"
-            + "Click Reset to start fresh, or fix the file at:<br><tt>"
-            + persistence.libraryFile() + "</tt></html>");
-        resetMsg.setForeground(Color.WHITE);
-        p.add(resetMsg, BorderLayout.CENTER);
-        JButton reset = new JButton("Reset library");
-        Styles.secondaryButton(reset);
-        reset.addActionListener(e -> {
-            int ok = JOptionPane.showConfirmDialog(this,
-                "This will discard the unreadable library files. Continue?",
-                "Reset library", JOptionPane.OK_CANCEL_OPTION);
-            if (ok != JOptionPane.OK_OPTION) return;
-            try { Files.deleteIfExists(persistence.libraryFile()); }
-            catch (IOException ignored) {}
-            try { Files.deleteIfExists(persistence.backupFile()); }
-            catch (IOException ignored) {}
-            persistence.allowSavesAfterReset();
-            store.bootstrap(new Library());
-        });
-        p.add(reset, BorderLayout.EAST);
-        return p;
     }
 
     /**
