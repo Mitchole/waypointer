@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 public final class RouteLibrary
 {
-    public static final int CURRENT_SCHEMA_VERSION = 1;
+    public static final int CURRENT_SCHEMA_VERSION = 2;
 
     private int schemaVersion = CURRENT_SCHEMA_VERSION;
     private List<Route> routes = new ArrayList<>();
