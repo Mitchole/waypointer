@@ -111,6 +111,7 @@ public class WaypointerPlugin extends Plugin
             .priority(7)
             .panel(tabHost)
             .build();
+        tabHost.setNavButton(navButton);
         clientToolbar.addNavigation(navButton);
         eventBus.register(menuHandler);
         eventBus.register(pathfinderService);
