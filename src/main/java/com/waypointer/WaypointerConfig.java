@@ -20,7 +20,8 @@ public interface WaypointerConfig extends Config
         keyName = "entityRightClickEnabled",
         name = "Right-click NPCs and objects to save",
         description = "Adds 'Save as Waypoint' to the right-click menu on NPCs and game objects. "
-            + "Requires holding Shift. The NPC's name and tile at click time are used as the default.",
+            + "Objects require holding Shift; NPCs do not, since Shift hides them. "
+            + "The NPC's name and tile at click time are used as the default.",
         position = 11
     )
     default boolean entityRightClickEnabled() { return false; }
@@ -29,7 +30,7 @@ public interface WaypointerConfig extends Config
         keyName = "showNearestLandmarkBar",
         name = "Show 'nearest landmark' bar",
         description = "Adds a row of one-click shortcuts in the sidebar to path to the nearest "
-            + "landmark. Click the customize button to choose which landmark types appear. "
+            + "landmark. Click the customise button to choose which landmark types appear. "
             + "Off hides the row entirely.",
         position = 15
     )

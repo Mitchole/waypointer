@@ -61,6 +61,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
         private boolean selectMode;
         private boolean selected;
         private java.util.function.Consumer<Boolean> onSelectClick = sel -> {};
+        private Runnable onEnterSelectMode = () -> {};
 
         private Spec(Waypoint waypoint) { this.waypoint = waypoint; }
 
@@ -77,6 +78,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
         public Spec selectMode(boolean v) { this.selectMode = v; return this; }
         public Spec selected(boolean v) { this.selected = v; return this; }
         public Spec onSelectClick(java.util.function.Consumer<Boolean> c) { this.onSelectClick = c; return this; }
+        public Spec onEnterSelectMode(Runnable r) { this.onEnterSelectMode = r; return this; }
 
         public WaypointRow build() { return new WaypointRow(this); }
     }
@@ -123,8 +125,17 @@ public class WaypointRow extends JPanel implements DropIndicatable
             ma = Cards.clickable(this, s.onClickBody);
         }
 
-        // Right-click popup (pin / delete) stays available in both modes.
+        // Right-click popup (pin / delete) stays available in both modes. Outside select mode it
+        // also offers "Select multiple" -- the entry point for bulk selection now that the toolbar
+        // toggle button is gone.
         JPopupMenu popup = new JPopupMenu();
+        if (!s.selectMode)
+        {
+            JMenuItem selectItem = new JMenuItem("Select multiple");
+            selectItem.addActionListener(e -> s.onEnterSelectMode.run());
+            popup.add(selectItem);
+            popup.addSeparator();
+        }
         JMenuItem pinItem = new JMenuItem(s.isPinned ? "Unpin" : "Pin to top");
         pinItem.addActionListener(e -> s.onTogglePin.run());
         JMenuItem deleteItem = new JMenuItem("Delete");

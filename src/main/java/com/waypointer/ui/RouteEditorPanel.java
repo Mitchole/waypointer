@@ -37,16 +37,23 @@ final class RouteEditorPanel extends JPanel
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        add(buildHeader(), BorderLayout.NORTH);
+        // Nav row and the add-step controls both sit at the top: the add-step buttons are the
+        // primary action here, so they belong above the step list rather than buried in a footer.
+        JPanel top = new JPanel();
+        top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
+        top.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        top.add(buildNavRow());
+        top.add(buildAddStepBar());
+        add(top, BorderLayout.NORTH);
+
         stepList.setLayout(new BoxLayout(stepList, BoxLayout.Y_AXIS));
         stepList.setBackground(ColorScheme.DARK_GRAY_COLOR);
         add(Styles.pinnedScrollPane(stepList), BorderLayout.CENTER);
-        add(buildFooter(), BorderLayout.SOUTH);
 
         rebuild();
     }
 
-    private JPanel buildHeader()
+    private JPanel buildNavRow()
     {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         header.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -65,20 +72,20 @@ final class RouteEditorPanel extends JPanel
         return header;
     }
 
-    private JPanel buildFooter()
+    private JPanel buildAddStepBar()
     {
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        footer.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        bar.setBackground(ColorScheme.DARK_GRAY_COLOR);
         // ◉ = waypoint glyph; capture the player's current tile as a step
         JButton markHere = new JButton("◉ Mark location");
         Styles.secondaryButton(markHere);
         markHere.addActionListener(e -> onMarkCurrentLocation.run());
-        footer.add(markHere);
+        bar.add(markHere);
 
         JButton fromSaved = new JButton("◉ From saved");
         Styles.secondaryButton(fromSaved);
         fromSaved.addActionListener(e -> onAddFromLibrary.run());
-        footer.add(fromSaved);
+        bar.add(fromSaved);
 
         // ✎ = pencil glyph for manual step
         JButton addManual = new JButton("✎ Add manual step");
@@ -87,8 +94,8 @@ final class RouteEditorPanel extends JPanel
             String text = JOptionPane.showInputDialog(this, "Instruction:");
             if (text != null && !text.trim().isEmpty()) store.addManualStep(routeId, text.trim());
         });
-        footer.add(addManual);
-        return footer;
+        bar.add(addManual);
+        return bar;
     }
 
     /** Rebuild the step list from the store. Call after any mutation. */

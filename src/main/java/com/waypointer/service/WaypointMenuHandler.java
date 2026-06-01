@@ -24,9 +24,11 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.api.worldmap.WorldMap;
 import net.runelite.client.eventbus.Subscribe;
 
-// Adds a "Save as Waypoint" right-click entry in two contexts, both gated on Shift being held:
-//   1. Over the world-map widget; converts cursor canvas position to a world tile.
-//   2. On a 3D-world tile when the corresponding config is on.
+// Adds a "Save as Waypoint" right-click entry in three contexts:
+//   1. Over the world-map widget (Shift held); converts cursor canvas position to a world tile.
+//   2. On a 3D-world tile when the corresponding config is on (Shift held).
+//   3. On an NPC or game object when the corresponding config is on. Objects require Shift;
+//      NPCs do not, because holding Shift hides NPCs from selection.
 // Mirrors the world-map coord math from shortest-path's ShortestPathPlugin#calculateMapPoint.
 @Slf4j
 @Singleton
@@ -95,15 +97,19 @@ public class WaypointMenuHandler
     private void tryAddEntityEntry(MenuEntryAdded event)
     {
         if (!config.entityRightClickEnabled()) return;
-        if (!client.isKeyPressed(KeyCode.KC_SHIFT)) return;
 
         MenuEntry source = event.getMenuEntry();
         net.runelite.api.NPC npc = source.getNpc();
         if (npc != null)
         {
+            // No Shift gate for NPCs: holding Shift in RuneLite suppresses NPC hover and
+            // selection, so a Shift-only entry could never be reached. The entry appears on a
+            // plain right-click whenever the setting is on.
             addEntry(1, e -> onSaveFromNpc(npc));
             return;
         }
+        // Objects keep the Shift gate so the entry doesn't crowd ordinary object menus.
+        if (!client.isKeyPressed(KeyCode.KC_SHIFT)) return;
         if (isObjectAction(source.getType()))
         {
             int sceneX = source.getParam0();

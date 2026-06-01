@@ -5,13 +5,10 @@ import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
 import com.waypointer.service.WaypointStore;
-import java.awt.Color;
 import java.awt.Window;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import javax.swing.JButton;
-import net.runelite.client.ui.ColorScheme;
 
 /**
  * Owns the panel's bulk select mode: the {@link BulkSelection} model, the select-mode flag, the
@@ -35,7 +32,6 @@ final class BulkSelectController
 
     private final WaypointStore store;
     private final Toasts toasts;
-    private final JButton toggleBtn;
     private final WaypointShareCodec shareCodec;
     private final LibraryJsonCodec libraryCodec;
     private final Host host;
@@ -48,16 +44,16 @@ final class BulkSelectController
     // refreshed every render pass so shift-range select honours the active filter and sort.
     private final List<UUID> visibleOrderedIds = new ArrayList<>();
 
-    BulkSelectController(WaypointStore store, Toasts toasts, JButton toggleBtn,
+    BulkSelectController(WaypointStore store, Toasts toasts,
         WaypointShareCodec shareCodec, LibraryJsonCodec libraryCodec, Host host)
     {
         this.store = store;
         this.toasts = toasts;
-        this.toggleBtn = toggleBtn;
         this.shareCodec = shareCodec;
         this.libraryCodec = libraryCodec;
         this.host = host;
         this.bar = new BulkActionBar(
+            this::exitSelectMode,
             store::getCategoriesOrdered,
             this::bulkMoveTo,
             this::bulkDelete,
@@ -102,16 +98,23 @@ final class BulkSelectController
         afterSelectionChanged();
     }
 
-    void toggleSelectMode()
+    /** Enter select mode. Triggered by the "Select multiple" right-click entry. */
+    void enterSelectMode() { setSelectMode(true); }
+
+    /** Exit select mode. Triggered by the action bar's Done button. */
+    void exitSelectMode() { setSelectMode(false); }
+
+    void toggleSelectMode() { setSelectMode(!selectMode); }
+
+    private void setSelectMode(boolean on)
     {
-        selectMode = !selectMode;
+        if (selectMode == on) return;
+        selectMode = on;
         if (!selectMode)
         {
             selection.clear();
             lastClickedId = null;
         }
-        toggleBtn.setForeground(selectMode ? ColorScheme.BRAND_ORANGE : Color.WHITE);
-        toggleBtn.setText(selectMode ? "Done" : "Select");
         host.rebuild();
         refreshBulkBar();
     }

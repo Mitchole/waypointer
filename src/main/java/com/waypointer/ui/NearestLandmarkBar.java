@@ -115,7 +115,8 @@ public final class NearestLandmarkBar extends JPanel
             SPRITE_IDS,
             selection,
             this::onPickerToggle,
-            this::onPickerReorder);
+            this::onPickerReorder,
+            this::hidePicker);
         // Match the icon row's left alignment; a mismatched alignmentX makes BoxLayout narrow
         // the icon row when the picker is shown, forcing the bar to wrap earlier than it should.
         picker.setAlignmentX(LEFT_ALIGNMENT);
@@ -161,18 +162,41 @@ public final class NearestLandmarkBar extends JPanel
 
         overflowBtn = makeButton();
         overflowBtn.setText("⋮"); // U+22EE vertical ellipsis
-        overflowBtn.getAccessibleContext().setAccessibleName("Customize landmark bar");
+        overflowBtn.getAccessibleContext().setAccessibleName("Customise landmark bar");
         overflowBtn.addActionListener(e -> {
             picker.setVisible(!picker.isVisible());
             revalidate();
             repaint();
         });
         iconRow.add(overflowBtn);
-        popover.attach(overflowBtn, () -> "Customize");
+        popover.attach(overflowBtn, () -> "Customise");
 
         applyEnabledState();
         iconRow.revalidate();
         iconRow.repaint();
+    }
+
+    // Closes the inline picker (the X in its header, or the overflow toggle).
+    private void hidePicker()
+    {
+        picker.setVisible(false);
+        revalidate();
+        repaint();
+    }
+
+    // The first layout computes the icon row's WrapLayout preferred height before the row has a
+    // real width, so the icons can wrap to a phantom second row and leave a tall gap above the
+    // search field. Once the row has bounds, a deferred revalidate recomputes against the true
+    // width and collapses it back to a single row -- the same effect the user got by toggling the
+    // picker open and closed. Runs each time the bar joins a displayable hierarchy.
+    @Override
+    public void addNotify()
+    {
+        super.addNotify();
+        SwingUtilities.invokeLater(() -> {
+            revalidate();
+            repaint();
+        });
     }
 
     private void onPickerToggle(LandmarkType type, boolean include)

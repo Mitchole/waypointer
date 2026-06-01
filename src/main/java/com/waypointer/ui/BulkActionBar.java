@@ -27,11 +27,12 @@ import net.runelite.client.ui.FontManager;
 final class BulkActionBar extends JPanel
 {
     private final JLabel countLabel = new JLabel("0 selected");
+    private final JButton doneBtn = new JButton("Done");
     private final JButton moveBtn = new JButton("Move to ▾"); // down triangle
     private final JButton deleteBtn = new JButton("Delete");
     private final JButton exportBtn = new JButton("Export");
 
-    BulkActionBar(Supplier<List<Category>> categorySupplier, Consumer<UUID> onMove,
+    BulkActionBar(Runnable onDone, Supplier<List<Category>> categorySupplier, Consumer<UUID> onMove,
         Runnable onDelete, Runnable onExport)
     {
         setLayout(new BorderLayout(4, 0));
@@ -41,9 +42,18 @@ final class BulkActionBar extends JPanel
             BorderFactory.createMatteBorder(1, 0, 0, 0, ColorScheme.DARK_GRAY_COLOR),
             BorderFactory.createEmptyBorder(6, 8, 6, 8)));
 
+        // Done exits select mode; it's the counterpart to the right-click "Select multiple"
+        // entry that enters it, and stays enabled regardless of how many rows are selected.
+        Styles.secondaryButton(doneBtn);
+        doneBtn.addActionListener(e -> onDone.run());
+
         countLabel.setForeground(Color.WHITE);
         countLabel.setFont(FontManager.getRunescapeSmallFont());
-        add(countLabel, BorderLayout.WEST);
+        JPanel west = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        west.setOpaque(false);
+        west.add(doneBtn);
+        west.add(countLabel);
+        add(west, BorderLayout.WEST);
 
         Styles.secondaryButton(moveBtn);
         Styles.secondaryButton(deleteBtn);

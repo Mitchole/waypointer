@@ -175,12 +175,30 @@ public class WaypointMenuHandlerTest
     }
 
     @Test
-    public void npcFlowDoesNothingWithoutShift()
+    public void npcFlowAddsEntryWithoutShift()
     {
+        // Holding Shift hides NPCs from selection, so the NPC entry must appear on a plain
+        // right-click whenever the setting is on -- no Shift required.
         when(config.entityRightClickEnabled()).thenReturn(true);
         when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(null);
         when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(false);
         when(sourceEntry.getNpc()).thenReturn(mock(net.runelite.api.NPC.class));
+
+        handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
+
+        verify(menu).createMenuEntry(anyInt());
+    }
+
+    @Test
+    public void objectFlowDoesNothingWithoutShift()
+    {
+        // Objects keep the Shift gate, so without Shift the object entry is not added.
+        when(config.entityRightClickEnabled()).thenReturn(true);
+        when(config.tileRightClickEnabled()).thenReturn(false);
+        when(client.getWidget(ComponentID.WORLD_MAP_MAPVIEW)).thenReturn(null);
+        when(client.isKeyPressed(net.runelite.api.KeyCode.KC_SHIFT)).thenReturn(false);
+        when(sourceEntry.getNpc()).thenReturn(null);
+        when(sourceEntry.getType()).thenReturn(MenuAction.GAME_OBJECT_FIRST_OPTION);
 
         handler.onMenuEntryAdded(new MenuEntryAdded(sourceEntry));
 

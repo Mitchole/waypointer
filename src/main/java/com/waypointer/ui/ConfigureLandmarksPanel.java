@@ -43,6 +43,7 @@ final class ConfigureLandmarksPanel extends JPanel
     private final Map<LandmarkType, Integer> spriteIds;
     private final BiConsumer<LandmarkType, Boolean> onToggle;
     private final BiConsumer<Integer, Integer> onReorder;
+    private final Runnable onClose;
 
     private LandmarkSelection selection;
 
@@ -50,13 +51,15 @@ final class ConfigureLandmarksPanel extends JPanel
         Map<LandmarkType, Integer> spriteIds,
         LandmarkSelection initial,
         BiConsumer<LandmarkType, Boolean> onToggle,
-        BiConsumer<Integer, Integer> onReorder)
+        BiConsumer<Integer, Integer> onReorder,
+        Runnable onClose)
     {
         this.spriteManager = spriteManager;
         this.spriteIds = spriteIds;
         this.selection = initial;
         this.onToggle = onToggle;
         this.onReorder = onReorder;
+        this.onClose = onClose;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -75,6 +78,7 @@ final class ConfigureLandmarksPanel extends JPanel
     private void rebuild()
     {
         removeAll();
+        add(buildHeader());
         int index = 0;
         for (LandmarkType type : selection.order())
         {
@@ -83,6 +87,34 @@ final class ConfigureLandmarksPanel extends JPanel
         }
         revalidate();
         repaint();
+    }
+
+    // Title row with a close (X) affordance. The picker is otherwise only dismissable by
+    // re-clicking the overflow toggle, which isn't obvious -- the X makes it explicit.
+    private JPanel buildHeader()
+    {
+        JPanel header = new JPanel(new java.awt.BorderLayout());
+        header.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        header.setMaximumSize(new Dimension(Integer.MAX_VALUE, ROW_HEIGHT));
+        header.setPreferredSize(new Dimension(0, ROW_HEIGHT));
+
+        JLabel title = new JLabel("Landmarks");
+        title.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        title.setFont(FontManager.getRunescapeSmallFont());
+        header.add(title, java.awt.BorderLayout.WEST);
+
+        JLabel close = new JLabel("✕"); // U+2715 multiplication X -- close glyph
+        close.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        close.setFont(FontManager.getRunescapeFont());
+        close.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        close.setToolTipText("Close");
+        close.getAccessibleContext().setAccessibleName("Close landmark picker");
+        close.addMouseListener(new MouseAdapter()
+        {
+            @Override public void mouseClicked(MouseEvent e) { if (onClose != null) onClose.run(); }
+        });
+        header.add(close, java.awt.BorderLayout.EAST);
+        return header;
     }
 
     private JPanel buildRow(LandmarkType type, int index)

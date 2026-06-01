@@ -27,7 +27,7 @@ final class TabStrip extends EnumTabStrip<TabStrip.Tab>
     {
         switch (t)
         {
-            case MY_WAYPOINTS: return "My waypoints";
+            case MY_WAYPOINTS: return "Waypoints";
             case PRESETS:      return "Presets";
             case ROUTES:       return "Routes";
             case DEV:          return "Dev";

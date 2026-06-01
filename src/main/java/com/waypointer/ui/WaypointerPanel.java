@@ -83,7 +83,6 @@ public class WaypointerPanel extends PluginPanel
     private final JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
     private final JButton markBtn = new JButton("Mark current location");
-    private final JButton selectToggleBtn = new JButton("Select");
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
 
@@ -220,7 +219,7 @@ public class WaypointerPanel extends PluginPanel
         add(toastOverlay, BorderLayout.CENTER);
 
         this.bulkSelect = new BulkSelectController(
-            store, toastOverlay, selectToggleBtn, shareCodec, libraryCodec,
+            store, toastOverlay, shareCodec, libraryCodec,
             new BulkSelectController.Host()
             {
                 @Override public void rebuild() { scheduleRebuild(); }
@@ -345,18 +344,10 @@ public class WaypointerPanel extends PluginPanel
             }
         });
 
+        // The search field spans the full width now. Bulk select is entered from the row /
+        // category right-click "Select multiple" entry and exited from the action bar's Done
+        // button, so the old toolbar toggle no longer crowds the search field.
         container.add(searchField, BorderLayout.CENTER);
-
-        selectToggleBtn.setToolTipText("Select multiple waypoints");
-        Styles.secondaryButton(selectToggleBtn);
-        Dimension toggleSize = new Dimension(58, searchField.getPreferredSize().height);
-        selectToggleBtn.setPreferredSize(toggleSize);
-        selectToggleBtn.addActionListener(e -> bulkSelect.toggleSelectMode());
-        JPanel east = new JPanel(new BorderLayout());
-        east.setOpaque(false);
-        east.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0));
-        east.add(selectToggleBtn, BorderLayout.CENTER);
-        container.add(east, BorderLayout.EAST);
 
         return container;
     }
@@ -556,7 +547,8 @@ public class WaypointerPanel extends PluginPanel
                         () -> categoryMenu.promptDelete(c),
                         () -> categoryMenu.promptSetIcon(c),
                         () -> categoryMenu.promptSetColour(c, this),
-                        mode -> store.setCategorySortMode(c.getId(), mode)),
+                        mode -> store.setCategorySortMode(c.getId(), mode),
+                        bulkSelect::enterSelectMode),
                     spriteManager,
                     bulkSelect.isSelectMode(),
                     bulkSelect.selection(),
@@ -681,6 +673,9 @@ public class WaypointerPanel extends PluginPanel
                     null, null);
                 break;
             }
+            case ENTER_SELECT:
+                bulkSelect.enterSelectMode();
+                break;
         }
     }
 

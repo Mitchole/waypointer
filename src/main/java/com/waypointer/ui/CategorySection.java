@@ -155,6 +155,9 @@ public class CategorySection extends CollapsibleSection
             sortBy.add(buildSortItem("Date added (newest first)",
                 com.waypointer.model.CategorySortMode.DATE_ADDED, active, actions));
 
+            JMenuItem selectMultiple = new JMenuItem("Select multiple");
+            selectMultiple.addActionListener(e -> { if (actions.onEnterSelect != null) actions.onEnterSelect.run(); });
+
             JMenuItem delete = new JMenuItem("Delete category");
             delete.addActionListener(e -> actions.onDelete.run());
             menu.add(rename);
@@ -162,6 +165,7 @@ public class CategorySection extends CollapsibleSection
             menu.add(setColour);
             menu.add(sortBy);
             menu.addSeparator();
+            menu.add(selectMultiple);
             menu.add(delete);
             // Right-click on the label still opens the popup (legacy discoverability).
             headerLabel.setComponentPopupMenu(menu);
@@ -204,6 +208,7 @@ public class CategorySection extends CollapsibleSection
                 .onClickBody(() -> onRowAction.accept(w, RowAction.EXPAND))
                 .onTogglePin(() -> onRowAction.accept(w, RowAction.TOGGLE_PIN))
                 .onDelete(() -> onRowAction.accept(w, RowAction.DELETE))
+                .onEnterSelectMode(() -> onRowAction.accept(w, RowAction.ENTER_SELECT))
                 .spriteManager(spriteManager)
                 .selectMode(selectMode)
                 .selected(selection.ids().contains(w.getId()))
@@ -269,7 +274,7 @@ public class CategorySection extends CollapsibleSection
     }
 
     /** Row-level user actions plumbed up from {@link WaypointRow} to the panel. */
-    public enum RowAction { PLAY, EXPAND, DELETE, TOGGLE_PIN }
+    public enum RowAction { PLAY, EXPAND, DELETE, TOGGLE_PIN, ENTER_SELECT }
 
     /** The category-level menu actions, bundled so the constructor stays readable. */
     public static final class Actions
@@ -279,16 +284,19 @@ public class CategorySection extends CollapsibleSection
         final Runnable onSetIcon;
         final Runnable onSetColour;
         final java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode;
+        final Runnable onEnterSelect;
 
         public Actions(Runnable onRename, Runnable onDelete, Runnable onSetIcon,
             Runnable onSetColour,
-            java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode)
+            java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode,
+            Runnable onEnterSelect)
         {
             this.onRename = onRename;
             this.onDelete = onDelete;
             this.onSetIcon = onSetIcon;
             this.onSetColour = onSetColour;
             this.onSetSortMode = onSetSortMode;
+            this.onEnterSelect = onEnterSelect;
         }
     }
 

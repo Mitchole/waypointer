@@ -54,6 +54,7 @@ public class PinnedSection extends CollapsibleSection
                 .onClickBody(() -> onRowAction.accept(w, CategorySection.RowAction.EXPAND))
                 .onTogglePin(() -> onRowAction.accept(w, CategorySection.RowAction.TOGGLE_PIN))
                 .onDelete(() -> onRowAction.accept(w, CategorySection.RowAction.DELETE))
+                .onEnterSelectMode(() -> onRowAction.accept(w, CategorySection.RowAction.ENTER_SELECT))
                 .spriteManager(spriteManager)
                 .originCategoryName(originName)
                 .build();

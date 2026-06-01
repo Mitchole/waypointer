@@ -7,7 +7,6 @@ import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
 import com.waypointer.service.WaypointStore;
 import java.awt.Window;
-import javax.swing.JButton;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -37,28 +36,35 @@ public class BulkSelectControllerTest
         return new BulkSelectController(
             store,
             Toasts.NO_OP,
-            new JButton("Select"),
             mock(WaypointShareCodec.class),
             mock(LibraryJsonCodec.class),
             host);
     }
 
     @Test
-    public void toggleSelectModeFlipsFlagAndButtonText()
+    public void enterAndExitSelectModeFlipTheFlag()
     {
         WaypointStore store = freshStore();
-        JButton btn = new JButton("Select");
-        BulkSelectController c = new BulkSelectController(
-            store, Toasts.NO_OP, btn,
-            mock(WaypointShareCodec.class), mock(LibraryJsonCodec.class), new CountingHost());
+        BulkSelectController c = newController(store, new CountingHost());
+
+        assertFalse(c.isSelectMode());
+        c.enterSelectMode();
+        assertTrue(c.isSelectMode());
+        c.exitSelectMode();
+        assertFalse(c.isSelectMode());
+    }
+
+    @Test
+    public void toggleSelectModeFlipsTheFlag()
+    {
+        WaypointStore store = freshStore();
+        BulkSelectController c = newController(store, new CountingHost());
 
         assertFalse(c.isSelectMode());
         c.toggleSelectMode();
         assertTrue(c.isSelectMode());
-        assertEquals("Done", btn.getText());
         c.toggleSelectMode();
         assertFalse(c.isSelectMode());
-        assertEquals("Select", btn.getText());
     }
 
     @Test
