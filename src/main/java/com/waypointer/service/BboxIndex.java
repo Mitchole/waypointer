@@ -98,10 +98,29 @@ public class BboxIndex
         return listeners.subscribe(r);
     }
 
-    public java.util.List<Entry> bundledOfType(LandmarkType t)
+    /**
+     * Per-entry editor view of a type: every bundled entry of the type that has not been deleted,
+     * followed by any override-added entries of the type. Unlike the live index (see
+     * {@link #applyOverrides}) this does NOT apply the wholesale "a type override replaces the
+     * whole bundled type" rule, so the dev editor can list and curate individual bundled entries
+     * even once overrides exist for that type. Reflects deletions, additions, and edits (an edit
+     * is recorded as a deletion of the original plus an added entry).
+     */
+    public java.util.List<Entry> editableOfType(LandmarkType t, LandmarkOverridesSnapshot s)
     {
         java.util.List<Entry> out = new java.util.ArrayList<>();
-        for (Entry e : bundled) if (e.type == t) out.add(e);
+        for (Entry b : bundled)
+        {
+            if (b.type == t && !isDeleted(b, s)) out.add(b);
+        }
+        LandmarkOverridesSnapshot.TypeOverride ov = s.getByType().get(t.name());
+        if (ov != null)
+        {
+            for (LandmarkOverridesSnapshot.Entry e : ov.getEntries())
+            {
+                out.add(new Entry(e.getX1(), e.getY1(), e.getX2(), e.getY2(), e.getPlane(), e.getName(), t));
+            }
+        }
         return out;
     }
 

@@ -49,6 +49,40 @@ public class BboxIndexOverrideMergeTest
     }
 
     @Test
+    public void editableOfTypeExcludesDeletedBundledEntries()
+    {
+        BboxIndex idx = BboxIndex.forTesting(Arrays.asList(
+            new BboxIndex.Entry(1, 1, 1, 1, 0, "Keep", LandmarkType.BANK),
+            new BboxIndex.Entry(3, 3, 3, 3, 0, "Drop", LandmarkType.BANK)));
+        LandmarkOverridesSnapshot s = new LandmarkOverridesSnapshot(1,
+            new LinkedHashMap<>(),
+            new ArrayList<>(Arrays.asList(new DeletedEntry("BANK", "Drop", 3, 3, 3, 3, 0))));
+
+        java.util.List<BboxIndex.Entry> view = idx.editableOfType(LandmarkType.BANK, s);
+
+        assertEquals(1, view.size());
+        assertEquals("Keep", view.get(0).name);
+    }
+
+    @Test
+    public void editableOfTypeKeepsBundledAlongsideAdditions()
+    {
+        // Contrast with overrideReplacesBundledTypeEntirely: the editor view is a per-entry merge,
+        // so a bundled entry is NOT dropped just because the type also has an added override entry.
+        BboxIndex idx = BboxIndex.forTesting(Arrays.asList(
+            new BboxIndex.Entry(1, 1, 1, 1, 0, "Bundled", LandmarkType.BANK)));
+        Map<String, TypeOverride> by = new LinkedHashMap<>();
+        by.put("BANK", new TypeOverride(Arrays.asList(new Entry("Added", 5, 5, 5, 5, 0))));
+        LandmarkOverridesSnapshot s = new LandmarkOverridesSnapshot(1, by, new ArrayList<>());
+
+        java.util.List<BboxIndex.Entry> view = idx.editableOfType(LandmarkType.BANK, s);
+
+        assertEquals(2, view.size());
+        assertEquals("Bundled", view.get(0).name);
+        assertEquals("Added", view.get(1).name);
+    }
+
+    @Test
     public void emptySnapshotIsPassThrough()
     {
         BboxIndex idx = BboxIndex.forTesting(Arrays.asList(

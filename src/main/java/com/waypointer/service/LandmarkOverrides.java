@@ -149,6 +149,29 @@ public class LandmarkOverrides
         scheduleSave();
     }
 
+    /**
+     * Deletes an entry by tuple regardless of provenance: if it matches an override-added entry
+     * it is removed from that type override; otherwise it is recorded as a bundled deletion. The
+     * dev editor uses this because a listed row may be either a bundled entry or one the user
+     * added.
+     */
+    public void deleteEntry(String type, String name, int x1, int y1, int x2, int y2, int plane)
+    {
+        undoBuffer = deepCopy(snapshot);
+        TypeOverride t = snapshot.getByType().get(type);
+        if (t != null && t.getEntries().removeIf(x ->
+            x.getX1() == x1 && x.getY1() == y1 && x.getX2() == x2 && x.getY2() == y2
+                && x.getPlane() == plane && Objects.equals(x.getName(), name)))
+        {
+            listeners.fire();
+            scheduleSave();
+            return;
+        }
+        snapshot.getDeletions().add(new DeletedEntry(type, name, x1, y1, x2, y2, plane));
+        listeners.fire();
+        scheduleSave();
+    }
+
     public boolean undoLast()
     {
         if (undoBuffer == null) return false;

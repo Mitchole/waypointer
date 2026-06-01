@@ -42,6 +42,27 @@ public class LandmarkOverridesTest
     }
 
     @Test
+    public void deleteEntryOnBundledRecordsDeletion()
+    {
+        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        ov.deleteEntry("BANK", "Bad bank", 1, 1, 1, 1, 0);
+        assertEquals(1, ov.getSnapshot().getDeletions().size());
+        assertTrue(ov.getSnapshot().getByType().isEmpty());
+    }
+
+    @Test
+    public void deleteEntryOnOverrideRemovesItAndRecordsNoDeletion()
+    {
+        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        ov.addEntry("BANK", new Entry("Added", 5, 5, 5, 5, 0));
+        ov.deleteEntry("BANK", "Added", 5, 5, 5, 5, 0);
+        TypeOverride t = ov.getSnapshot().getByType().get("BANK");
+        assertTrue("override entry should be gone", t == null || t.getEntries().isEmpty());
+        assertEquals("no bundled deletion for an override entry",
+            0, ov.getSnapshot().getDeletions().size());
+    }
+
+    @Test
     public void listenersFireOnMutation()
     {
         LandmarkOverrides ov = LandmarkOverrides.forTesting();

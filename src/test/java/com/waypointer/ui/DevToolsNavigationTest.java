@@ -85,7 +85,7 @@ public class DevToolsNavigationTest
     @Test
     public void landmarkEditorNavigateRequestsPathAtEntryCorner() throws Exception
     {
-        when(bboxIndex.bundledOfType(any())).thenReturn(Collections.emptyList());
+        when(bboxIndex.editableOfType(any(), any())).thenReturn(Collections.emptyList());
         when(pathfinder.isAvailable()).thenReturn(true);
         LandmarkEditorPanel panel = new LandmarkEditorPanel(
             bboxIndex, landmarkOverrides, capture, pathfinder, areaOverlay, landmarkCodec);

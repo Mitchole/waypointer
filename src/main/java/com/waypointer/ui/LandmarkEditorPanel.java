@@ -106,7 +106,7 @@ public class LandmarkEditorPanel extends JPanel
         LandmarkType type = (LandmarkType) typePicker.getSelectedItem();
         if (type == null) { body.revalidate(); body.repaint(); return; }
         String query = searchField.getText().toLowerCase();
-        for (BboxIndex.Entry e : bboxIndex.bundledOfType(type))
+        for (BboxIndex.Entry e : bboxIndex.editableOfType(type, overrides.getSnapshot()))
         {
             if (!query.isEmpty() && !e.name.toLowerCase().contains(query)) continue;
             LandmarkRow row = new LandmarkRow(type, e, this::navigateTo, this::openEdit, this::onDelete);
@@ -168,7 +168,7 @@ public class LandmarkEditorPanel extends JPanel
 
     private void onDelete(BboxIndex.Entry e)
     {
-        overrides.deleteBundledEntry(
+        overrides.deleteEntry(
             ((LandmarkType) typePicker.getSelectedItem()).name(),
             e.name, e.x1, e.y1, e.x2, e.y2, e.plane);
     }
