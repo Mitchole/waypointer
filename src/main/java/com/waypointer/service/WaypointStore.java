@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -47,9 +45,12 @@ public class WaypointStore
 
     /**
      * Single-slot undo buffer. Holds the inverse of the most recent destructive op
-     * ({@link #deleteWaypoint(UUID)}, {@link #updateWaypointPoint(UUID, int)},
-     * {@link #deleteCategory(UUID, boolean)}). Any other public mutation method clears
-     * the slot. Survives toast hide; does not survive plugin disable/enable.
+     * ({@link #deleteWaypoint(UUID)}, {@link #deleteWaypoints(Collection)},
+     * {@link #updateWaypointPoint(UUID, int)}, {@link #deleteCategory(UUID, boolean)}), each of
+     * which arms it via {@link #armUndoAndNotify(Runnable)}. Every other successful mutation goes
+     * through {@link #notifyChanged()}, which clears the slot. A mutation that no-ops or is
+     * rejected before firing leaves the slot untouched. Survives toast hide; does not survive
+     * plugin disable/enable.
      */
     private Runnable lastUndo;
 
@@ -59,7 +60,25 @@ public class WaypointStore
         waypointIndex = null;
     }
 
+    /**
+     * Default notify path for every mutation: clears the undo slot, then fires. Clearing here
+     * makes "no undo" the default for any successful mutation that fires listeners. Methods that
+     * want their inverse to survive must opt in via {@link #armUndoAndNotify(Runnable)} instead.
+     */
     private void notifyChanged()
+    {
+        lastUndo = null;
+        fireChanged();
+    }
+
+    /** Arms the single-slot undo buffer with {@code inverse}, then fires without clearing it. */
+    private void armUndoAndNotify(Runnable inverse)
+    {
+        lastUndo = inverse;
+        fireChanged();
+    }
+
+    private void fireChanged()
     {
         cachedCategoriesOrdered = null;
         cachedWaypointsByCategory = null;
@@ -73,7 +92,6 @@ public class WaypointStore
     /** Initializes the store with a library, ensuring the Uncategorized sentinel is present. */
     public void bootstrap(Library lib)
     {
-        lastUndo = null;
         this.library = lib;
         ensureUncategorized();
         // Notify so any listener attached before bootstrap (e.g. the panel built by Guice
@@ -183,7 +201,6 @@ public class WaypointStore
 
     public Category createCategory(String name)
     {
-        lastUndo = null;
         if (getCategoryByName(name) != null)
         {
             throw new IllegalArgumentException("Category name already exists: " + name);
@@ -198,7 +215,6 @@ public class WaypointStore
 
     public void renameCategory(UUID id, String newName)
     {
-        lastUndo = null;
         Category c = getCategoryById(id);
         if (c == null) return;
         if (c.isUncategorized())
@@ -219,7 +235,6 @@ public class WaypointStore
         Category c = getCategoryById(id);
         if (c == null)
         {
-            lastUndo = null;
             return;
         }
         if (c.isUncategorized())
@@ -227,6 +242,7 @@ public class WaypointStore
             throw new IllegalArgumentException("Cannot delete Uncategorized");
         }
         Category snapshotCategory = c;
+        Runnable inverse;
         if (moveChildrenToUncategorized)
         {
             // Capture each affected waypoint's previous categoryId AND sortOrder so the
@@ -245,7 +261,7 @@ public class WaypointStore
             library.getCategories().removeIf(cc -> cc.getId().equals(id));
 
             UUID origCategoryId = id;
-            lastUndo = () -> {
+            inverse = () -> {
                 library.getCategories().add(snapshotCategory);
                 for (Waypoint w : affected)
                 {
@@ -266,18 +282,17 @@ public class WaypointStore
             library.getWaypoints().removeIf(w -> w.getCategoryId().equals(id));
             library.getCategories().removeIf(cc -> cc.getId().equals(id));
 
-            lastUndo = () -> {
+            inverse = () -> {
                 library.getCategories().add(snapshotCategory);
                 library.getWaypoints().addAll(deletedChildren);
                 notifyChanged();
             };
         }
-        notifyChanged();
+        armUndoAndNotify(inverse);
     }
 
     public void setCategoryIcon(UUID categoryId, Integer iconId)
     {
-        lastUndo = null;
         Category c = getCategoryById(categoryId);
         if (c == null) return;
         c.setIconId(iconId);
@@ -286,7 +301,6 @@ public class WaypointStore
 
     public void setCategoryColor(UUID categoryId, Integer color)
     {
-        lastUndo = null;
         Category c = getCategoryById(categoryId);
         if (c == null) return;
         c.setColor(color);
@@ -295,7 +309,6 @@ public class WaypointStore
 
     public void setCategorySortMode(UUID categoryId, com.waypointer.model.CategorySortMode mode)
     {
-        lastUndo = null;
         Category c = getCategoryById(categoryId);
         if (c == null) return;
         c.setSortMode(mode);
@@ -304,7 +317,6 @@ public class WaypointStore
 
     public void reorderCategories(List<UUID> idsInNewOrder)
     {
-        lastUndo = null;
         Map<UUID, Integer> rank = new HashMap<>();
         for (int i = 0; i < idsInNewOrder.size(); i++) rank.put(idsInNewOrder.get(i), i);
         for (Category c : library.getCategories())
@@ -322,7 +334,6 @@ public class WaypointStore
 
     public Waypoint createWaypoint(int packed, String name, UUID categoryId, String targetNpcName)
     {
-        lastUndo = null;
         Waypoint w = new Waypoint(
             UUID.randomUUID(),
             name,
@@ -343,7 +354,6 @@ public class WaypointStore
 
     public void renameWaypoint(UUID id, String newName)
     {
-        lastUndo = null;
         Waypoint w = getWaypointById(id);
         if (w == null) return;
         w.setName(newName);
@@ -352,7 +362,6 @@ public class WaypointStore
 
     public void updateWaypointIcon(UUID id, Integer iconId)
     {
-        lastUndo = null;
         Waypoint w = getWaypointById(id);
         if (w == null) return;
         w.setIconId(iconId);
@@ -361,7 +370,6 @@ public class WaypointStore
 
     public void setWaypointPinned(UUID id, boolean pinned)
     {
-        lastUndo = null;
         Waypoint w = getWaypointById(id);
         if (w == null) return;
         if (pinned == w.isPinned()) return;
@@ -372,7 +380,6 @@ public class WaypointStore
 
     public void setWaypointBypassWildernessConfirm(UUID id, boolean bypass)
     {
-        lastUndo = null;
         Waypoint w = getWaypointById(id);
         if (w == null) return;
         if (bypass == w.isBypassWildernessConfirm()) return;
@@ -402,7 +409,6 @@ public class WaypointStore
 
     public void updateWaypointNotes(UUID id, String notes)
     {
-        lastUndo = null;
         Waypoint w = getWaypointById(id);
         if (w == null) return;
         w.setNotes(notes == null ? "" : notes);
@@ -414,21 +420,19 @@ public class WaypointStore
         Waypoint w = getWaypointById(id);
         if (w == null)
         {
-            lastUndo = null;
             return;
         }
         int oldPacked = w.getPackedWorldPoint();
         w.setPackedWorldPoint(packed);
         UUID targetId = id;
-        lastUndo = () -> {
+        armUndoAndNotify(() -> {
             Waypoint cur = getWaypointById(targetId);
             if (cur != null)
             {
                 cur.setPackedWorldPoint(oldPacked);
                 notifyChanged();
             }
-        };
-        notifyChanged();
+        });
     }
 
     public void deleteWaypoint(UUID id)
@@ -436,16 +440,14 @@ public class WaypointStore
         Waypoint w = getWaypointById(id);
         if (w == null)
         {
-            lastUndo = null;
             return;
         }
         library.getWaypoints().removeIf(x -> x.getId().equals(id));
         Waypoint snapshot = w;
-        lastUndo = () -> {
+        armUndoAndNotify(() -> {
             library.getWaypoints().add(snapshot);
             notifyChanged();
-        };
-        notifyChanged();
+        });
     }
 
     /**
@@ -463,20 +465,17 @@ public class WaypointStore
         }
         if (removed.isEmpty())
         {
-            lastUndo = null;
             return;
         }
         library.getWaypoints().removeIf(w -> idSet.contains(w.getId()));
-        lastUndo = () -> {
+        armUndoAndNotify(() -> {
             library.getWaypoints().addAll(removed);
             notifyChanged();
-        };
-        notifyChanged();
+        });
     }
 
     public void moveWaypointToCategory(UUID waypointId, UUID newCategoryId)
     {
-        lastUndo = null;
         Waypoint w = getWaypointById(waypointId);
         if (w == null) return;
         if (getCategoryById(newCategoryId) == null) return;
@@ -492,7 +491,6 @@ public class WaypointStore
      */
     public void moveWaypointsToCategory(Collection<UUID> ids, UUID targetId)
     {
-        lastUndo = null;
         if (getCategoryById(targetId) == null) return;
         int order = nextWaypointSortOrder(targetId);
         boolean any = false;
@@ -509,7 +507,6 @@ public class WaypointStore
 
     public void reorderWithinCategory(UUID categoryId, List<UUID> waypointIdsInOrder)
     {
-        lastUndo = null;
         Map<UUID, Integer> rank = new HashMap<>();
         for (int i = 0; i < waypointIdsInOrder.size(); i++) rank.put(waypointIdsInOrder.get(i), i);
         for (Waypoint w : library.getWaypoints())
@@ -524,7 +521,6 @@ public class WaypointStore
     /** Merge another library into this one. Dedupe by id; rebind incoming categoryIds by name. */
     public ImportResult importMerge(Library incoming)
     {
-        lastUndo = null;
         ImportResult result = new ImportResult();
         Map<UUID, UUID> categoryIdRemap = new HashMap<>();
 
@@ -626,10 +622,7 @@ public class WaypointStore
 
     // ---- Debounced persistence wiring ----
 
-    private WaypointStorePersistence persistence;
-    private ScheduledExecutorService scheduler;
-    private Duration debounce;
-    private volatile ScheduledFuture<?> pendingSave;
+    private DebouncedSaver saver;
     private Listeners.Subscription saveSub;
 
     public void enableDebouncedPersistence(
@@ -638,10 +631,10 @@ public class WaypointStore
         Duration debounceWindow)
     {
         if (saveSub != null) return;
-        this.persistence = p;
-        this.scheduler = exec;
-        this.debounce = debounceWindow;
-        this.saveSub = listeners.subscribe(this::scheduleSave);
+        // The supplier reads the field live, so a later bootstrap() that swaps the library
+        // (e.g. a profile switch) is picked up without re-wiring the saver.
+        this.saver = new DebouncedSaver(p, exec, debounceWindow, () -> library);
+        this.saveSub = listeners.subscribe(saver::schedule);
     }
 
     /**
@@ -657,35 +650,13 @@ public class WaypointStore
             saveSub.close();
             saveSub = null;
         }
-        if (pendingSave != null && !pendingSave.isDone()) pendingSave.cancel(false);
-    }
-
-    private void scheduleSave()
-    {
-        if (persistence == null || scheduler == null) return;
-        if (pendingSave != null && !pendingSave.isDone()) pendingSave.cancel(false);
-        // Snapshot the library to JSON on the calling thread (mutations happen here, so
-        // iteration is safe). The scheduler thread only writes the frozen bytes. Avoids
-        // ConcurrentModificationException during gson iteration vs. a parallel mutation.
-        final String json = persistence.serialize(library);
-        pendingSave = scheduler.schedule(
-            () -> {
-                boolean ok = persistence.writeBlocking(json);
-                if (!ok) log.warn("Library save failed");
-            },
-            debounce.toMillis(),
-            TimeUnit.MILLISECONDS);
+        if (saver != null) saver.cancelPending();
     }
 
     /** Cancels any pending debounced save, then writes the current library synchronously. */
     public void flushPendingSave()
     {
-        if (pendingSave != null && !pendingSave.isDone()) pendingSave.cancel(false);
-        if (persistence != null)
-        {
-            boolean ok = persistence.saveBlocking(library);
-            if (!ok) log.warn("Library save failed");
-        }
+        if (saver != null) saver.flush();
     }
 
     private int nextWaypointSortOrder(UUID categoryId)

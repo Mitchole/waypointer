@@ -405,6 +405,128 @@ public class WaypointStoreTest
     }
 
     @Test
+    public void noOpMutationLeavesUndoSlotArmed()
+    {
+        Waypoint w = store.createWaypoint(100, "X", store.getUncategorized().getId());
+        store.deleteWaypoint(w.getId());
+        assertTrue("delete arms undo", store.hasUndoable());
+
+        // A mutation that changes nothing (unknown id) never reaches notifyChanged, so it
+        // leaves the armed inverse intact rather than discarding it.
+        store.renameWaypoint(UUID.randomUUID(), "ignored");
+        assertTrue("a no-op mutation must not clear the slot", store.hasUndoable());
+
+        store.undoLast();
+        assertNotNull("the still-armed undo restores the deleted waypoint",
+            store.getWaypointById(w.getId()));
+    }
+
+    @Test
+    public void rejectedMutationLeavesUndoSlotArmed()
+    {
+        Category c = store.createCategory("Herbs");
+        Waypoint w = store.createWaypoint(100, "X", c.getId());
+        store.deleteWaypoint(w.getId());
+        assertTrue(store.hasUndoable());
+
+        // A rejected mutation throws before notifying, so the slot survives.
+        try
+        {
+            store.renameCategory(c.getId(), store.getUncategorized().getName());
+            fail("expected duplicate-name rejection");
+        }
+        catch (IllegalArgumentException expected)
+        {
+            // intended
+        }
+        assertTrue("a rejected mutation must not clear the slot", store.hasUndoable());
+    }
+
+    @Test
+    public void renameWaypointClearsUndoSlot()
+    {
+        Waypoint w = store.createWaypoint(100, "X", store.getUncategorized().getId());
+        store.testArmUndoSlot(() -> {});
+        store.renameWaypoint(w.getId(), "Y");
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void moveWaypointToCategoryClearsUndoSlot()
+    {
+        Category c = store.createCategory("Herbs");
+        Waypoint w = store.createWaypoint(100, "X", store.getUncategorized().getId());
+        store.testArmUndoSlot(() -> {});
+        store.moveWaypointToCategory(w.getId(), c.getId());
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void setCategoryColorClearsUndoSlot()
+    {
+        Category c = store.createCategory("Herbs");
+        store.testArmUndoSlot(() -> {});
+        store.setCategoryColor(c.getId(), 0xFF00FF);
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void setWaypointPinnedClearsUndoSlot()
+    {
+        Waypoint w = store.createWaypoint(100, "X", store.getUncategorized().getId());
+        store.testArmUndoSlot(() -> {});
+        store.setWaypointPinned(w.getId(), true);
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void updateWaypointNotesClearsUndoSlot()
+    {
+        Waypoint w = store.createWaypoint(100, "X", store.getUncategorized().getId());
+        store.testArmUndoSlot(() -> {});
+        store.updateWaypointNotes(w.getId(), "a note");
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void reorderCategoriesClearsUndoSlot()
+    {
+        Category a = store.createCategory("A");
+        Category b = store.createCategory("B");
+        store.testArmUndoSlot(() -> {});
+        store.reorderCategories(java.util.Arrays.asList(b.getId(), a.getId()));
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void importMergeClearsUndoSlot()
+    {
+        store.testArmUndoSlot(() -> {});
+        Library incoming = new Library();
+        incoming.getCategories().add(
+            new Category(UUID.randomUUID(), "Imported", 0, false, null, false));
+        store.importMerge(incoming);
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
+    public void undoLastAfterDeleteWaypointsRestoresAll()
+    {
+        Waypoint a = store.createWaypoint(100, "A", store.getUncategorized().getId());
+        Waypoint b = store.createWaypoint(200, "B", store.getUncategorized().getId());
+
+        store.deleteWaypoints(java.util.Arrays.asList(a.getId(), b.getId()));
+        assertNull(store.getWaypointById(a.getId()));
+        assertNull(store.getWaypointById(b.getId()));
+        assertTrue("batch delete arms one undo", store.hasUndoable());
+
+        store.undoLast();
+        assertNotNull("undo restores the first waypoint", store.getWaypointById(a.getId()));
+        assertNotNull("undo restores the second waypoint", store.getWaypointById(b.getId()));
+        assertFalse(store.hasUndoable());
+    }
+
+    @Test
     public void setWaypointPinnedFlipsFlagAndStampsPinnedAt()
     {
         Waypoint w = store.createWaypoint(1, "Home", store.getUncategorized().getId());
