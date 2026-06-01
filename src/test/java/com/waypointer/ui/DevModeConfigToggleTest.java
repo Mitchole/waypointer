@@ -12,6 +12,7 @@ import com.waypointer.model.Library;
 import com.waypointer.preset.PresetCatalog;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.RoutePlaybackEngine;
+import com.waypointer.service.RouteRecorder;
 import com.waypointer.service.RouteStore;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointPathfinder;
@@ -125,7 +126,8 @@ public class DevModeConfigToggleTest
         when(routeStore.getRoutesOrdered()).thenReturn(Collections.emptyList());
         RoutePlaybackEngine routeEngine = mock(RoutePlaybackEngine.class);
         when(routeEngine.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
-        RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine);
+        RouteRecorder routeRecorder = mock(RouteRecorder.class);
+        RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder);
 
         return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config);
     }

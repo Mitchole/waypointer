@@ -2,10 +2,12 @@ package com.waypointer.ui;
 
 import com.waypointer.model.route.Route;
 import com.waypointer.service.RoutePlaybackEngine;
+import com.waypointer.service.RouteRecorder;
 import com.waypointer.service.RouteStore;
 import com.waypointer.util.Listeners;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.UUID;
@@ -13,6 +15,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -21,7 +24,7 @@ import javax.swing.SwingUtilities;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 
-/** The Routes tab body: a list of routes, a playback bar, and create/edit navigation. */
+/** The Routes tab body: a list of routes, a playback bar, a recording bar, and create/edit nav. */
 @Singleton
 public class RoutesPanel extends JPanel
 {
@@ -30,7 +33,9 @@ public class RoutesPanel extends JPanel
 
     private final RouteStore store;
     private final RoutePlaybackEngine engine;
+    private final RouteRecorder recorder;
     private final RoutePlaybackBar playbackBar;
+    private final JPanel recordingBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
 
     private final CardLayout cards = new CardLayout();
     private final JPanel cardHost = new JPanel(cards);
@@ -41,19 +46,27 @@ public class RoutesPanel extends JPanel
     private final javax.swing.JScrollBar routeListScrollBar;
     private Listeners.Subscription storeSub;
     private Listeners.Subscription engineSub;
+    private Listeners.Subscription recorderSub;
     private RouteEditorPanel openEditor;
 
     @Inject
-    public RoutesPanel(RouteStore store, RoutePlaybackEngine engine)
+    public RoutesPanel(RouteStore store, RoutePlaybackEngine engine, RouteRecorder recorder)
     {
         this.store = store;
         this.engine = engine;
+        this.recorder = recorder;
         this.playbackBar = new RoutePlaybackBar(engine);
 
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        add(playbackBar, BorderLayout.NORTH);
+        JPanel north = new JPanel();
+        north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
+        north.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        playbackBar.setAlignmentX(LEFT_ALIGNMENT);
+        north.add(playbackBar);
+        north.add(buildRecordingBar());
+        add(north, BorderLayout.NORTH);
 
         routeList.setLayout(new BoxLayout(routeList, BoxLayout.Y_AXIS));
         routeList.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -73,9 +86,14 @@ public class RoutesPanel extends JPanel
 
         storeSub = store.subscribe(() -> SwingUtilities.invokeLater(this::rebuildList));
         engineSub = engine.subscribe(() -> SwingUtilities.invokeLater(playbackBar::refresh));
+        recorderSub = recorder.subscribe(() -> SwingUtilities.invokeLater(() -> {
+            refreshRecordingBar();
+            if (openEditor != null) openEditor.rebuild();
+        }));
 
         rebuildList();
         playbackBar.refresh();
+        refreshRecordingBar();
         cards.show(cardHost, CARD_LIST);
     }
 
@@ -94,7 +112,58 @@ public class RoutesPanel extends JPanel
             }
         });
         header.add(create);
+
+        JButton record = new JButton("Record");
+        Styles.secondaryButton(record);
+        record.addActionListener(e -> {
+            if (recorder.isRecording())
+            {
+                recorder.stopAndSave();
+                return;
+            }
+            String name = JOptionPane.showInputDialog(this, "Record new route - name:");
+            if (name != null && !name.trim().isEmpty())
+            {
+                recorder.start(name.trim());
+                openEditorFor(recorder.getDraftRouteId());
+            }
+        });
+        header.add(record);
         return header;
+    }
+
+    private JPanel buildRecordingBar()
+    {
+        recordingBar.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        recordingBar.setAlignmentX(LEFT_ALIGNMENT);
+        JLabel rec = new JLabel("● Recording");   // filled circle
+        rec.setForeground(new Color(0xFF5B5B));
+        recordingBar.add(rec);
+
+        JButton mark = new JButton("Mark location");
+        JButton manual = new JButton("Add manual");
+        JButton stop = new JButton("Stop & save");
+        Styles.compactSecondaryButton(mark);
+        Styles.compactSecondaryButton(manual);
+        Styles.compactSecondaryButton(stop);
+        mark.addActionListener(e -> recorder.markCurrentLocation());
+        manual.addActionListener(e -> {
+            String t = JOptionPane.showInputDialog(this, "Instruction:");
+            if (t != null && !t.trim().isEmpty()) recorder.addManualStep(t.trim());
+        });
+        stop.addActionListener(e -> recorder.stopAndSave());
+        recordingBar.add(mark);
+        recordingBar.add(manual);
+        recordingBar.add(stop);
+        recordingBar.setVisible(false);
+        return recordingBar;
+    }
+
+    private void refreshRecordingBar()
+    {
+        recordingBar.setVisible(recorder.isRecording());
+        recordingBar.revalidate();
+        recordingBar.repaint();
     }
 
     private void rebuildList()
@@ -161,6 +230,7 @@ public class RoutesPanel extends JPanel
     {
         if (storeSub != null) { storeSub.close(); storeSub = null; }
         if (engineSub != null) { engineSub.close(); engineSub = null; }
+        if (recorderSub != null) { recorderSub.close(); recorderSub = null; }
     }
 
     @Override public Dimension getPreferredSize() { return new Dimension(PluginPanel.PANEL_WIDTH, 0); }
