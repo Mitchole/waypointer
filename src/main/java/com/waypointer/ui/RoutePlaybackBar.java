@@ -52,16 +52,16 @@ final class RoutePlaybackBar extends JPanel
 
     void refresh()
     {
-        boolean active = engine.isActive();
-        if (active)
+        // Read the route once: stop() can null it on the client thread between two reads.
+        Route r = engine.getActiveRoute();
+        if (r != null)
         {
-            Route r = engine.getActiveRoute();
             String text = "Step " + (engine.getCurrentIndex() + 1) + " / " + r.getSteps().size();
             if (r.isRepeating()) text += "  Lap " + engine.getLap();
             label.setText("<html><b>" + Styles.escapeHtml(r.getName()) + "</b><br>"
                 + text + "</html>");
         }
-        setVisible(active);
+        setVisible(r != null);
     }
 
     @Override
