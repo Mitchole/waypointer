@@ -53,5 +53,9 @@ final class AddCategoryForm extends JPanel
             onClose.run();
         });
         cancel.addActionListener(e -> onClose.run());
+
+        // Enter on the name field adds; Escape cancels. Bound on the name field only so the
+        // description text area keeps normal newline behaviour.
+        EditorKeyBindings.commitOnEnterCancelOnEscape(this, name, ok, cancel);
     }
 }

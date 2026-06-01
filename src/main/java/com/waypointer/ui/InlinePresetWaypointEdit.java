@@ -76,5 +76,9 @@ final class InlinePresetWaypointEdit extends JPanel
             onClose.run();
         }));
         cancel.addActionListener(e -> onClose.run());
+
+        // Enter on the name field saves; Escape cancels. Bound on the name field only so the
+        // description text area keeps normal newline behaviour. Recapture stays mouse-only.
+        EditorKeyBindings.commitOnEnterCancelOnEscape(this, name, save, cancel);
     }
 }

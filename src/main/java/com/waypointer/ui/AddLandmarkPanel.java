@@ -87,5 +87,8 @@ final class AddLandmarkPanel extends JPanel
             onClose.run();
         }));
         cancelBtn.addActionListener(e -> onClose.run());
+
+        // Enter on the name field captures; Escape cancels.
+        EditorKeyBindings.commitOnEnterCancelOnEscape(this, nameField, capBtn, cancelBtn);
     }
 }

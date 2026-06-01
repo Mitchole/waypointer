@@ -120,6 +120,9 @@ final class InlineLandmarkEdit extends JPanel
         }));
         cancel.addActionListener(e -> onClose.run());
 
+        // Enter on the name field saves the rename; Escape cancels. Recapture stays mouse-only.
+        EditorKeyBindings.commitOnEnterCancelOnEscape(this, nameField, save, cancel);
+
         // Sync the in-scene area-preview overlay with the initial Point/Area state.
         onSizeChanged.accept(originallyArea ? initialSize : 0);
     }
