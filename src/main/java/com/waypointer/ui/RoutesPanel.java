@@ -1,6 +1,9 @@
 package com.waypointer.ui;
 
+import com.waypointer.codec.RouteShareCodec;
 import com.waypointer.model.route.Route;
+import com.waypointer.model.route.RouteStep;
+import com.waypointer.model.route.StepType;
 import com.waypointer.service.RoutePlaybackEngine;
 import com.waypointer.service.RouteRecorder;
 import com.waypointer.service.RouteStore;
@@ -34,6 +37,7 @@ public class RoutesPanel extends JPanel
     private final RouteStore store;
     private final RoutePlaybackEngine engine;
     private final RouteRecorder recorder;
+    private final RouteShareCodec shareCodec;
     private final RoutePlaybackBar playbackBar;
     private final JPanel recordingBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
 
@@ -50,11 +54,12 @@ public class RoutesPanel extends JPanel
     private RouteEditorPanel openEditor;
 
     @Inject
-    public RoutesPanel(RouteStore store, RoutePlaybackEngine engine, RouteRecorder recorder)
+    public RoutesPanel(RouteStore store, RoutePlaybackEngine engine, RouteRecorder recorder, RouteShareCodec shareCodec)
     {
         this.store = store;
         this.engine = engine;
         this.recorder = recorder;
+        this.shareCodec = shareCodec;
         this.playbackBar = new RoutePlaybackBar(engine);
 
         setLayout(new BorderLayout());
@@ -129,6 +134,11 @@ public class RoutesPanel extends JPanel
             }
         });
         header.add(record);
+
+        JButton importBtn = new JButton("Import");
+        Styles.secondaryButton(importBtn);
+        importBtn.addActionListener(e -> importFromCode());
+        header.add(importBtn);
         return header;
     }
 
@@ -202,6 +212,7 @@ public class RoutesPanel extends JPanel
     private void showOverflow(UUID routeId)
     {
         JPopupMenu menu = new JPopupMenu();
+        menu.add(menuItem("Export (copy code)", () -> exportToClipboard(routeId)));
         menu.add(menuItem("Rename", () -> {
             Route r = store.getRouteById(routeId);
             String name = JOptionPane.showInputDialog(this, "Rename route:", r == null ? "" : r.getName());
@@ -210,6 +221,50 @@ public class RoutesPanel extends JPanel
         menu.add(menuItem("Duplicate", () -> store.duplicateRoute(routeId)));
         menu.add(menuItem("Delete", () -> store.deleteRoute(routeId)));
         menu.show(this, getWidth() / 2, 40);
+    }
+
+    private void exportToClipboard(UUID routeId)
+    {
+        Route r = store.getRouteById(routeId);
+        if (r == null) return;
+        String code = shareCodec.encodeRoute(r);
+        java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()
+            .setContents(new java.awt.datatransfer.StringSelection(code), null);
+        JOptionPane.showMessageDialog(this, "Route code copied to clipboard.",
+            "Export", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void importFromCode()
+    {
+        String code = JOptionPane.showInputDialog(this, "Paste a route code (RT1:...):");
+        if (code == null || code.trim().isEmpty()) return;
+        final Route imported;
+        try
+        {
+            imported = shareCodec.decodeRoute(code.trim());
+        }
+        catch (RouteShareCodec.MalformedCodeException ex)
+        {
+            JOptionPane.showMessageDialog(this, "That is not a valid route code.",
+                "Import failed", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        // Re-create through the store so the imported route gets fresh ids and persists.
+        Route created = store.createRoute(imported.getName());
+        store.setRepeating(created.getId(), imported.isRepeating());
+        for (RouteStep s : imported.getSteps())
+        {
+            if (s.getType() == StepType.WAYPOINT)
+            {
+                store.addWaypointStep(created.getId(), s.getPackedWorldPoint(), s.getLabel(), null);
+            }
+            else
+            {
+                store.addManualStep(created.getId(), s.getLabel());
+            }
+        }
+        JOptionPane.showMessageDialog(this, "Imported route: " + imported.getName(),
+            "Import", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private static JMenuItem menuItem(String text, Runnable action)
