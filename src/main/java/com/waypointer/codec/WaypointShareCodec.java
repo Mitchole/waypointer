@@ -2,8 +2,6 @@ package com.waypointer.codec;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
@@ -81,16 +79,7 @@ public class WaypointShareCodec
 
     private static JsonObject parseObject(String json)
     {
-        try
-        {
-            @SuppressWarnings("deprecation")
-            JsonObject o = new JsonParser().parse(json).getAsJsonObject();
-            return o;
-        }
-        catch (JsonParseException | IllegalStateException e)
-        {
-            throw new MalformedCodeException("Bad JSON inside share code");
-        }
+        return JsonDecodeSupport.parseObject(json, e -> new MalformedCodeException("Bad JSON inside share code"));
     }
 
     public static class MalformedCodeException extends RuntimeException
