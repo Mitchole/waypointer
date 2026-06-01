@@ -80,7 +80,7 @@ public class WaypointerPanel extends PluginPanel
     private final LibraryJsonCodec libraryCodec;
     private final CaptureForm captureForm;
     private final JPanel body = new JPanel();
-    private JScrollBar bodyScrollBar;
+    private final JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
     private final JButton markBtn = new JButton("Mark current location");
     private final JButton selectToggleBtn = new JButton("Select");

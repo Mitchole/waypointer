@@ -73,11 +73,10 @@ public class PresetBrowserPanel extends PluginPanel
         bodyHolder.setBackground(ColorScheme.DARK_GRAY_COLOR);
         bodyHolder.add(body, BorderLayout.NORTH);
 
-        // Mirror WaypointerPanel's scrollbar-pin pattern. As a Singleton constructed
-        // during loadCorePlugins() (before ClientUI.init() installs RuneLiteLAF), the
-        // vertical scrollbar's UI delegate picks up Metal defaults unless we pin width
-        // + showButtons + install RuneLiteScrollBarUI here, then call
-        // refreshScrollbarStyling() from startUp() once LAF is live.
+        // Constructed during loadCorePlugins(), before ClientUI.init() installs RuneLiteLAF,
+        // so the scrollbar's UI delegate would inherit Metal defaults. Styles.pinnedScrollPane
+        // applies the dark-theme pin now; refreshScrollbarStyling() re-derives it from startUp()
+        // once the LAF is live.
         JScrollPane scroll = Styles.pinnedScrollPane(bodyHolder);
         this.bodyScrollBar = scroll.getVerticalScrollBar();
         toastOverlay = new ToastOverlay(scroll);

@@ -32,6 +32,10 @@ final class Styles
     private static final String CLIENT_PROP_ACTIVE = "waypointer.playActive";
     private static final String CLIENT_PROP_HOVER_ATTACHED = "waypointer.playHoverAttached";
 
+    private static final int SCROLLBAR_PIN_WIDTH = 7;
+    private static final String CP_SCROLLBAR_WIDTH = "JScrollBar.width";
+    private static final String CP_SCROLLBAR_BUTTONS = "JScrollBar.showButtons";
+
     // Destructive-action red used on delete row buttons and the delete link. ERROR_RED is the
     // slightly lighter tint for inline form-validation messages.
     static final Color DELETE_RED = new Color(220, 80, 80);
@@ -257,9 +261,9 @@ final class Styles
         scroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         JScrollBar vBar = scroll.getVerticalScrollBar();
-        vBar.putClientProperty("JScrollBar.width", 7);
-        vBar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
-        vBar.setPreferredSize(new Dimension(7, 0));
+        vBar.putClientProperty(CP_SCROLLBAR_WIDTH, SCROLLBAR_PIN_WIDTH);
+        vBar.putClientProperty(CP_SCROLLBAR_BUTTONS, Boolean.FALSE);
+        vBar.setPreferredSize(new Dimension(SCROLLBAR_PIN_WIDTH, 0));
         vBar.setUI((ScrollBarUI) RuneLiteScrollBarUI.createUI(vBar));
         return scroll;
     }
@@ -271,9 +275,9 @@ final class Styles
     {
         if (bar == null) return;
         bar.updateUI();
-        bar.setPreferredSize(new Dimension(7, 0));
-        bar.putClientProperty("JScrollBar.width", 7);
-        bar.putClientProperty("JScrollBar.showButtons", Boolean.FALSE);
+        bar.setPreferredSize(new Dimension(SCROLLBAR_PIN_WIDTH, 0));
+        bar.putClientProperty(CP_SCROLLBAR_WIDTH, SCROLLBAR_PIN_WIDTH);
+        bar.putClientProperty(CP_SCROLLBAR_BUTTONS, Boolean.FALSE);
     }
 
     // Escapes s for embedding in HTML. Handles <, >, &, ", and '. Returns "" when s is null.
