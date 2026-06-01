@@ -30,9 +30,14 @@ public class WaypointShareCodec
     static final int MAX_INFLATED_BYTES = 1024 * 1024;
 
     private final Gson gson;
+    private final LibraryJsonCodec libraryJsonCodec;
 
     @Inject
-    public WaypointShareCodec(Gson gson) { this.gson = gson; }
+    public WaypointShareCodec(Gson gson, LibraryJsonCodec libraryJsonCodec)
+    {
+        this.gson = gson;
+        this.libraryJsonCodec = libraryJsonCodec;
+    }
 
     public SingleResult decodeSingle(String input)
     {
@@ -65,11 +70,19 @@ public class WaypointShareCodec
         }
         String body = stripMagic(input, LIBRARY_MAGIC);
         String json = ungzipBase64(body);
-        Library lib = gson.fromJson(json, Library.class);
-        if (lib == null) throw new MalformedCodeException("Library decoded as null");
-        if (lib.getCategories() == null) lib.setCategories(new java.util.ArrayList<>());
-        if (lib.getWaypoints() == null) lib.setWaypoints(new java.util.ArrayList<>());
-        return lib;
+        // Share the file-load decode contract: schema-version guard, migrator, and field defaults.
+        try
+        {
+            return libraryJsonCodec.decode(json);
+        }
+        catch (LibraryJsonCodec.UnsupportedSchemaException e)
+        {
+            throw new MalformedCodeException("Share code is from a newer version of the plugin");
+        }
+        catch (LibraryJsonCodec.MalformedLibraryException e)
+        {
+            throw new MalformedCodeException("Bad library JSON inside share code");
+        }
     }
 
     // ---- helpers ----

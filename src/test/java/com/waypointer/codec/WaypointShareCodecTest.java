@@ -24,6 +24,17 @@ public class WaypointShareCodecTest
                 Instant.parse(e.getAsString()))
         .create();
 
+    private String wpl1(String innerJson) throws java.io.IOException
+    {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.GZIPOutputStream gz = new java.util.zip.GZIPOutputStream(baos))
+        {
+            gz.write(innerJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+        return "WPL1:" + java.util.Base64.getEncoder().withoutPadding()
+            .encodeToString(baos.toByteArray());
+    }
+
     private String legacyWp1(Waypoint w, Category c) throws java.io.IOException
     {
         com.google.gson.JsonObject obj = new com.google.gson.JsonObject();
@@ -52,7 +63,7 @@ public class WaypointShareCodecTest
                 (com.google.gson.JsonDeserializer<Instant>) (e, t, c) ->
                     Instant.parse(e.getAsString()))
             .create();
-        codec = new WaypointShareCodec(gson);
+        codec = new WaypointShareCodec(gson, new LibraryJsonCodec(gson));
     }
 
     @Test
@@ -192,5 +203,25 @@ public class WaypointShareCodecTest
         }
         String code = codec.encodeLibrary(lib);
         codec.decodeLibrary(code);  // should throw on size cap
+    }
+
+    @Test(expected = WaypointShareCodec.MalformedCodeException.class)
+    public void rejectsLibraryCodeFromNewerSchema() throws Exception
+    {
+        // Inner library schemaVersion newer than supported must be rejected, like the file-load path.
+        String json = "{\"schemaVersion\":" + (Library.CURRENT_SCHEMA_VERSION + 1)
+            + ",\"categories\":[],\"waypoints\":[]}";
+        codec.decodeLibrary(wpl1(json));
+    }
+
+    @Test
+    public void legacyLibraryCodeWithoutSchemaDecodesViaMigrator() throws Exception
+    {
+        // A pre-versioned inner payload (no schemaVersion) must run through the migrator and be
+        // normalised to CURRENT, proving the share path now shares the file-load decode contract.
+        String json = "{\"categories\":[],\"waypoints\":[]}";
+        Library back = codec.decodeLibrary(wpl1(json));
+        assertNotNull(back);
+        assertEquals(Library.CURRENT_SCHEMA_VERSION, back.getSchemaVersion());
     }
 }

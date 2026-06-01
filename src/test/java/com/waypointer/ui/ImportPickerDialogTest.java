@@ -41,8 +41,8 @@ public class ImportPickerDialogTest
                 (com.google.gson.JsonDeserializer<Instant>) (e, t, c) ->
                     Instant.parse(e.getAsString()))
             .create();
-        shareCodec = new WaypointShareCodec(gson);
         libraryCodec = new LibraryJsonCodec(gson);
+        shareCodec = new WaypointShareCodec(gson, libraryCodec);
     }
 
     private static Library oneWaypointLibrary()
