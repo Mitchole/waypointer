@@ -62,6 +62,7 @@ public class RoutePlaybackEngine
     public void detach()
     {
         if (storeSub != null) { storeSub.close(); storeSub = null; }
+        this.client = null;
         stop();
     }
 

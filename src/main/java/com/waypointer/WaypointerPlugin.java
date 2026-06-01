@@ -99,7 +99,7 @@ public class WaypointerPlugin extends Plugin
         // a hard client crash or user closing the RuneLite window). Removed in shutDown() so
         // we don't leak a hook reference across plugin enable/disable cycles.
         shutdownHook = new Thread(() -> {
-            try { store.flushPendingSave(); }
+            try { store.flushPendingSave(); routeStore.flushPendingSave(); }
             catch (Exception e) { log.warn("Shutdown-hook save failed", e); }
         }, "waypointer-shutdown-flush");
         Runtime.getRuntime().addShutdownHook(shutdownHook);
