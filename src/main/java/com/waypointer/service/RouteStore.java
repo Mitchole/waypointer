@@ -1,6 +1,5 @@
 package com.waypointer.service;
 
-import com.waypointer.model.WorldPointPacker;
 import com.waypointer.model.route.Route;
 import com.waypointer.model.route.RouteLibrary;
 import com.waypointer.model.route.RouteStep;
@@ -205,20 +204,16 @@ public class RouteStore
 
     public void disableDebouncedPersistence()
     {
-        if (saveSub != null) { saveSub.close(); saveSub = null; }
+        if (saveSub != null)
+        {
+            saveSub.close();
+            saveSub = null;
+        }
         if (saver != null) saver.cancelPending();
     }
 
     public void flushPendingSave()
     {
         if (saver != null) saver.flush();
-    }
-
-    // Convenience for callers building a waypoint step without their own label helper.
-    public static String defaultWaypointLabel(int packed)
-    {
-        return packed == WorldPointPacker.UNDEFINED
-            ? "Waypoint"
-            : "(" + WorldPointPacker.getX(packed) + ", " + WorldPointPacker.getY(packed) + ")";
     }
 }

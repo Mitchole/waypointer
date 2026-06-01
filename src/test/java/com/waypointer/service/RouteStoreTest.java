@@ -42,7 +42,7 @@ public class RouteStoreTest
         AtomicInteger fires = new AtomicInteger();
         store.subscribe(fires::incrementAndGet);
         store.createRoute("A");
-        assertTrue(fires.get() >= 1);
+        assertEquals(1, fires.get());
     }
 
     @Test
