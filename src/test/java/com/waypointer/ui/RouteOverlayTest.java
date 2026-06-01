@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.model.route.Route;
@@ -45,5 +46,29 @@ public class RouteOverlayTest
         Route r = route(false, RouteStep.manual("only"));
         List<String> lines = RouteOverlay.buildLines(r, 0, 1);
         assertTrue(lines.stream().noneMatch(l -> l.startsWith("Next:")));
+    }
+
+    @Test
+    public void boxTextOverridesLabelForCurrentAndNextLines()
+    {
+        RouteStep s0 = RouteStep.manual("Bank");
+        s0.setBoxText("Withdraw 5 seeds");
+        RouteStep s1 = RouteStep.manual("Plant");
+        s1.setBoxText("Plant in patch 3");
+        Route r = route(false, s0, s1);
+
+        List<String> lines = RouteOverlay.buildLines(r, 0, 1);
+
+        assertTrue(lines.contains("Withdraw 5 seeds"));
+        assertFalse(lines.contains("Bank"));
+        assertTrue(lines.contains("Next: Plant in patch 3"));
+    }
+
+    @Test
+    public void fallsBackToLabelWhenNoBoxText()
+    {
+        Route r = route(false, RouteStep.manual("Withdraw seeds"));
+        List<String> lines = RouteOverlay.buildLines(r, 0, 1);
+        assertTrue(lines.contains("Withdraw seeds"));
     }
 }

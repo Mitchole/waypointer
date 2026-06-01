@@ -68,13 +68,13 @@ public class RouteOverlay extends OverlayPanel
 
         if (currentIndex >= 0 && currentIndex < total)
         {
-            lines.add(route.getSteps().get(currentIndex).getLabel());
+            lines.add(route.getSteps().get(currentIndex).boxTextOrLabel());
         }
         int next = currentIndex + 1;
         if (next < total)
         {
             RouteStep n = route.getSteps().get(next);
-            lines.add("Next: " + n.getLabel());
+            lines.add("Next: " + n.boxTextOrLabel());
         }
         return lines;
     }
