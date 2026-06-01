@@ -11,10 +11,12 @@ import static org.junit.Assert.assertFalse;
 
 public class PresetOverridesTest
 {
+    private static final com.google.gson.Gson GSON = new com.google.gson.Gson();
+
     @Test
     public void upsertWaypointAddsWhenAbsent()
     {
-        PresetOverrides ov = PresetOverrides.forTesting();
+        PresetOverrides ov = PresetOverrides.forTesting(GSON);
         ov.upsertWaypoint("Bosses", null, new Waypoint("Vorkath", "", 1, 2, 0));
         CategoryOverride bosses = ov.getSnapshot().getByCategory().get("Bosses");
         assertEquals(1, bosses.getWaypoints().size());
@@ -23,7 +25,7 @@ public class PresetOverridesTest
     @Test
     public void upsertWaypointReplacesByOriginalTuple()
     {
-        PresetOverrides ov = PresetOverrides.forTesting();
+        PresetOverrides ov = PresetOverrides.forTesting(GSON);
         Waypoint original = new Waypoint("Vorkath", "old", 1, 2, 0);
         ov.upsertWaypoint("Bosses", null, original);
         Waypoint updated = new Waypoint("Vorkath", "new", 9, 9, 0);
@@ -36,7 +38,7 @@ public class PresetOverridesTest
     @Test
     public void addCategoryRejectsDuplicateName()
     {
-        PresetOverrides ov = PresetOverrides.forTesting();
+        PresetOverrides ov = PresetOverrides.forTesting(GSON);
         assertTrue(ov.addCategory(new CategoryOverride("Bosses", "", null, new ArrayList<>())));
         assertFalse(ov.addCategory(new CategoryOverride("Bosses", "", null, new ArrayList<>())));
     }
@@ -44,7 +46,7 @@ public class PresetOverridesTest
     @Test
     public void deleteBundledWaypointAppendsToDeletions()
     {
-        PresetOverrides ov = PresetOverrides.forTesting();
+        PresetOverrides ov = PresetOverrides.forTesting(GSON);
         ov.deleteBundledWaypoint("Skilling", "Bad", 1, 2, 0);
         assertEquals(1, ov.getSnapshot().getDeletedWaypoints().size());
     }
@@ -52,7 +54,7 @@ public class PresetOverridesTest
     @Test
     public void listenersFireOnMutation()
     {
-        PresetOverrides ov = PresetOverrides.forTesting();
+        PresetOverrides ov = PresetOverrides.forTesting(GSON);
         int[] count = {0};
         Subscription sub = ov.subscribe(() -> count[0]++);
         ov.upsertWaypoint("Bosses", null, new Waypoint("V", "", 1, 1, 0));
@@ -63,7 +65,7 @@ public class PresetOverridesTest
     @Test
     public void undoLastRestoresPriorSnapshot()
     {
-        PresetOverrides ov = PresetOverrides.forTesting();
+        PresetOverrides ov = PresetOverrides.forTesting(GSON);
         ov.upsertWaypoint("Bosses", null, new Waypoint("A", "", 1, 1, 0));
         ov.upsertWaypoint("Bosses", null, new Waypoint("B", "", 2, 2, 0));
         assertTrue(ov.undoLast());
@@ -73,7 +75,7 @@ public class PresetOverridesTest
     @Test
     public void undoTwiceIsNoOp()
     {
-        PresetOverrides ov = PresetOverrides.forTesting();
+        PresetOverrides ov = PresetOverrides.forTesting(GSON);
         ov.upsertWaypoint("Bosses", null, new Waypoint("A", "", 1, 1, 0));
         assertTrue(ov.undoLast());
         assertFalse(ov.undoLast());

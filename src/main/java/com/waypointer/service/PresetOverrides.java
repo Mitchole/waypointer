@@ -45,12 +45,12 @@ public class PresetOverrides
         this.scheduler = scheduler;
     }
 
-    public static PresetOverrides forTesting()
+    public static PresetOverrides forTesting(com.google.gson.Gson gson)
     {
         try
         {
             return forTesting(java.nio.file.Files.createTempDirectory("po-mem"),
-                new com.waypointer.codec.PresetOverridesCodec(new com.google.gson.Gson()));
+                new com.waypointer.codec.PresetOverridesCodec(gson));
         }
         catch (java.io.IOException e) { throw new RuntimeException(e); }
     }

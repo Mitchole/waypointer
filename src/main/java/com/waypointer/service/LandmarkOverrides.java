@@ -45,12 +45,12 @@ public class LandmarkOverrides
         this.scheduler = scheduler;
     }
 
-    public static LandmarkOverrides forTesting()
+    public static LandmarkOverrides forTesting(com.google.gson.Gson gson)
     {
         try
         {
             return forTesting(java.nio.file.Files.createTempDirectory("lo-mem"),
-                new com.waypointer.codec.LandmarkOverridesCodec(new com.google.gson.Gson()));
+                new com.waypointer.codec.LandmarkOverridesCodec(gson));
         }
         catch (java.io.IOException e) { throw new RuntimeException(e); }
     }

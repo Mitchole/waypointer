@@ -18,7 +18,7 @@ public class PresetCatalogOverrideMergeTest
 {
     private PresetCatalog catalog(List<Preset> bundled)
     {
-        return PresetCatalog.forTesting(bundled);
+        return PresetCatalog.forTesting(new com.google.gson.Gson(), bundled);
     }
 
     @Test

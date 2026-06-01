@@ -138,9 +138,9 @@ public class PresetCatalog
         cached = new ArrayList<>(out.values());
     }
 
-    public static PresetCatalog forTesting(List<Preset> bundled)
+    public static PresetCatalog forTesting(Gson gson, List<Preset> bundled)
     {
-        PresetCatalog c = new PresetCatalog(new Gson(), PresetOverrides.forTesting());
+        PresetCatalog c = new PresetCatalog(gson, PresetOverrides.forTesting(gson));
         c.bundled = new ArrayList<>(bundled);
         c.rebuild();
         return c;

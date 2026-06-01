@@ -10,7 +10,8 @@ import static org.junit.Assert.assertTrue;
 
 public class PresetCatalogTest
 {
-    private final PresetCatalog catalog = new PresetCatalog(new Gson(), PresetOverrides.forTesting());
+    private final Gson gson = new Gson();
+    private final PresetCatalog catalog = new PresetCatalog(gson, PresetOverrides.forTesting(gson));
 
     @Test
     public void parsesValidJson()

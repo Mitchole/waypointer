@@ -10,10 +10,12 @@ import static org.junit.Assert.assertTrue;
 
 public class LandmarkOverridesTest
 {
+    private static final com.google.gson.Gson GSON = new com.google.gson.Gson();
+
     @Test
     public void addEntryAppendsToTypeOverride()
     {
-        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(GSON);
         ov.addEntry("BANK", new Entry("New bank", 1, 2, 1, 2, 0));
         TypeOverride t = ov.getSnapshot().getByType().get("BANK");
         assertEquals(1, t.getEntries().size());
@@ -23,7 +25,7 @@ public class LandmarkOverridesTest
     @Test
     public void replaceEntryRewritesByOriginalTuple()
     {
-        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(GSON);
         ov.addEntry("BANK", new Entry("A", 1, 1, 1, 1, 0));
         ov.replaceEntry("BANK",
             new Entry("A", 1, 1, 1, 1, 0),
@@ -36,7 +38,7 @@ public class LandmarkOverridesTest
     @Test
     public void deleteEntryFromBundled()
     {
-        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(GSON);
         ov.deleteBundledEntry("BANK", "Bad bank", 1, 1, 1, 1, 0);
         assertEquals(1, ov.getSnapshot().getDeletions().size());
     }
@@ -44,7 +46,7 @@ public class LandmarkOverridesTest
     @Test
     public void deleteEntryOnBundledRecordsDeletion()
     {
-        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(GSON);
         ov.deleteEntry("BANK", "Bad bank", 1, 1, 1, 1, 0);
         assertEquals(1, ov.getSnapshot().getDeletions().size());
         assertTrue(ov.getSnapshot().getByType().isEmpty());
@@ -53,7 +55,7 @@ public class LandmarkOverridesTest
     @Test
     public void deleteEntryOnOverrideRemovesItAndRecordsNoDeletion()
     {
-        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(GSON);
         ov.addEntry("BANK", new Entry("Added", 5, 5, 5, 5, 0));
         ov.deleteEntry("BANK", "Added", 5, 5, 5, 5, 0);
         TypeOverride t = ov.getSnapshot().getByType().get("BANK");
@@ -65,7 +67,7 @@ public class LandmarkOverridesTest
     @Test
     public void duplicateBundledDeletionRecordedOnce()
     {
-        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(GSON);
         ov.deleteBundledEntry("BANK", "Bad bank", 1, 1, 1, 1, 0);
         ov.deleteBundledEntry("BANK", "Bad bank", 1, 1, 1, 1, 0);
         ov.deleteEntry("BANK", "Bad bank", 1, 1, 1, 1, 0);
@@ -99,7 +101,7 @@ public class LandmarkOverridesTest
     @Test
     public void listenersFireOnMutation()
     {
-        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(GSON);
         int[] count = {0};
         Subscription sub = ov.subscribe(() -> count[0]++);
         ov.addEntry("BANK", new Entry("x", 1, 1, 1, 1, 0));
@@ -112,7 +114,7 @@ public class LandmarkOverridesTest
     @Test
     public void undoLastRestoresPriorSnapshot()
     {
-        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(GSON);
         ov.addEntry("BANK", new Entry("x", 1, 1, 1, 1, 0));
         ov.addEntry("BANK", new Entry("y", 2, 2, 2, 2, 0));
         assertTrue(ov.undoLast());
@@ -123,7 +125,7 @@ public class LandmarkOverridesTest
     @Test
     public void undoTwiceIsNoOp()
     {
-        LandmarkOverrides ov = LandmarkOverrides.forTesting();
+        LandmarkOverrides ov = LandmarkOverrides.forTesting(GSON);
         ov.addEntry("BANK", new Entry("x", 1, 1, 1, 1, 0));
         assertTrue(ov.undoLast());
         assertFalse(ov.undoLast());

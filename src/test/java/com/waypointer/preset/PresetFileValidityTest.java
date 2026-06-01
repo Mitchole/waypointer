@@ -13,7 +13,8 @@ public class PresetFileValidityTest
     @Test
     public void bundledPresetsAreInternallyConsistent()
     {
-        List<Preset> presets = new PresetCatalog(new Gson(), PresetOverrides.forTesting()).getPresets();
+        Gson gson = new Gson();
+        List<Preset> presets = new PresetCatalog(gson, PresetOverrides.forTesting(gson)).getPresets();
         assertFalse("preset catalog must not be empty", presets.isEmpty());
         for (Preset p : presets)
         {
