@@ -57,4 +57,28 @@ public class RouteModelTest
         assertEquals(RouteLibrary.CURRENT_SCHEMA_VERSION, lib.getSchemaVersion());
         assertEquals(0, lib.getRoutes().size());
     }
+
+    @Test
+    public void boxTextOrLabelFallsBackToLabelWhenUnset()
+    {
+        RouteStep s = RouteStep.manual("Withdraw seeds");
+        assertNull(s.getBoxText());
+        assertEquals("Withdraw seeds", s.boxTextOrLabel());
+    }
+
+    @Test
+    public void boxTextOrLabelFallsBackToLabelWhenEmpty()
+    {
+        RouteStep s = RouteStep.manual("Withdraw seeds");
+        s.setBoxText("");
+        assertEquals("Withdraw seeds", s.boxTextOrLabel());
+    }
+
+    @Test
+    public void boxTextOrLabelUsesBoxTextWhenSet()
+    {
+        RouteStep s = RouteStep.manual("Bank");
+        s.setBoxText("Withdraw 5 ranarr seeds");
+        assertEquals("Withdraw 5 ranarr seeds", s.boxTextOrLabel());
+    }
 }

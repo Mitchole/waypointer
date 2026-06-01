@@ -22,6 +22,7 @@ public final class RouteStep
     private int packedWorldPoint;         // WAYPOINT only; WorldPointPacker.UNDEFINED otherwise
     private UUID sourceWaypointId;        // nullable provenance link when captured from the library
     private Integer iconId;               // nullable
+    private String boxText;               // nullable; in-game box overrides label when set
 
     public RouteStep(UUID id, StepType type, String label, int packedWorldPoint,
         UUID sourceWaypointId, Integer iconId)
@@ -43,6 +44,12 @@ public final class RouteStep
     {
         return new RouteStep(UUID.randomUUID(), StepType.MANUAL, label,
             WorldPointPacker.UNDEFINED, null, null);
+    }
+
+    /** Overlay text: the explicit in-game box text if set, else the sidebar label. */
+    public String boxTextOrLabel()
+    {
+        return boxText == null || boxText.isEmpty() ? label : boxText;
     }
 
     @Override
