@@ -72,4 +72,15 @@ public class RouteRecorderTest
         recorder.markCurrentLocation();
         assertEquals(0, store.getRoutesOrdered().size());
     }
+
+    @Test
+    public void addCurrentLocationToAppendsWaypointToGivenRoute()
+    {
+        Route r = store.createRoute("R");
+        recorder.addCurrentLocationTo(r.getId());
+        assertEquals(1, store.getRouteById(r.getId()).getSteps().size());
+        assertEquals(StepType.WAYPOINT, store.getRouteById(r.getId()).getSteps().get(0).getType());
+        assertEquals(WorldPointPacker.pack(3200, 3200, 0),
+            store.getRouteById(r.getId()).getSteps().get(0).getPackedWorldPoint());
+    }
 }

@@ -22,13 +22,18 @@ final class RouteEditorPanel extends JPanel
     private final RouteStore store;
     private final UUID routeId;
     private final Runnable onBack;
+    private final Runnable onMarkCurrentLocation;
+    private final Runnable onAddFromLibrary;
     private final JPanel stepList = new JPanel();
 
-    RouteEditorPanel(RouteStore store, UUID routeId, Runnable onBack)
+    RouteEditorPanel(RouteStore store, UUID routeId, Runnable onBack,
+        Runnable onMarkCurrentLocation, Runnable onAddFromLibrary)
     {
         this.store = store;
         this.routeId = routeId;
         this.onBack = onBack;
+        this.onMarkCurrentLocation = onMarkCurrentLocation;
+        this.onAddFromLibrary = onAddFromLibrary;
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
 
@@ -64,6 +69,17 @@ final class RouteEditorPanel extends JPanel
     {
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         footer.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        // ◉ = waypoint glyph; capture the player's current tile as a step
+        JButton markHere = new JButton("◉ Mark location");
+        Styles.secondaryButton(markHere);
+        markHere.addActionListener(e -> onMarkCurrentLocation.run());
+        footer.add(markHere);
+
+        JButton fromSaved = new JButton("◉ From saved");
+        Styles.secondaryButton(fromSaved);
+        fromSaved.addActionListener(e -> onAddFromLibrary.run());
+        footer.add(fromSaved);
+
         // ✎ = pencil glyph for manual step
         JButton addManual = new JButton("✎ Add manual step");
         Styles.secondaryButton(addManual);

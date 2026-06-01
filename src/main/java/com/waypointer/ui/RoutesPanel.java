@@ -38,6 +38,7 @@ public class RoutesPanel extends JPanel
     private final RoutePlaybackEngine engine;
     private final RouteRecorder recorder;
     private final RouteShareCodec shareCodec;
+    private final com.waypointer.service.WaypointStore waypointStore;
     private final RoutePlaybackBar playbackBar;
     private final JPanel recordingBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
 
@@ -54,12 +55,14 @@ public class RoutesPanel extends JPanel
     private RouteEditorPanel openEditor;
 
     @Inject
-    public RoutesPanel(RouteStore store, RoutePlaybackEngine engine, RouteRecorder recorder, RouteShareCodec shareCodec)
+    public RoutesPanel(RouteStore store, RoutePlaybackEngine engine, RouteRecorder recorder,
+        RouteShareCodec shareCodec, com.waypointer.service.WaypointStore waypointStore)
     {
         this.store = store;
         this.engine = engine;
         this.recorder = recorder;
         this.shareCodec = shareCodec;
+        this.waypointStore = waypointStore;
         this.playbackBar = new RoutePlaybackBar(engine);
 
         setLayout(new BorderLayout());
@@ -195,7 +198,9 @@ public class RoutesPanel extends JPanel
     private void openEditorFor(UUID routeId)
     {
         editorHost.removeAll();
-        openEditor = new RouteEditorPanel(store, routeId, this::showList);
+        openEditor = new RouteEditorPanel(store, routeId, this::showList,
+            () -> recorder.addCurrentLocationTo(routeId),
+            () -> addFromLibrary(routeId));
         editorHost.add(openEditor, BorderLayout.CENTER);
         editorHost.revalidate();
         editorHost.repaint();
@@ -265,6 +270,38 @@ public class RoutesPanel extends JPanel
         }
         JOptionPane.showMessageDialog(this, "Imported route: " + imported.getName(),
             "Import", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Pick a saved waypoint from the library and append it as a route step, snapshotting the
+     * tile + name and recording the source waypoint id (hybrid sourcing: snapshot is
+     * authoritative, so deleting the library waypoint never breaks the route).
+     */
+    private void addFromLibrary(UUID routeId)
+    {
+        java.util.List<com.waypointer.model.Waypoint> all = waypointStore.getLibrary().getWaypoints();
+        if (all.isEmpty())
+        {
+            JOptionPane.showMessageDialog(this, "No saved waypoints to choose from.",
+                "From saved", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        java.util.List<WaypointChoice> choices = new java.util.ArrayList<>();
+        for (com.waypointer.model.Waypoint w : all) choices.add(new WaypointChoice(w));
+        choices.sort((a, b) -> a.toString().compareToIgnoreCase(b.toString()));
+        Object picked = JOptionPane.showInputDialog(this, "Pick a saved waypoint:", "From saved",
+            JOptionPane.QUESTION_MESSAGE, null, choices.toArray(), choices.get(0));
+        if (!(picked instanceof WaypointChoice)) return;
+        com.waypointer.model.Waypoint w = ((WaypointChoice) picked).waypoint;
+        store.addWaypointStep(routeId, w.getPackedWorldPoint(), w.getName(), w.getId());
+    }
+
+    /** Wraps a library waypoint so the chooser shows its name; carries the waypoint for selection. */
+    private static final class WaypointChoice
+    {
+        final com.waypointer.model.Waypoint waypoint;
+        WaypointChoice(com.waypointer.model.Waypoint waypoint) { this.waypoint = waypoint; }
+        @Override public String toString() { return waypoint.getName(); }
     }
 
     private static JMenuItem menuItem(String text, Runnable action)

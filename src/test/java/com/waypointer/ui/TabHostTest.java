@@ -193,7 +193,7 @@ public class TabHostTest
         RoutePlaybackEngine routeEngine = mock(RoutePlaybackEngine.class);
         when(routeEngine.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
         RouteRecorder routeRecorder = mock(RouteRecorder.class);
-        RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class));
+        RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class));
 
         TabHost host = new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config);
         assertEquals(3, host.visibleTabCountForTest());
@@ -268,7 +268,7 @@ public class TabHostTest
         RoutePlaybackEngine routeEngine = mock(RoutePlaybackEngine.class);
         when(routeEngine.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
         RouteRecorder routeRecorder = mock(RouteRecorder.class);
-        RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class));
+        RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class));
 
         return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config);
     }
