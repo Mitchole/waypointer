@@ -35,26 +35,32 @@ final class BulkActionBar extends JPanel
     BulkActionBar(Runnable onDone, Supplier<List<Category>> categorySupplier, Consumer<UUID> onMove,
         Runnable onDelete, Runnable onExport)
     {
-        setLayout(new BorderLayout(4, 0));
+        setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
         setOpaque(true);
         setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 0, 0, 0, ColorScheme.DARK_GRAY_COLOR),
             BorderFactory.createEmptyBorder(6, 8, 6, 8)));
 
-        // Done exits select mode; it's the counterpart to the right-click "Select multiple"
-        // entry that enters it, and stays enabled regardless of how many rows are selected.
+        // Row 1: "N selected" on the left, Done on the right. Both stay enabled regardless of
+        // how many rows are selected, so they sit together apart from the action buttons. Done
+        // exits select mode -- the counterpart to the right-click "Select multiple" entry.
+        countLabel.setForeground(Color.WHITE);
+        countLabel.setFont(FontManager.getRunescapeSmallFont());
         Styles.secondaryButton(doneBtn);
         doneBtn.addActionListener(e -> onDone.run());
 
-        countLabel.setForeground(Color.WHITE);
-        countLabel.setFont(FontManager.getRunescapeSmallFont());
-        JPanel west = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        west.setOpaque(false);
-        west.add(doneBtn);
-        west.add(countLabel);
-        add(west, BorderLayout.WEST);
+        JPanel statusRow = new JPanel(new BorderLayout(4, 0));
+        statusRow.setOpaque(false);
+        statusRow.setAlignmentX(LEFT_ALIGNMENT);
+        statusRow.add(countLabel, BorderLayout.WEST);
+        statusRow.add(doneBtn, BorderLayout.EAST);
+        add(statusRow);
 
+        add(javax.swing.Box.createVerticalStrut(4));
+
+        // Row 2: the three actions, disabled while the selection is empty. At a narrow sidebar
+        // width all three fit on their own row where a single five-control row would overlap.
         Styles.secondaryButton(moveBtn);
         Styles.secondaryButton(deleteBtn);
         Styles.secondaryButton(exportBtn);
@@ -73,12 +79,13 @@ final class BulkActionBar extends JPanel
         deleteBtn.addActionListener(e -> onDelete.run());
         exportBtn.addActionListener(e -> onExport.run());
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
-        buttons.setOpaque(false);
-        buttons.add(moveBtn);
-        buttons.add(deleteBtn);
-        buttons.add(exportBtn);
-        add(buttons, BorderLayout.EAST);
+        JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        actionRow.setOpaque(false);
+        actionRow.setAlignmentX(LEFT_ALIGNMENT);
+        actionRow.add(moveBtn);
+        actionRow.add(deleteBtn);
+        actionRow.add(exportBtn);
+        add(actionRow);
 
         setActionsEnabled(false);
     }
