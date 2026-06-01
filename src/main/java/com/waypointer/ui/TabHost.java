@@ -13,7 +13,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.PluginPanel;
 
 /**
@@ -34,6 +36,8 @@ public class TabHost extends PluginPanel
     private final DevPanel devPanel;
     private final RoutesPanel routesPanel;
     private final WaypointerConfig config;
+    private final ClientToolbar clientToolbar;
+    private NavigationButton navButton;
     private final ActivePathBanner banner;
     private final JPanel northStack;
     private TabStrip tabStrip;
@@ -47,7 +51,8 @@ public class TabHost extends PluginPanel
 
     @Inject
     public TabHost(WaypointerPanel waypointerPanel, PresetBrowserPanel presetBrowserPanel,
-        DevPanel devPanel, RoutesPanel routesPanel, WaypointPathfinder pathfinder, WaypointerConfig config)
+        DevPanel devPanel, RoutesPanel routesPanel, WaypointPathfinder pathfinder,
+        WaypointerConfig config, ClientToolbar clientToolbar)
     {
         super(false);
         this.waypointerPanel = waypointerPanel;
@@ -55,6 +60,7 @@ public class TabHost extends PluginPanel
         this.devPanel = devPanel;
         this.routesPanel = routesPanel;
         this.config = config;
+        this.clientToolbar = clientToolbar;
         this.banner = new ActivePathBanner(pathfinder, config);
 
         setLayout(new BorderLayout());
@@ -123,6 +129,27 @@ public class TabHost extends PluginPanel
         tabStrip.setActive(active);
         cardLayout.show(cards, CARD_ROUTES);
         revalidate();
+    }
+
+    /** The plugin sets this after building the nav button so openToCapture can open the panel. */
+    public void setNavButton(NavigationButton navButton)
+    {
+        this.navButton = navButton;
+    }
+
+    /**
+     * Right-click capture entry point: open the sidebar (if not already), switch to the Waypoints
+     * tab, and pop the inline capture form prefilled for {@code packed}. Replaces the old modal
+     * CaptureDialog so saving a waypoint never steals focus from the game canvas.
+     */
+    public void openToCapture(int packed, String defaultName, String npcName)
+    {
+        if (clientToolbar != null && navButton != null)
+        {
+            clientToolbar.openPanel(navButton);
+        }
+        selectMyWaypoints();
+        waypointerPanel.showCaptureForm(packed, defaultName, npcName);
     }
 
     public void refreshScrollbarStyling()

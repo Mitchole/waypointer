@@ -25,6 +25,7 @@ import javax.swing.JPanel;
 import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
+import net.runelite.client.ui.ClientToolbar;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -132,6 +133,6 @@ public class DevModeConfigToggleTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config);
+        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class));
     }
 }

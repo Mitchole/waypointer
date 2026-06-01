@@ -13,6 +13,7 @@ import com.waypointer.WaypointerConfig;
 import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
+import com.waypointer.model.WorldPointPacker;
 import com.waypointer.preset.PresetCatalog;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.RoutePlaybackEngine;
@@ -28,6 +29,7 @@ import java.util.Collections;
 import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
+import net.runelite.client.ui.ClientToolbar;
 import org.junit.Test;
 
 public class TabHostTest
@@ -63,6 +65,20 @@ public class TabHostTest
         TabHost host = buildHost();
         host.selectPresets();
         host.selectMyWaypoints();
+        assertEquals(TabStrip.Tab.MY_WAYPOINTS, host.getActiveTabForTest());
+        assertEquals("my", host.getVisibleCardNameForTest());
+    }
+
+    @Test
+    public void openToCaptureSwitchesToMyWaypointsTab()
+    {
+        TabHost host = buildHost();
+        host.selectPresets();
+        assertEquals(TabStrip.Tab.PRESETS, host.getActiveTabForTest());
+
+        // navButton is null here (never set), so openPanel is skipped; tab switch + form still run.
+        host.openToCapture(WorldPointPacker.pack(3222, 3218, 0), "Lumbridge", null);
+
         assertEquals(TabStrip.Tab.MY_WAYPOINTS, host.getActiveTabForTest());
         assertEquals("my", host.getVisibleCardNameForTest());
     }
@@ -198,7 +214,7 @@ public class TabHostTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        TabHost host = new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config);
+        TabHost host = new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class));
         assertEquals(3, host.visibleTabCountForTest());
     }
 
@@ -275,6 +291,6 @@ public class TabHostTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config);
+        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class));
     }
 }
