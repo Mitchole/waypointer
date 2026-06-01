@@ -29,10 +29,12 @@ final class Cards
 
             @Override public void mouseExited(MouseEvent e)
             {
-                // mouseExited fires when the cursor crosses into a child component too. If
-                // the cursor's still within the card's own bounds the swap would flicker as
-                // the user mouses over a child label, so skip the revert in that case.
-                if (card.contains(e.getPoint())) return;
+                // mouseExited fires when the cursor crosses into a child component too, and the
+                // event point arrives in that child's coordinate space. Convert to the card's
+                // space before the bounds test, or exiting via a child whose bounds overlap the
+                // card origin leaves the hover tint stuck (mirrors WaypointRow's select adapter).
+                java.awt.Point p = SwingUtilities.convertPoint(e.getComponent(), e.getPoint(), card);
+                if (card.contains(p)) return;
                 card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
             }
 
