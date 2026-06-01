@@ -57,6 +57,21 @@ public class RouteJsonCodecTest
     }
 
     @Test
+    public void stepBoxTextRoundTrips()
+    {
+        RouteStep step = RouteStep.manual("Bank");
+        step.setBoxText("Withdraw 5 ranarr seeds");
+        Route route = new Route(UUID.randomUUID(), "Herb run",
+            Arrays.asList(step), false, Instant.parse("2026-06-01T00:00:00Z"), 0);
+        RouteLibrary lib = new RouteLibrary();
+        lib.getRoutes().add(route);
+
+        RouteLibrary decoded = codec.decode(codec.encode(lib));
+        assertEquals("Withdraw 5 ranarr seeds",
+            decoded.getRoutes().get(0).getSteps().get(0).getBoxText());
+    }
+
+    @Test
     public void missingFieldsDecodeToEmptyDefaults()
     {
         RouteLibrary lib = codec.decode("{}");

@@ -53,6 +53,18 @@ public class RouteShareCodecTest
         assertTrue(decoded.isRepeating());
     }
 
+    @Test
+    public void roundTripsStepBoxText()
+    {
+        RouteStep step = RouteStep.manual("Bank");
+        step.setBoxText("Withdraw 5 ranarr seeds");
+        Route route = new Route(UUID.randomUUID(), "Herb run",
+            Arrays.asList(step), false, Instant.parse("2026-06-01T00:00:00Z"), 0);
+
+        Route decoded = codec.decodeRoute(codec.encodeRoute(route));
+        assertEquals("Withdraw 5 ranarr seeds", decoded.getSteps().get(0).getBoxText());
+    }
+
     @Test(expected = RouteShareCodec.MalformedCodeException.class)
     public void wrongMagicThrows()
     {
