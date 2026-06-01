@@ -80,6 +80,7 @@ public class WaypointerPanel extends PluginPanel
     private final LibraryJsonCodec libraryCodec;
     private final CaptureForm captureForm;
     private final BulkSelectController bulkSelect;
+    private final CategoryMenuController categoryMenu;
     private final JPanel body = new JPanel();
     private final JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
@@ -247,6 +248,9 @@ public class WaypointerPanel extends PluginPanel
             });
         add(bulkSelect.bar(), BorderLayout.SOUTH);
 
+        this.categoryMenu = new CategoryMenuController(store, spriteManager, iconCatalog,
+            toastOverlay, this);
+
         storeSub = store.subscribe(this::scheduleRebuild);
         pathSub = pathfinder.subscribe(this::scheduleRebuild);
         rebuild();
@@ -305,58 +309,6 @@ public class WaypointerPanel extends PluginPanel
             }
             captureForm.show(packed);
         });
-    }
-
-    // Category-level menu actions, wired into each CategorySection via CategorySection.Actions.
-
-    private void promptRenameCategory(Category c)
-    {
-        String newName = JOptionPane.showInputDialog(this,
-            "Rename '" + c.getName() + "' to:", c.getName());
-        if (newName == null || newName.trim().isEmpty()) return;
-        try { store.renameCategory(c.getId(), newName.trim()); }
-        catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Waypointer",
-                JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-    private void promptDeleteCategory(Category c)
-    {
-        String[] options = {"Move to Uncategorized", "Delete waypoints", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(this,
-            "Delete category '" + c.getName() + "'?\n\nWhat to do with its waypoints?",
-            "Delete category", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-            null, options, options[0]);
-        String name = c.getName();
-        if (choice == 0)
-        {
-            store.deleteCategory(c.getId(), true);
-            toastOverlay.show("Deleted category '" + name + "'", "Undo", store::undoLast);
-        }
-        else if (choice == 1)
-        {
-            // childCount is captured BEFORE the delete - deleteCategory(_, false) removes
-            // those waypoints so getWaypointsInCategory would return 0 afterwards.
-            int childCount = store.getWaypointsInCategory(c.getId()).size();
-            store.deleteCategory(c.getId(), false);
-            String msg = "Deleted '" + name + "' and " + childCount
-                + (childCount == 1 ? " waypoint" : " waypoints");
-            toastOverlay.show(msg, "Undo", store::undoLast);
-        }
-    }
-
-    private void promptSetCategoryIcon(Category c)
-    {
-        Window owner = SwingUtilities.getWindowAncestor(this);
-        new IconPickerDialog(owner, spriteManager, iconCatalog, c.getIconId(),
-            iconId -> store.setCategoryIcon(c.getId(), iconId)).setVisible(true);
-    }
-
-    private void promptSetCategoryColour(Category c, java.awt.Component anchor)
-    {
-        ColorPalettePopup.build(c.getColor(), rgb -> store.setCategoryColor(c.getId(), rgb))
-            .show(anchor, 0, anchor.getHeight());
     }
 
     // Scrolls an already-open world map to the given packed tile. setWorldMapPositionTarget
@@ -614,10 +566,10 @@ public class WaypointerPanel extends PluginPanel
                     this::inlineProviderFor,
                     dnd,
                     new CategorySection.Actions(
-                        () -> promptRenameCategory(c),
-                        () -> promptDeleteCategory(c),
-                        () -> promptSetCategoryIcon(c),
-                        () -> promptSetCategoryColour(c, this),
+                        () -> categoryMenu.promptRename(c),
+                        () -> categoryMenu.promptDelete(c),
+                        () -> categoryMenu.promptSetIcon(c),
+                        () -> categoryMenu.promptSetColour(c, this),
                         mode -> store.setCategorySortMode(c.getId(), mode)),
                     spriteManager,
                     bulkSelect.isSelectMode(),
