@@ -110,7 +110,14 @@ final class RouteEditorPanel extends JPanel
             {
                 stepList.add(new RouteStepRow(i++, s,
                     () -> editStep(s),
-                    step -> store.deleteStep(routeId, step.getId())));
+                    step -> {
+                        String[] options = {"Cancel", "Delete"};
+                        int choice = JOptionPane.showOptionDialog(this,
+                            "Delete this step?", "Delete step",
+                            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                            null, options, options[0]);
+                        if (choice == 1) store.deleteStep(routeId, step.getId());
+                    }));
             }
         }
         stepList.revalidate();
