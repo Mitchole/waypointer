@@ -43,6 +43,14 @@ public class RouteStorePersistence implements JsonSnapshotSink<RouteLibrary>
     public Path routesFile() { return dir.resolve(ROUTES_FILENAME); }
     public Path backupFile() { return dir.resolve(BACKUP_FILENAME); }
 
+    public boolean isRefusingSaves() { return refuseSavesUntilReset; }
+
+    /** Clears the corrupt-state freeze so the next save proceeds; used by a future reset action. */
+    public void allowSavesAfterReset() { refuseSavesUntilReset = false; }
+
+    // tryLoad returns null for an absent OR transiently-unreadable file (a clean miss) and only
+    // sets refuseSavesUntilReset on confirmed parse corruption. So a transient IO error falls
+    // through to an empty library with saves still enabled; only real corruption freezes saves.
     public RouteLibrary loadOrEmpty()
     {
         RouteLibrary primary = tryLoad(routesFile());
