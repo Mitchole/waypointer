@@ -186,4 +186,24 @@ public class CaptureFormTest
         assertFalse("sub-row should be cleared on re-entry",
             form.isNewCategoryRowVisible());
     }
+
+    @Test
+    public void showWithDefaultNamePrefillsThatNameInsteadOfCaptureDefault()
+    {
+        form.show(packed, "Vorkath", null);
+        assertTrue(form.isVisible());
+        assertEquals("Vorkath", form.getNameText());
+    }
+
+    @Test
+    public void saveWithNpcNamePersistsTheNpcLink()
+    {
+        form.show(packed, "Hans", "Hans");
+        form.clickSave();
+
+        assertEquals(1, store.getLibrary().getWaypoints().size());
+        com.waypointer.model.Waypoint w = store.getLibrary().getWaypoints().get(0);
+        assertEquals("Hans", w.getName());
+        assertEquals("Hans", w.getTargetNpcName());
+    }
 }

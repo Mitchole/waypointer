@@ -49,6 +49,7 @@ class CaptureForm extends JPanel
     private CategoryComboController categoryController;
 
     private int packedPoint;
+    private String targetNpcName;
 
     CaptureForm(WaypointStore store, WaypointCapture capture)
     {
@@ -156,13 +157,21 @@ class CaptureForm extends JPanel
 
     void show(int packed)
     {
+        show(packed, null, null);
+    }
+
+    void show(int packed, String defaultName, String npcName)
+    {
         this.packedPoint = packed;
+        this.targetNpcName = npcName;
         newCategoryRow.setVisible(false);
         newCategoryName.setText("");
         errorLabel.setVisible(false);
         errorLabel.setText(" ");
         categoryController.rebuild(store.getUncategorized().getId());
-        nameField.setText(capture.defaultName(packed));
+        String prefill = (defaultName != null && !defaultName.isEmpty())
+            ? defaultName : capture.defaultName(packed);
+        nameField.setText(prefill);
         nameField.selectAll();
         setVisible(true);
         nameField.requestFocusInWindow();
@@ -241,7 +250,7 @@ class CaptureForm extends JPanel
 
         UUID categoryId = categoryController.resolveSelectedId();
 
-        store.createWaypoint(packedPoint, trimmed, categoryId);
+        store.createWaypoint(packedPoint, trimmed, categoryId, targetNpcName);
         dismiss();
     }
 
