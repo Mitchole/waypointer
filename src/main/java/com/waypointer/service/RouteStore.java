@@ -94,8 +94,10 @@ public class RouteStore
         List<RouteStep> copies = new ArrayList<>();
         for (RouteStep s : src.getSteps())
         {
-            copies.add(new RouteStep(UUID.randomUUID(), s.getType(), s.getLabel(),
-                s.getPackedWorldPoint(), s.getSourceWaypointId(), s.getIconId()));
+            RouteStep copy = new RouteStep(UUID.randomUUID(), s.getType(), s.getLabel(),
+                s.getPackedWorldPoint(), s.getSourceWaypointId(), s.getIconId());
+            copy.setBoxText(s.getBoxText());
+            copies.add(copy);
         }
         int nextOrder = library.getRoutes().stream().mapToInt(Route::getSortOrder).max().orElse(-1) + 1;
         Route copy = new Route(UUID.randomUUID(), src.getName() + " (copy)", copies,
@@ -148,6 +150,15 @@ public class RouteStore
         if (s == null) return;
         s.setPackedWorldPoint(packed);
         if (label != null) s.setLabel(label);
+        notifyChanged();
+    }
+
+    public void updateStepText(UUID routeId, UUID stepId, String name, String boxText)
+    {
+        RouteStep s = findStep(routeId, stepId);
+        if (s == null) return;
+        s.setLabel(name);
+        s.setBoxText(boxText);
         notifyChanged();
     }
 

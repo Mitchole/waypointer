@@ -133,4 +133,33 @@ public class RouteStoreTest
         assertEquals("B", store.getRoutesOrdered().get(0).getName());
         assertEquals("A", store.getRoutesOrdered().get(1).getName());
     }
+
+    @Test
+    public void updateStepTextSetsBothFieldsAndFiresOnce()
+    {
+        Route r = store.createRoute("R");
+        store.addManualStep(r.getId(), "old");
+        UUID stepId = r.getSteps().get(0).getId();
+
+        AtomicInteger fires = new AtomicInteger();
+        store.subscribe(fires::incrementAndGet);
+        store.updateStepText(r.getId(), stepId, "Bank", "Withdraw 5 seeds");
+
+        RouteStep s = store.getRouteById(r.getId()).getSteps().get(0);
+        assertEquals("Bank", s.getLabel());
+        assertEquals("Withdraw 5 seeds", s.getBoxText());
+        assertEquals(1, fires.get());
+    }
+
+    @Test
+    public void duplicateRouteCopiesBoxText()
+    {
+        Route r = store.createRoute("R");
+        store.addManualStep(r.getId(), "Bank");
+        UUID stepId = r.getSteps().get(0).getId();
+        store.updateStepText(r.getId(), stepId, "Bank", "Withdraw 5 seeds");
+
+        Route copy = store.duplicateRoute(r.getId());
+        assertEquals("Withdraw 5 seeds", copy.getSteps().get(0).getBoxText());
+    }
 }
