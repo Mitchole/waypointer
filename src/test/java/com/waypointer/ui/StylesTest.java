@@ -3,11 +3,13 @@ package com.waypointer.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class StylesTest
 {
@@ -87,12 +89,12 @@ public class StylesTest
         JPanel row = new JPanel();
         Styles.editableMetaRow(row, "Vorkath", "(1, 2) p0", () -> {}, () -> {}, () -> {});
 
-        java.awt.BorderLayout layout = (java.awt.BorderLayout) row.getLayout();
+        BorderLayout layout = (BorderLayout) row.getLayout();
         assertEquals("Vorkath",
-            ((javax.swing.JLabel) layout.getLayoutComponent(java.awt.BorderLayout.WEST)).getText());
+            ((JLabel) layout.getLayoutComponent(BorderLayout.WEST)).getText());
         assertEquals("(1, 2) p0",
-            ((javax.swing.JLabel) layout.getLayoutComponent(java.awt.BorderLayout.CENTER)).getText());
-        JPanel east = (JPanel) layout.getLayoutComponent(java.awt.BorderLayout.EAST);
+            ((JLabel) layout.getLayoutComponent(BorderLayout.CENTER)).getText());
+        JPanel east = (JPanel) layout.getLayoutComponent(BorderLayout.EAST);
         assertEquals(3, east.getComponentCount());
         assertEquals("Go",     ((JButton) east.getComponent(0)).getText());
         assertEquals("Edit",   ((JButton) east.getComponent(1)).getText());
@@ -106,13 +108,13 @@ public class StylesTest
         boolean[] fired = new boolean[3];
         Styles.editableMetaRow(row, "n", "d",
             () -> fired[0] = true, () -> fired[1] = true, () -> fired[2] = true);
-        JPanel east = (JPanel) ((java.awt.BorderLayout) row.getLayout())
-            .getLayoutComponent(java.awt.BorderLayout.EAST);
+        JPanel east = (JPanel) ((BorderLayout) row.getLayout())
+            .getLayoutComponent(BorderLayout.EAST);
         ((JButton) east.getComponent(0)).doClick();
         ((JButton) east.getComponent(1)).doClick();
         ((JButton) east.getComponent(2)).doClick();
-        assertEquals(true, fired[0]);
-        assertEquals(true, fired[1]);
-        assertEquals(true, fired[2]);
+        assertTrue(fired[0]);
+        assertTrue(fired[1]);
+        assertTrue(fired[2]);
     }
 }
