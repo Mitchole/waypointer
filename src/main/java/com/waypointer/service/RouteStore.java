@@ -190,31 +190,24 @@ public class RouteStore
 
     public int listenerCountForTest() { return listeners.size(); }
 
-    // ---- Debounced persistence wiring (mirrors WaypointStore) ----
+    // ---- Debounced persistence wiring ----
 
-    private DebouncedSaver<RouteLibrary> saver;
-    private Listeners.Subscription saveSub;
+    // Must be initialized after `listeners` above -- it captures that reference at construction.
+    private final PersistenceBinding<RouteLibrary> persistenceBinding = new PersistenceBinding<>(listeners);
 
     public void enableDebouncedPersistence(
         RouteStorePersistence p, ScheduledExecutorService exec, Duration debounceWindow)
     {
-        if (saveSub != null) return;
-        this.saver = new DebouncedSaver<>(p, exec, debounceWindow, () -> library);
-        this.saveSub = listeners.subscribe(saver::schedule);
+        persistenceBinding.enable(p, exec, debounceWindow, () -> library);
     }
 
     public void disableDebouncedPersistence()
     {
-        if (saveSub != null)
-        {
-            saveSub.close();
-            saveSub = null;
-        }
-        if (saver != null) saver.cancelPending();
+        persistenceBinding.disable();
     }
 
     public void flushPendingSave()
     {
-        if (saver != null) saver.flush();
+        persistenceBinding.flush();
     }
 }

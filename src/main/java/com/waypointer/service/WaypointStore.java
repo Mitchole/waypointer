@@ -629,19 +629,17 @@ public class WaypointStore
 
     // ---- Debounced persistence wiring ----
 
-    private DebouncedSaver<Library> saver;
-    private Listeners.Subscription saveSub;
+    // Must be initialized after `listeners` above -- it captures that reference at construction.
+    private final PersistenceBinding<Library> persistenceBinding = new PersistenceBinding<>(listeners);
 
     public void enableDebouncedPersistence(
         WaypointStorePersistence p,
         ScheduledExecutorService exec,
         Duration debounceWindow)
     {
-        if (saveSub != null) return;
         // The supplier reads the field live, so a later bootstrap() that swaps the library
         // (e.g. a profile switch) is picked up without re-wiring the saver.
-        this.saver = new DebouncedSaver<>(p, exec, debounceWindow, () -> library);
-        this.saveSub = listeners.subscribe(saver::schedule);
+        persistenceBinding.enable(p, exec, debounceWindow, () -> library);
     }
 
     /**
@@ -652,18 +650,13 @@ public class WaypointStore
      */
     public void disableDebouncedPersistence()
     {
-        if (saveSub != null)
-        {
-            saveSub.close();
-            saveSub = null;
-        }
-        if (saver != null) saver.cancelPending();
+        persistenceBinding.disable();
     }
 
     /** Cancels any pending debounced save, then writes the current library synchronously. */
     public void flushPendingSave()
     {
-        if (saver != null) saver.flush();
+        persistenceBinding.flush();
     }
 
     private int nextWaypointSortOrder(UUID categoryId)
