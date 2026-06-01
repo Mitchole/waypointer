@@ -11,7 +11,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.UUID;
 import javax.swing.AbstractAction;
@@ -35,7 +34,7 @@ public class CaptureDialog extends JDialog
     private final String targetNpcName;
 
     private JComboBox<CategoryComboItem> categoryCombo;
-    private CategoryComboItem lastSelected;
+    private CategoryComboController categoryController;
 
     public CaptureDialog(Window owner, WaypointStore store, WaypointCapture capture, int packedPoint)
     {
@@ -77,7 +76,8 @@ public class CaptureDialog extends JDialog
         form.add(Styles.fieldLabel("Category"), g);
         categoryCombo = new JComboBox<>();
         Styles.combo(categoryCombo);
-        rebuildCategoryCombo(store.getUncategorized().getId());
+        categoryController = new CategoryComboController(categoryCombo, store);
+        categoryController.rebuild(store.getUncategorized().getId());
         categoryCombo.addActionListener(e -> handleCategorySelection());
         g.gridx = 1; g.weightx = 1;
         form.add(categoryCombo, g);
@@ -120,34 +120,26 @@ public class CaptureDialog extends JDialog
     {
         String trimmed = typedName == null ? "" : typedName.trim();
         if (trimmed.isEmpty()) trimmed = defaultName;
-        CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
-        UUID categoryId = (sel == null || sel.isSentinel())
-            ? store.getUncategorized().getId() : sel.id();
+        UUID categoryId = categoryController.resolveSelectedId();
         store.createWaypoint(packedPoint, trimmed, categoryId, targetNpcName);
         dispose();
     }
 
     private void handleCategorySelection()
     {
-        CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
-        if (sel == null) return;
-        if (!sel.isSentinel())
+        if (!categoryController.isSentinelSelected())
         {
-            lastSelected = sel;
+            CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
+            if (sel != null) categoryController.setLastNonSentinel(sel);
             return;
         }
         // "+ New category..." chosen: prompt for a name
         String name = JOptionPane.showInputDialog(this, "New category name:");
-        if (name == null || name.trim().isEmpty())
-        {
-            // revert
-            revertSelection();
-            return;
-        }
+        if (name == null || name.trim().isEmpty()) { revertSelection(); return; }
         try
         {
             Category created = store.createCategory(name.trim());
-            rebuildCategoryCombo(created.getId());
+            categoryController.rebuild(created.getId());
         }
         catch (IllegalArgumentException ex)
         {
@@ -159,31 +151,7 @@ public class CaptureDialog extends JDialog
 
     private void revertSelection()
     {
-        UUID id = lastSelected != null ? lastSelected.id() : store.getUncategorized().getId();
-        rebuildCategoryCombo(id);
-    }
-
-    private void rebuildCategoryCombo(UUID selectId)
-    {
-        // suppress action events while rebuilding
-        ActionListener[] listeners = categoryCombo.getActionListeners();
-        for (ActionListener l : listeners) categoryCombo.removeActionListener(l);
-
-        categoryCombo.removeAllItems();
-        CategoryComboItem toSelect = null;
-        for (Category c : store.getCategoriesOrdered())
-        {
-            CategoryComboItem item = new CategoryComboItem(c);
-            categoryCombo.addItem(item);
-            if (c.getId().equals(selectId)) toSelect = item;
-        }
-        categoryCombo.addItem(CategoryComboItem.sentinel("+ New category..."));
-        if (toSelect != null)
-        {
-            categoryCombo.setSelectedItem(toSelect);
-            lastSelected = toSelect;
-        }
-
-        for (ActionListener l : listeners) categoryCombo.addActionListener(l);
+        CategoryComboItem last = categoryController.lastNonSentinel();
+        categoryController.rebuild(last != null ? last.id() : store.getUncategorized().getId());
     }
 }

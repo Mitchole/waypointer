@@ -10,7 +10,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.UUID;
 import javax.swing.AbstractAction;
@@ -47,7 +46,7 @@ class CaptureForm extends JPanel
     private final JButton newCategoryCreate = new JButton("Create");
     private final JButton newCategoryCancel = new JButton("Cancel");
     private final JLabel errorLabel = new JLabel(" ");
-    private CategoryComboItem lastNonSentinelSelection;
+    private CategoryComboController categoryController;
 
     private int packedPoint;
 
@@ -86,6 +85,7 @@ class CaptureForm extends JPanel
         g.gridx = 0; g.gridy = 1; g.weightx = 0;
         form.add(Styles.fieldLabel("Category"), g);
         Styles.combo(categoryCombo);
+        categoryController = new CategoryComboController(categoryCombo, store);
         g.gridx = 1; g.weightx = 1;
         form.add(categoryCombo, g);
 
@@ -161,7 +161,7 @@ class CaptureForm extends JPanel
         newCategoryName.setText("");
         errorLabel.setVisible(false);
         errorLabel.setText(" ");
-        rebuildCategoryCombo(store.getUncategorized().getId());
+        categoryController.rebuild(store.getUncategorized().getId());
         nameField.setText(capture.defaultName(packed));
         nameField.selectAll();
         setVisible(true);
@@ -182,36 +182,12 @@ class CaptureForm extends JPanel
         return nameField.getText();
     }
 
-    private void rebuildCategoryCombo(UUID selectId)
-    {
-        ActionListener[] listeners = categoryCombo.getActionListeners();
-        for (ActionListener l : listeners) categoryCombo.removeActionListener(l);
-
-        categoryCombo.removeAllItems();
-        CategoryComboItem toSelect = null;
-        for (Category c : store.getCategoriesOrdered())
-        {
-            CategoryComboItem item = new CategoryComboItem(c);
-            categoryCombo.addItem(item);
-            if (c.getId().equals(selectId)) toSelect = item;
-        }
-        categoryCombo.addItem(CategoryComboItem.sentinel("+ New category..."));
-        if (toSelect != null)
-        {
-            categoryCombo.setSelectedItem(toSelect);
-            lastNonSentinelSelection = toSelect;
-        }
-
-        for (ActionListener l : listeners) categoryCombo.addActionListener(l);
-    }
-
     private void onCategorySelectionChanged()
     {
-        CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
-        if (sel == null) return;
-        if (!sel.isSentinel())
+        if (!categoryController.isSentinelSelected())
         {
-            lastNonSentinelSelection = sel;
+            CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
+            if (sel != null) categoryController.setLastNonSentinel(sel);
             newCategoryRow.setVisible(false);
             errorLabel.setVisible(false);
             revalidate();
@@ -232,7 +208,7 @@ class CaptureForm extends JPanel
         try
         {
             Category created = store.createCategory(name.trim());
-            rebuildCategoryCombo(created.getId());
+            categoryController.rebuild(created.getId());
             newCategoryRow.setVisible(false);
             errorLabel.setVisible(false);
             errorLabel.setText(" ");
@@ -248,10 +224,9 @@ class CaptureForm extends JPanel
 
     private void cancelInlineCategory()
     {
-        UUID revertTo = lastNonSentinelSelection != null
-            ? lastNonSentinelSelection.id()
-            : store.getUncategorized().getId();
-        rebuildCategoryCombo(revertTo);
+        CategoryComboItem last = categoryController.lastNonSentinel();
+        UUID revertTo = last != null ? last.id() : store.getUncategorized().getId();
+        categoryController.rebuild(revertTo);
         newCategoryRow.setVisible(false);
         errorLabel.setVisible(false);
         revalidate();
@@ -264,9 +239,7 @@ class CaptureForm extends JPanel
         String trimmed = typed == null ? "" : typed.trim();
         if (trimmed.isEmpty()) trimmed = capture.defaultName(packedPoint);
 
-        CategoryComboItem sel = (CategoryComboItem) categoryCombo.getSelectedItem();
-        UUID categoryId = (sel == null || sel.isSentinel())
-            ? store.getUncategorized().getId() : sel.id();
+        UUID categoryId = categoryController.resolveSelectedId();
 
         store.createWaypoint(packedPoint, trimmed, categoryId);
         dismiss();
