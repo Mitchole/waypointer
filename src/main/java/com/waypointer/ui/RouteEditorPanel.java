@@ -6,11 +6,14 @@ import com.waypointer.service.RouteStore;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.util.UUID;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import net.runelite.client.ui.ColorScheme;
 
 /**
@@ -126,7 +129,23 @@ final class RouteEditorPanel extends JPanel
 
     private void editStep(RouteStep s)
     {
-        String text = JOptionPane.showInputDialog(this, "Edit step:", s.getLabel());
-        if (text != null) store.updateStepLabel(routeId, s.getId(), text.trim());
+        JTextField nameField = new JTextField(s.getLabel() == null ? "" : s.getLabel(), 20);
+        JTextField boxField = new JTextField(s.getBoxText() == null ? "" : s.getBoxText(), 20);
+
+        JPanel form = new JPanel();
+        form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
+        form.add(new JLabel("Name (sidebar)"));
+        form.add(nameField);
+        form.add(Box.createVerticalStrut(8));
+        form.add(new JLabel("In-game box text (blank = use name)"));
+        form.add(boxField);
+
+        int result = JOptionPane.showConfirmDialog(this, form, "Edit step",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION)
+        {
+            store.updateStepText(routeId, s.getId(),
+                nameField.getText().trim(), boxField.getText().trim());
+        }
     }
 }
