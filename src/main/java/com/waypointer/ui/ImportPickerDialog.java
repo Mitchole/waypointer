@@ -24,7 +24,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import net.runelite.client.ui.ColorScheme;
 
@@ -58,11 +57,8 @@ final class ImportPickerDialog extends JDialog
         this.libraryCodec = libraryCodec;
         this.toasts = toasts == null ? Toasts.NO_OP : toasts;
 
-        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        JPanel content = (JPanel) getContentPane();
-        content.setLayout(new BorderLayout(8, 8));
-        content.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        content.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        JPanel content = Dialogs.applyDarkContentPane(this);
+        Dialogs.bindEscape(this);
 
         content.add(buildSourceRow(), BorderLayout.NORTH);
 
@@ -73,8 +69,7 @@ final class ImportPickerDialog extends JDialog
         content.add(buildFooter(), BorderLayout.SOUTH);
 
         updateImportButton();
-        pack();
-        setLocationRelativeTo(owner);
+        Dialogs.finish(this, owner);
     }
 
     private JPanel buildSourceRow()
