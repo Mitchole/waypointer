@@ -88,8 +88,8 @@ final class RouteEditorPanel extends JPanel
         bar.add(Box.createVerticalStrut(4));
         bar.add(fullWidthButton("◉ From saved", e -> onAddFromLibrary.run()));
         bar.add(Box.createVerticalStrut(4));
-        // ✎ = pencil glyph for a manual (text-only) step
-        bar.add(fullWidthButton("✎ Add manual step", e -> {
+        // ▤ = note-card glyph for a manual (text-only) step
+        bar.add(fullWidthButton("▤ Add manual step", e -> {
             String text = JOptionPane.showInputDialog(this, "Instruction:");
             if (text != null && !text.trim().isEmpty()) store.addManualStep(routeId, text.trim());
         }));
@@ -115,6 +115,7 @@ final class RouteEditorPanel extends JPanel
         Route r = store.getRouteById(routeId);
         if (r != null)
         {
+            RouteStepDragHandler dragHandler = new RouteStepDragHandler(store, routeId);
             int i = 0;
             for (RouteStep s : r.getSteps())
             {
@@ -127,7 +128,8 @@ final class RouteEditorPanel extends JPanel
                             JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                             null, options, options[0]);
                         if (choice == 1) store.deleteStep(routeId, step.getId());
-                    }));
+                    },
+                    dragHandler));
             }
         }
         stepList.revalidate();
