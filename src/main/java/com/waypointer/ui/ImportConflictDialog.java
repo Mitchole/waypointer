@@ -5,7 +5,6 @@ import com.waypointer.service.PresetImportResolver.PendingConflict;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Window;
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -26,9 +25,8 @@ public final class ImportConflictDialog
     {
         Result[] out = { new Result(Choice.SKIP, false) };
         JDialog d = new JDialog(owner, "Conflict in " + c.category, JDialog.ModalityType.APPLICATION_MODAL);
-        d.getContentPane().setBackground(ColorScheme.DARK_GRAY_COLOR);
-        d.setLayout(new BorderLayout(8, 8));
-        d.getRootPane().setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        Dialogs.applyDarkContentPane(d);
+        Dialogs.bindEscape(d);
 
         JLabel msg = new JLabel("'" + c.imported.getName() + "' already exists.");
         msg.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
@@ -55,8 +53,7 @@ public final class ImportConflictDialog
         buttons.add(skip);
         d.add(buttons, BorderLayout.SOUTH);
 
-        d.pack();
-        d.setLocationRelativeTo(owner);
+        Dialogs.finish(d, owner);
         d.setVisible(true);
         return out[0];
     }
