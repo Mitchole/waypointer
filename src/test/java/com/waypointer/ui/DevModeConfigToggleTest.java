@@ -133,6 +133,6 @@ public class DevModeConfigToggleTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class));
+        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class), store);
     }
 }

@@ -716,6 +716,14 @@ public class WaypointerPanel extends PluginPanel
         switch (action)
         {
             case PLAY:
+                // Clicking the active row's button again stops pathing. Stopping skips the
+                // availability and wilderness gates -- those only guard starting a path.
+                if (pathfinder.getActiveTarget() != WorldPointPacker.UNDEFINED
+                    && pathfinder.getActiveTarget() == w.getPackedWorldPoint())
+                {
+                    pathfinder.clearPath();
+                    break;
+                }
                 if (!pathfinder.isAvailable())
                 {
                     toastOverlay.show("Install the Shortest Path plugin to use Play.");

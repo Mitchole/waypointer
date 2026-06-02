@@ -150,6 +150,13 @@ public class WaypointStore
 
     public Waypoint getWaypointById(UUID id) { return views.getWaypointById(id); }
 
+    /** True if any saved waypoint sits on {@code packed}. Used to suppress the path banner when
+     *  the active target already has a row whose Play/Stop button covers it. */
+    public boolean hasWaypointAt(int packed)
+    {
+        return library.getWaypoints().stream().anyMatch(w -> w.getPackedWorldPoint() == packed);
+    }
+
     public List<Category> getCategoriesOrdered() { return views.getCategoriesOrdered(); }
 
     public List<Waypoint> getWaypointsInCategory(UUID categoryId) { return views.getWaypointsInCategory(categoryId); }

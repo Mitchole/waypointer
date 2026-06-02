@@ -13,10 +13,12 @@ import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
 
 /**
- * Slim status strip that sits between the Waypointer panel's search bar and its scrolling
- * body. Shows "Pathing to <name>" plus a Stop button while a path is active to a saved
- * waypoint, and hides itself otherwise. Pure projection of {@link WaypointPathfinder}
- * state plus the {@code showPathingBanner} config toggle.
+ * Slim status strip across the top of the tab host. Shows "Pathing to <name>" plus a Stop
+ * button while a path is active, and hides itself otherwise. Suppressed for targets that have
+ * a saved-waypoint row -- that row's Stop square is the indicator there -- so the banner only
+ * surfaces for rowless paths (landmark bar, presets, routes, death auto-path). Pure projection
+ * of {@link WaypointPathfinder} state, the {@code showPathingBanner} config toggle, and the
+ * "target has a row" predicate.
  */
 final class ActivePathBanner extends JPanel
 {
@@ -24,13 +26,16 @@ final class ActivePathBanner extends JPanel
 
     private final WaypointPathfinder pathfinder;
     private final WaypointerConfig config;
+    private final java.util.function.IntPredicate targetHasRow;
     private final JLabel label = new JLabel();
     private final JButton stop = new JButton("✕ Stop");
 
-    ActivePathBanner(WaypointPathfinder pathfinder, WaypointerConfig config)
+    ActivePathBanner(WaypointPathfinder pathfinder, WaypointerConfig config,
+        java.util.function.IntPredicate targetHasRow)
     {
         this.pathfinder = pathfinder;
         this.config = config;
+        this.targetHasRow = targetHasRow;
 
         setLayout(new BorderLayout(6, 0));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -51,9 +56,12 @@ final class ActivePathBanner extends JPanel
     /** Pull the latest target/name from the pathfinder, refresh the label, toggle visibility. */
     void refresh()
     {
-        boolean active = pathfinder.getActiveTarget() != WorldPointPacker.UNDEFINED;
+        int target = pathfinder.getActiveTarget();
+        boolean active = target != WorldPointPacker.UNDEFINED;
         boolean enabled = config.showPathingBanner();
-        boolean visible = active && enabled;
+        // A saved-waypoint target shows its own Stop square on the row, so the banner stands down
+        // and only covers rowless paths (landmark bar, presets, routes, death auto-path).
+        boolean visible = active && enabled && !targetHasRow.test(target);
         if (visible)
         {
             String name = pathfinder.getActiveName();

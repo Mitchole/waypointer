@@ -2,6 +2,7 @@ package com.waypointer.ui;
 
 import com.waypointer.WaypointerConfig;
 import com.waypointer.service.WaypointPathfinder;
+import com.waypointer.service.WaypointStore;
 import com.waypointer.util.Listeners;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -53,7 +54,7 @@ public class TabHost extends PluginPanel
     @Inject
     public TabHost(WaypointerPanel waypointerPanel, PresetBrowserPanel presetBrowserPanel,
         DevPanel devPanel, RoutesPanel routesPanel, WaypointPathfinder pathfinder,
-        WaypointerConfig config, ClientToolbar clientToolbar)
+        WaypointerConfig config, ClientToolbar clientToolbar, WaypointStore store)
     {
         super(false);
         this.waypointerPanel = waypointerPanel;
@@ -62,7 +63,7 @@ public class TabHost extends PluginPanel
         this.routesPanel = routesPanel;
         this.config = config;
         this.clientToolbar = clientToolbar;
-        this.banner = new ActivePathBanner(pathfinder, config);
+        this.banner = new ActivePathBanner(pathfinder, config, store::hasWaypointAt);
 
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);

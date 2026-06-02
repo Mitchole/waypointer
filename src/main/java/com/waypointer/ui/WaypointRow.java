@@ -214,11 +214,8 @@ public class WaypointRow extends JPanel implements DropIndicatable
         this.playButton = play;
         this.activePathState = s.active;
         PlayButton.style(play, s.active);
-        HoverHint.shared().attach(play, () -> activePathState ? "Pathing here" : "Path to here");
-        play.getAccessibleContext().setAccessibleName(
-            s.waypoint.getName() == null || s.waypoint.getName().isEmpty()
-                ? "Path to waypoint"
-                : "Path to " + s.waypoint.getName());
+        HoverHint.shared().attach(play, () -> activePathState ? "Stop pathing here" : "Path to here");
+        play.getAccessibleContext().setAccessibleName(playAccessibleName(s.active));
         play.addActionListener(e -> s.onPlay.run());
 
         JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
@@ -243,7 +240,20 @@ public class WaypointRow extends JPanel implements DropIndicatable
         if (playButton == null) return;
         activePathState = active;
         PlayButton.style(playButton, active);
+        playButton.getAccessibleContext().setAccessibleName(playAccessibleName(active));
         playButton.repaint();
+    }
+
+    // "Stop pathing to X" while this row is the active target, "Path to X" otherwise, so the
+    // screen-reader name tracks the same toggle the glyph and tooltip show.
+    private String playAccessibleName(boolean active)
+    {
+        String n = waypoint.getName();
+        if (n == null || n.isEmpty())
+        {
+            return active ? "Stop pathing to waypoint" : "Path to waypoint";
+        }
+        return (active ? "Stop pathing to " : "Path to ") + n;
     }
 
     public JLabel getDragHandle() { return dragHandle; }

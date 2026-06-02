@@ -214,7 +214,7 @@ public class TabHostTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        TabHost host = new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class));
+        TabHost host = new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class), store);
         assertEquals(3, host.visibleTabCountForTest());
     }
 
@@ -270,7 +270,7 @@ public class TabHostTest
             mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
         new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config,
-            mock(ClientToolbar.class));
+            mock(ClientToolbar.class), store);
 
         assertEquals(false, routesPanel.getToastsForTest() == Toasts.NO_OP);
         org.junit.Assert.assertTrue(routesPanel.getToastsForTest() instanceof ToastOverlay);
@@ -349,6 +349,6 @@ public class TabHostTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class));
+        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class), store);
     }
 }
