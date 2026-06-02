@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/main/resources/com/waypointer/icon.png" alt="Waypointer" width="128" height="128">
+</p>
+
 # Waypointer
 
 Save your favourite Old School RuneScape locations and travel to them in one click.
