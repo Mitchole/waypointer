@@ -633,7 +633,7 @@ public class WaypointerPanel extends PluginPanel
 
     private void addNoMatchLabel()
     {
-        JLabel none = new JLabel("<html><div style='text-align:center;padding:24px;color:#9b9b9b;'>"
+        JLabel none = new JLabel("<html><div style='text-align:center;padding:24px;color:" + Styles.MUTED_HEX + ";'>"
             + "No waypoints match.</div></html>", SwingConstants.CENTER);
         none.setAlignmentX(Component.LEFT_ALIGNMENT);
         none.setForeground(Color.LIGHT_GRAY);
@@ -678,7 +678,7 @@ public class WaypointerPanel extends PluginPanel
         wrap.add(arrow, BorderLayout.NORTH);
 
         JLabel empty = new JLabel("<html><div style='text-align:center;padding:8px 12px 8px;"
-            + "color:#9b9b9b;'>No waypoints yet.<br>Mark a location to begin. Or select "
+            + "color:" + Styles.MUTED_HEX + ";'>No waypoints yet.<br>Mark a location to begin. Or select "
             + "'Presets' to add premade Waypoints</div></html>", SwingConstants.CENTER);
         empty.setForeground(Color.LIGHT_GRAY);
         wrap.add(empty, BorderLayout.CENTER);

@@ -36,7 +36,7 @@ public class DevPanel
         open.setAlignmentX(JPanel.LEFT_ALIGNMENT);
         open.addActionListener(e -> window.open(root));
 
-        JLabel hint = new JLabel("<html><div style='color:#9b9b9b;'>Opens a separate window to "
+        JLabel hint = new JLabel("<html><div style='color:" + Styles.MUTED_HEX + ";'>Opens a separate window to "
             + "edit and navigate landmark and preset data.</div></html>");
         hint.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         hint.setFont(FontManager.getRunescapeSmallFont());

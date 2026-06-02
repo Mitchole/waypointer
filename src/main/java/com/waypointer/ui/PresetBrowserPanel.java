@@ -158,7 +158,7 @@ public class PresetBrowserPanel extends PluginPanel
         if (presets.isEmpty())
         {
             JLabel none = new JLabel("<html><div style='text-align:center;padding:24px 12px;"
-                + "color:#9b9b9b;'>No presets available.</div></html>");
+                + "color:" + Styles.MUTED_HEX + ";'>No presets available.</div></html>");
             none.setAlignmentX(LEFT_ALIGNMENT);
             none.setForeground(Color.LIGHT_GRAY);
             body.add(none);

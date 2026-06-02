@@ -58,8 +58,8 @@ final class FooterStrip extends JPanel
     void refresh(int waypoints, int categories)
     {
         label.setText("<html><div style='text-align:center;'>"
-            + "<span style='color:#9b9b9b;'>" + countText(waypoints, categories) + "</span><br>"
-            + "<span style='color:#6e6e6e;font-style:italic;'>" + TIPS[tipIndex] + "</span>"
+            + "<span style='color:" + Styles.MUTED_HEX + ";'>" + countText(waypoints, categories) + "</span><br>"
+            + "<span style='color:" + Styles.FAINT_HEX + ";font-style:italic;'>" + TIPS[tipIndex] + "</span>"
             + "</div></html>");
     }
 

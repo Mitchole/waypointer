@@ -42,6 +42,14 @@ final class Styles
     static final Color DELETE_RED = new Color(220, 80, 80);
     static final Color ERROR_RED = new Color(220, 90, 90);
 
+    // Secondary text greys used across empty-states, footer, and no-match copy. MUTED is the
+    // primary secondary-text colour; FAINT is the dimmer tier (e.g. the footer tip). Each has a
+    // hex twin for the HTML <span style='color:...'> sites that can't take a java.awt.Color.
+    static final Color  MUTED_TEXT = new Color(0x9b, 0x9b, 0x9b);
+    static final Color  FAINT_TEXT = new Color(0x6e, 0x6e, 0x6e);
+    static final String MUTED_HEX  = "#9b9b9b";
+    static final String FAINT_HEX  = "#6e6e6e";
+
     static void secondaryButton(JButton b)
     {
         b.setBackground(ColorScheme.DARKER_GRAY_COLOR);

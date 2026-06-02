@@ -196,7 +196,7 @@ class PresetSection extends JPanel
         {
             JLabel descLabel = new JLabel("<html><div style='padding:4px 9px 4px 22px;'>"
                 + Text.escapeHtml(desc) + "</div></html>");
-            descLabel.setForeground(Color.GRAY);
+            descLabel.setForeground(Styles.MUTED_TEXT);
             descLabel.setFont(FontManager.getRunescapeSmallFont());
             descLabel.setAlignmentX(LEFT_ALIGNMENT);
             rows.add(descLabel);
