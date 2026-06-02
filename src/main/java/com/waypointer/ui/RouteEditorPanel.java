@@ -6,6 +6,7 @@ import com.waypointer.service.RouteStore;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.util.UUID;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -77,28 +78,34 @@ final class RouteEditorPanel extends JPanel
 
     private JPanel buildAddStepBar()
     {
-        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+        JPanel bar = new JPanel();
+        bar.setLayout(new BoxLayout(bar, BoxLayout.Y_AXIS));
         bar.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        bar.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+
         // ◉ = waypoint glyph; capture the player's current tile as a step
-        JButton markHere = new JButton("◉ Mark location");
-        Styles.secondaryButton(markHere);
-        markHere.addActionListener(e -> onMarkCurrentLocation.run());
-        bar.add(markHere);
-
-        JButton fromSaved = new JButton("◉ From saved");
-        Styles.secondaryButton(fromSaved);
-        fromSaved.addActionListener(e -> onAddFromLibrary.run());
-        bar.add(fromSaved);
-
-        // ✎ = pencil glyph for manual step
-        JButton addManual = new JButton("✎ Add manual step");
-        Styles.secondaryButton(addManual);
-        addManual.addActionListener(e -> {
+        bar.add(fullWidthButton("◉ Mark location", e -> onMarkCurrentLocation.run()));
+        bar.add(Box.createVerticalStrut(4));
+        bar.add(fullWidthButton("◉ From saved", e -> onAddFromLibrary.run()));
+        bar.add(Box.createVerticalStrut(4));
+        // ✎ = pencil glyph for a manual (text-only) step
+        bar.add(fullWidthButton("✎ Add manual step", e -> {
             String text = JOptionPane.showInputDialog(this, "Instruction:");
             if (text != null && !text.trim().isEmpty()) store.addManualStep(routeId, text.trim());
-        });
-        bar.add(addManual);
+        }));
         return bar;
+    }
+
+    // Full-width button for the vertical add-step bar: the height is capped so the Y_AXIS
+    // BoxLayout does not stretch it, while the width expands to fill the column.
+    private JButton fullWidthButton(String text, java.awt.event.ActionListener onClick)
+    {
+        JButton b = new JButton(text);
+        Styles.secondaryButton(b);
+        b.setAlignmentX(LEFT_ALIGNMENT);
+        b.setMaximumSize(Styles.capHeight(b));
+        b.addActionListener(onClick);
+        return b;
     }
 
     /** Rebuild the step list from the store. Call after any mutation. */
