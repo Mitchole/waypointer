@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.PresetOverridesSnapshot;
+import com.waypointer.util.Listeners;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,7 +30,7 @@ public class PresetCatalog
     private List<Preset> bundled = null;
     private List<Preset> cached;
     private PresetOverridesSnapshot lastOverrides = PresetOverridesSnapshot.empty();
-    private final com.waypointer.util.Listeners listeners = new com.waypointer.util.Listeners();
+    private final Listeners listeners = new Listeners();
 
     @Inject
     public PresetCatalog(Gson gson, PresetOverrides overrides)
@@ -39,7 +40,7 @@ public class PresetCatalog
         overrides.subscribe(() -> reload(overrides.getSnapshot()));
     }
 
-    public com.waypointer.util.Listeners.Subscription subscribe(Runnable r)
+    public Listeners.Subscription subscribe(Runnable r)
     {
         return listeners.subscribe(r);
     }

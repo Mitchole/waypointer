@@ -1,9 +1,11 @@
 package com.waypointer.ui;
 
+import com.waypointer.codec.PresetOverridesCodec;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.preset.Preset;
 import com.waypointer.preset.PresetCatalog;
 import com.waypointer.preset.PresetWaypoint;
+import com.waypointer.service.PresetImportResolver;
 import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.PresetOverridesSnapshot.Waypoint;
 import com.waypointer.service.WaypointCapture;
@@ -11,6 +13,11 @@ import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.util.Listeners.Subscription;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.BorderFactory;
@@ -18,11 +25,13 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import net.runelite.client.ui.ColorScheme;
 
 @Singleton
@@ -39,7 +48,7 @@ public class PresetEditorPanel extends JPanel
     private final JButton removeCategoryBtn = new JButton("Remove category");
     private final JButton importBtn = new JButton("Import contributor file");
     private final JButton exportBtn = new JButton("Export changes");
-    private final com.waypointer.codec.PresetOverridesCodec presetOverridesCodec;
+    private final PresetOverridesCodec presetOverridesCodec;
     private final JPanel body = new JPanel();
     private JPanel activeInline = null;
 
@@ -47,7 +56,7 @@ public class PresetEditorPanel extends JPanel
 
     @Inject
     public PresetEditorPanel(PresetCatalog catalog, PresetOverrides overrides, WaypointCapture capture,
-        WaypointPathfinder pathfinder, com.waypointer.codec.PresetOverridesCodec presetOverridesCodec)
+        WaypointPathfinder pathfinder, PresetOverridesCodec presetOverridesCodec)
     {
         this.catalog = catalog;
         this.overrides = overrides;
@@ -224,37 +233,37 @@ public class PresetEditorPanel extends JPanel
 
     private void runImport()
     {
-        javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
-        fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Preset JSON", "json"));
-        if (fc.showOpenDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) return;
+        JFileChooser fc = new JFileChooser();
+        fc.setFileFilter(new FileNameExtensionFilter("Preset JSON", "json"));
+        if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
         String json;
         try
         {
-            json = new String(java.nio.file.Files.readAllBytes(fc.getSelectedFile().toPath()));
+            json = new String(Files.readAllBytes(fc.getSelectedFile().toPath()));
         }
-        catch (java.io.IOException ex)
+        catch (IOException ex)
         {
             showToast("Couldn't read that file. Check permissions.");
             return;
         }
-        java.util.List<com.waypointer.preset.Preset> imported = catalog.parse(json);
+        List<Preset> imported = catalog.parse(json);
         if (imported.isEmpty())
         {
             showToast("No presets found in that file.");
             return;
         }
-        com.waypointer.service.PresetImportResolver resolver =
-            new com.waypointer.service.PresetImportResolver(catalog.getPresets(), imported);
-        com.waypointer.service.PresetImportResolver.Choice applyAll = null;
-        for (com.waypointer.service.PresetImportResolver.PendingConflict c : resolver.conflicts())
+        PresetImportResolver resolver =
+            new PresetImportResolver(catalog.getPresets(), imported);
+        PresetImportResolver.Choice applyAll = null;
+        for (PresetImportResolver.PendingConflict c : resolver.conflicts())
         {
             if (applyAll != null) { resolver.resolve(c, applyAll); continue; }
             ImportConflictDialog.Result r = ImportConflictDialog.prompt(
-                javax.swing.SwingUtilities.getWindowAncestor(this), c);
+                SwingUtilities.getWindowAncestor(this), c);
             resolver.resolve(c, r.choice);
             if (r.applyToAll) applyAll = r.choice;
         }
-        for (com.waypointer.preset.PresetWaypoint w : resolver.staged())
+        for (PresetWaypoint w : resolver.staged())
         {
             String cat = findCategoryOf(imported, w);
             if (cat == null) continue;
@@ -268,17 +277,16 @@ public class PresetEditorPanel extends JPanel
     private void runExport()
     {
         String json = presetOverridesCodec.encode(overrides.getSnapshot());
-        java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()
-            .setContents(new java.awt.datatransfer.StringSelection(json), null);
+        Toolkit.getDefaultToolkit().getSystemClipboard()
+            .setContents(new StringSelection(json), null);
         showToast("Override snapshot copied to clipboard.");
     }
 
-    private String findCategoryOf(java.util.List<com.waypointer.preset.Preset> presets,
-        com.waypointer.preset.PresetWaypoint target)
+    private String findCategoryOf(List<Preset> presets, PresetWaypoint target)
     {
-        for (com.waypointer.preset.Preset p : presets)
+        for (Preset p : presets)
         {
-            for (com.waypointer.preset.PresetWaypoint w : p.getWaypoints())
+            for (PresetWaypoint w : p.getWaypoints())
             {
                 if (w == target) return p.getCategory();
             }

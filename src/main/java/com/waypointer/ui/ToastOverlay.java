@@ -3,12 +3,17 @@ package com.waypointer.ui;
 import com.waypointer.util.Text;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
@@ -30,9 +35,9 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     private final JPanel card = new JPanel();
     private final JLabel message = new JLabel();
     private final JLabel actionLabel = new JLabel();
-    private javax.swing.Timer autoHideTimer;
+    private Timer autoHideTimer;
     private int entryAnimationCount;
-    private javax.swing.Timer entryTimer;
+    private Timer entryTimer;
     private int entryStartY;
     private int entryTargetY;
     private int entryFrame;
@@ -55,7 +60,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
 
         actionLabel.setForeground(ColorScheme.BRAND_ORANGE);
         actionLabel.setFont(FontManager.getRunescapeSmallFont());
-        actionLabel.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+        actionLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         actionLabel.setVisible(false);
         card.add(actionLabel, BorderLayout.EAST);
 
@@ -101,12 +106,12 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         entryFrame = 0;
 
         if (entryTimer != null && entryTimer.isRunning()) entryTimer.stop();
-        entryTimer = new javax.swing.Timer(ANIMATION_FRAME_DELAY_MS, e -> {
+        entryTimer = new Timer(ANIMATION_FRAME_DELAY_MS, e -> {
             entryFrame++;
             double t = Math.min(1.0, (double) entryFrame / ANIMATION_FRAMES);
             currentCardY = (int) Math.round(entryStartY + (entryTargetY - entryStartY) * t);
             card.setLocation(MARGIN_PX, currentCardY);
-            if (entryFrame >= ANIMATION_FRAMES) ((javax.swing.Timer) e.getSource()).stop();
+            if (entryFrame >= ANIMATION_FRAMES) ((Timer) e.getSource()).stop();
         });
         entryTimer.start();
     }
@@ -114,7 +119,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     private void restartAutoHide(int durationMs)
     {
         if (autoHideTimer != null && autoHideTimer.isRunning()) autoHideTimer.stop();
-        autoHideTimer = new javax.swing.Timer(durationMs, e -> card.setVisible(false));
+        autoHideTimer = new Timer(durationMs, e -> card.setVisible(false));
         autoHideTimer.setRepeats(false);
         autoHideTimer.start();
     }
@@ -150,14 +155,14 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         this.actionLabel.setVisible(true);
 
         // Replace any previous listener so a stale runnable from the prior toast doesn't fire.
-        for (java.awt.event.MouseListener l : this.actionLabel.getMouseListeners())
+        for (MouseListener l : this.actionLabel.getMouseListeners())
         {
             this.actionLabel.removeMouseListener(l);
         }
-        this.actionLabel.addMouseListener(new java.awt.event.MouseAdapter()
+        this.actionLabel.addMouseListener(new MouseAdapter()
         {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent e)
+            public void mouseClicked(MouseEvent e)
             {
                 if (autoHideTimer != null) autoHideTimer.stop();
                 card.setVisible(false);
@@ -202,7 +207,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
 
     boolean cardIsVisibleForTest() { return card.isVisible(); }
     String cardLabelTextForTest() { return message.getText(); }
-    javax.swing.Timer autoHideTimerForTest() { return autoHideTimer; }
+    Timer autoHideTimerForTest() { return autoHideTimer; }
     JLabel actionLabelForTest() { return actionLabel; }
     int entryAnimationCountForTest() { return entryAnimationCount; }
 

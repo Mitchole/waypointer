@@ -1,5 +1,6 @@
 package com.waypointer.ui;
 
+import com.waypointer.codec.LandmarkOverridesCodec;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkOverrides;
@@ -9,12 +10,15 @@ import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.util.Listeners.Subscription;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
@@ -33,7 +37,7 @@ public class LandmarkEditorPanel extends JPanel
     private final PlaceholderTextField searchField = new PlaceholderTextField("Search by name");
     private final JButton addBtn = new JButton("+ Add entry");
     private final JButton exportBtn = new JButton("Export changes");
-    private final com.waypointer.codec.LandmarkOverridesCodec landmarkOverridesCodec;
+    private final LandmarkOverridesCodec landmarkOverridesCodec;
     private final JPanel body = new JPanel();
     private JPanel activeInline = null;
 
@@ -42,7 +46,7 @@ public class LandmarkEditorPanel extends JPanel
     @Inject
     public LandmarkEditorPanel(BboxIndex bboxIndex, LandmarkOverrides overrides,
         WaypointCapture capture, WaypointPathfinder pathfinder, AreaPreviewOverlay areaOverlay,
-        com.waypointer.codec.LandmarkOverridesCodec landmarkOverridesCodec)
+        LandmarkOverridesCodec landmarkOverridesCodec)
     {
         this.bboxIndex = bboxIndex;
         this.overrides = overrides;
@@ -82,11 +86,11 @@ public class LandmarkEditorPanel extends JPanel
 
         exportBtn.addActionListener(e -> {
             String json = landmarkOverridesCodec.encode(overrides.getSnapshot());
-            java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()
-                .setContents(new java.awt.datatransfer.StringSelection(json), null);
-            javax.swing.JOptionPane.showMessageDialog(this,
+            Toolkit.getDefaultToolkit().getSystemClipboard()
+                .setContents(new StringSelection(json), null);
+            JOptionPane.showMessageDialog(this,
                 "Override snapshot copied to clipboard.", "Waypointer",
-                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.INFORMATION_MESSAGE);
         });
 
         bboxSub = bboxIndex.subscribe(() -> SwingUtilities.invokeLater(this::rebuild));
@@ -164,9 +168,9 @@ public class LandmarkEditorPanel extends JPanel
     {
         if (!pathfinder.isAvailable())
         {
-            javax.swing.JOptionPane.showMessageDialog(this,
+            JOptionPane.showMessageDialog(this,
                 "Install the Shortest Path plugin to navigate.", "Waypointer",
-                javax.swing.JOptionPane.WARNING_MESSAGE);
+                JOptionPane.WARNING_MESSAGE);
             return;
         }
         pathfinder.requestPath(

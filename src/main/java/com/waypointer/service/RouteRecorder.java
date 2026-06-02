@@ -3,6 +3,7 @@ package com.waypointer.service;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.model.route.Route;
 import com.waypointer.util.Listeners;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -27,7 +28,7 @@ public class RouteRecorder
     private final Consumer<Runnable> clientThreadRunner;
     private final Listeners listeners = new Listeners();
 
-    @Nullable private java.util.UUID draftRouteId;
+    @Nullable private UUID draftRouteId;
     private int waypointCounter;
 
     /** Production constructor: reads the player tile on the client thread. */
@@ -58,7 +59,7 @@ public class RouteRecorder
 
     public boolean isRecording() { return draftRouteId != null; }
 
-    @Nullable public java.util.UUID getDraftRouteId() { return draftRouteId; }
+    @Nullable public UUID getDraftRouteId() { return draftRouteId; }
 
     public void start(String name)
     {
@@ -71,7 +72,7 @@ public class RouteRecorder
 
     public void markCurrentLocation()
     {
-        final java.util.UUID draft = draftRouteId;
+        final UUID draft = draftRouteId;
         if (draft == null) return;
         // The tile read touches Client, which asserts the client thread; run it there.
         clientThreadRunner.accept(() -> {
@@ -95,7 +96,7 @@ public class RouteRecorder
      * editor's "mark current location" action (independent of recording). Reads Client on the
      * client thread; the store mutation drives the UI refresh, so no recorder listener fire here.
      */
-    public void addCurrentLocationTo(java.util.UUID routeId)
+    public void addCurrentLocationTo(UUID routeId)
     {
         if (routeId == null) return;
         clientThreadRunner.accept(() -> {
@@ -111,5 +112,5 @@ public class RouteRecorder
         listeners.fire();
     }
 
-    java.util.UUID getDraftRouteIdForTest() { return draftRouteId; }
+    UUID getDraftRouteIdForTest() { return draftRouteId; }
 }

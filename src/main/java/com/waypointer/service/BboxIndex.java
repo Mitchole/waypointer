@@ -1,6 +1,7 @@
 package com.waypointer.service;
 
 import com.waypointer.model.WorldPointPacker;
+import com.waypointer.util.Listeners;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -8,8 +9,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -22,10 +26,10 @@ public class BboxIndex
     private static final class ResourceEntry
     {
         final String path;
-        @javax.annotation.Nullable
+        @Nullable
         final LandmarkType type;
 
-        ResourceEntry(String path, @javax.annotation.Nullable LandmarkType type)
+        ResourceEntry(String path, @Nullable LandmarkType type)
         {
             this.path = path;
             this.type = type;
@@ -52,7 +56,7 @@ public class BboxIndex
     {
         public final int x1, y1, x2, y2, plane, area;
         public final String name;
-        @javax.annotation.Nullable
+        @Nullable
         public final LandmarkType type;
 
         Entry(int x1, int y1, int x2, int y2, int plane, String name)
@@ -61,7 +65,7 @@ public class BboxIndex
         }
 
         Entry(int x1, int y1, int x2, int y2, int plane, String name,
-            @javax.annotation.Nullable LandmarkType type)
+            @Nullable LandmarkType type)
         {
             this.x1 = x1;
             this.y1 = y1;
@@ -75,7 +79,7 @@ public class BboxIndex
     }
 
     private final Map<Integer, List<Entry>> byPlane = new HashMap<>();
-    private final com.waypointer.util.Listeners listeners = new com.waypointer.util.Listeners();
+    private final Listeners listeners = new Listeners();
     private final List<Entry> bundled = new ArrayList<>();
     private int total;
     // Held to honour the "always hold the subscription token" rule. BboxIndex and
@@ -83,7 +87,7 @@ public class BboxIndex
     // it from -- the subscription lives as long as the injector. Kept in a field rather
     // than discarded so the one place that ignored its token no longer does.
     @SuppressWarnings("unused")
-    private final com.waypointer.util.Listeners.Subscription overridesSub;
+    private final Listeners.Subscription overridesSub;
 
     @Inject
     public BboxIndex(LandmarkOverrides overrides)
@@ -100,7 +104,7 @@ public class BboxIndex
         this.overridesSub = null;
     }
 
-    public com.waypointer.util.Listeners.Subscription subscribe(Runnable r)
+    public Listeners.Subscription subscribe(Runnable r)
     {
         return listeners.subscribe(r);
     }
@@ -113,9 +117,9 @@ public class BboxIndex
      * even once overrides exist for that type. Reflects deletions, additions, and edits (an edit
      * is recorded as a deletion of the original plus an added entry).
      */
-    public java.util.List<Entry> editableOfType(LandmarkType t, LandmarkOverridesSnapshot s)
+    public List<Entry> editableOfType(LandmarkType t, LandmarkOverridesSnapshot s)
     {
-        java.util.List<Entry> out = new java.util.ArrayList<>();
+        List<Entry> out = new ArrayList<>();
         for (Entry b : bundled)
         {
             if (b.type == t && !isDeleted(b, s)) out.add(b);
@@ -232,7 +236,7 @@ public class BboxIndex
         byPlane.clear();
         total = 0;
 
-        java.util.Set<String> replacedTypes = new java.util.HashSet<>(s.getByType().keySet());
+        Set<String> replacedTypes = new HashSet<>(s.getByType().keySet());
 
         for (Entry b : bundled)
         {
@@ -261,7 +265,7 @@ public class BboxIndex
             if (d.getX1() == b.x1 && d.getY1() == b.y1
                 && d.getX2() == b.x2 && d.getY2() == b.y2
                 && d.getPlane() == b.plane
-                && java.util.Objects.equals(d.getName(), b.name)) return true;
+                && Objects.equals(d.getName(), b.name)) return true;
         }
         return false;
     }
