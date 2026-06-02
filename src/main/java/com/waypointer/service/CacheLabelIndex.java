@@ -30,16 +30,12 @@ public class CacheLabelIndex
     {
         final int packed;
         final String name;
-        final int category;
-        final int spriteId;
         final int textScale;
 
-        Entry(int packed, String name, int category, int spriteId, int textScale)
+        Entry(int packed, String name, int textScale)
         {
             this.packed = packed;
             this.name = name;
-            this.category = category;
-            this.spriteId = spriteId;
             this.textScale = textScale;
         }
     }
@@ -203,12 +199,9 @@ public class CacheLabelIndex
                         int y = Integer.parseInt(coord[1]);
                         int plane = Integer.parseInt(coord[2]);
                         String name = tabs[1].trim();
-                        int category = Integer.parseInt(tabs[2].trim());
-                        int spriteId = Integer.parseInt(tabs[3].trim());
                         int textScale = Integer.parseInt(tabs[4].trim());
                         if (name.isEmpty()) continue;
-                        addEntry(new Entry(WorldPointPacker.pack(x, y, plane),
-                            name, category, spriteId, textScale));
+                        addEntry(new Entry(WorldPointPacker.pack(x, y, plane), name, textScale));
                     }
                     catch (NumberFormatException ignored) {}
                 }
