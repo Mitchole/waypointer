@@ -10,23 +10,12 @@ import java.awt.FlowLayout;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JSlider;
-import javax.swing.JTextField;
 import net.runelite.client.ui.ColorScheme;
 
 final class AddLandmarkPanel extends JPanel
 {
-    private final JTextField nameField = new JTextField();
-    private final JRadioButton pointBtn = new JRadioButton("Point", true);
-    private final JRadioButton areaBtn = new JRadioButton("Area");
-    private final JSlider sizeSlider = new JSlider(2, 10, 3);
-    private final JLabel sizeLabel = new JLabel("3x3");
-
     AddLandmarkPanel(WaypointCapture capture, LandmarkOverrides overrides,
         Supplier<LandmarkType> currentType,
         Consumer<Integer> onSizeChanged,
@@ -36,17 +25,8 @@ final class AddLandmarkPanel extends JPanel
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
         setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 
-        ButtonGroup g = new ButtonGroup();
-        g.add(pointBtn);
-        g.add(areaBtn);
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        header.setOpaque(false);
-        header.add(pointBtn);
-        header.add(areaBtn);
-        header.add(sizeSlider);
-        header.add(sizeLabel);
-
-        Styles.textField(nameField);
+        LandmarkCaptureControls controls = new LandmarkCaptureControls("", false, 3);
+        controls.addSizeListeners(onSizeChanged);
 
         JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         south.setOpaque(false);
@@ -57,38 +37,24 @@ final class AddLandmarkPanel extends JPanel
         south.add(cancelBtn);
         south.add(capBtn);
 
-        add(header, BorderLayout.NORTH);
-        add(nameField, BorderLayout.CENTER);
+        add(controls.header(), BorderLayout.NORTH);
+        add(controls.nameField(), BorderLayout.CENTER);
         add(south, BorderLayout.SOUTH);
-
-        sizeSlider.addChangeListener(e -> {
-            int n = sizeSlider.getValue();
-            sizeLabel.setText(n + "x" + n);
-            onSizeChanged.accept(areaBtn.isSelected() ? n : 0);
-        });
-        pointBtn.addActionListener(e -> onSizeChanged.accept(0));
-        areaBtn.addActionListener(e -> onSizeChanged.accept(sizeSlider.getValue()));
 
         capBtn.addActionListener(e -> capture.readCurrentLocation(packed -> {
             if (packed == WorldPointPacker.UNDEFINED) return;
             int x = WorldPointPacker.getX(packed);
             int y = WorldPointPacker.getY(packed);
             int plane = WorldPointPacker.getPlane(packed);
-            String name = nameField.getText().isEmpty() ? "Unnamed" : nameField.getText();
-            int x2 = x, y2 = y;
-            if (areaBtn.isSelected())
-            {
-                int n = sizeSlider.getValue();
-                x2 = x + n - 1;
-                y2 = y + n - 1;
-            }
+            String name = controls.getName().isEmpty() ? "Unnamed" : controls.getName();
+            int[] c = controls.cornersFor(x, y);
             overrides.addEntry(currentType.get().name(),
-                new Entry(name, x, y, x2, y2, plane));
+                new Entry(name, c[0], c[1], c[2], c[3], plane));
             onClose.run();
         }));
         cancelBtn.addActionListener(e -> onClose.run());
 
         // Enter on the name field captures; Escape cancels.
-        EditorKeyBindings.commitOnEnterCancelOnEscape(this, nameField, capBtn, cancelBtn);
+        EditorKeyBindings.commitOnEnterCancelOnEscape(this, controls.nameField(), capBtn, cancelBtn);
     }
 }
