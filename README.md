@@ -2,13 +2,15 @@
   <img src="waypointer-iconpng.png" alt="Waypointer" width="200">
 </p>
 
-# Waypointer
+<h1 align="center">Waypointer</h1>
 
-Save Old School RuneScape locations and travel to them in one click.
+<p align="center"><em>Save your favourite Old School RuneScape locations and travel to them in one click.</em></p>
 
-[![License: BSD-2-Clause](https://img.shields.io/badge/License-BSD_2--Clause-orange.svg)](LICENSE)
-[![Java 11](https://img.shields.io/badge/Java-11-blue.svg)](https://adoptium.net/)
-[![RuneLite Plugin](https://img.shields.io/badge/RuneLite-Plugin-red.svg)](https://runelite.net/)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-BSD_2--Clause-orange.svg" alt="License: BSD-2-Clause"></a>
+  <a href="https://adoptium.net/"><img src="https://img.shields.io/badge/Java-11-blue.svg" alt="Java 11"></a>
+  <a href="https://runelite.net/"><img src="https://img.shields.io/badge/RuneLite-Plugin-red.svg" alt="RuneLite Plugin"></a>
+</p>
 
 > **[ Screenshot ]** The Waypointer panel docked in the RuneLite sidebar, the nearest-landmark bar across the top and two or three categories expanded below. (Will be "panel.png")
 
