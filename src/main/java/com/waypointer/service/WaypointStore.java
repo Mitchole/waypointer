@@ -707,7 +707,7 @@ public class WaypointStore
         if (existing == null)
         {
             Category u = new Category(UUID.randomUUID(), UNCATEGORIZED_NAME, 0, true, null, false);
-            // Push existing categories out by 1 so Uncategorized can sit at top.
+            // Top-of-list ordering is enforced later by getCategoriesOrdered's tier sort, not here.
             library.getCategories().add(u);
         }
     }
