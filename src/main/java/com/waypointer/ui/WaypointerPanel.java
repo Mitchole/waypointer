@@ -36,7 +36,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -288,8 +287,7 @@ public class WaypointerPanel extends PluginPanel
         capture.readCurrentLocation(packed -> {
             if (packed == WorldPointPacker.UNDEFINED)
             {
-                JOptionPane.showMessageDialog(this, "Log in to mark a location.",
-                    "Waypointer", JOptionPane.INFORMATION_MESSAGE);
+                toastOverlay.show("Log in to mark a location.");
                 return;
             }
             captureForm.show(packed);
@@ -719,9 +717,7 @@ public class WaypointerPanel extends PluginPanel
             case PLAY:
                 if (!pathfinder.isAvailable())
                 {
-                    JOptionPane.showMessageDialog(this,
-                        "Install the Shortest Path plugin to use Play.",
-                        "Waypointer", JOptionPane.INFORMATION_MESSAGE);
+                    toastOverlay.show("Install the Shortest Path plugin to use Play.");
                     return;
                 }
                 if (!WildernessConfirmGuard.shouldProceed(w, config, wildernessGate, this, store)) return;
