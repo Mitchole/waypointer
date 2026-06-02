@@ -17,7 +17,6 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.WindowConstants;
 import net.runelite.client.ui.ColorScheme;
 
 /**
@@ -54,11 +53,8 @@ final class ExportPickerDialog extends JDialog
         }
         this.tree = new WaypointTreePicker(model, this::updateButtons);
 
-        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        JPanel content = (JPanel) getContentPane();
-        content.setLayout(new BorderLayout(8, 8));
-        content.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        content.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        JPanel content = Dialogs.applyDarkContentPane(this);
+        Dialogs.bindEscape(this);
 
         content.add(buildSelectBar(), BorderLayout.NORTH);
 
@@ -71,8 +67,7 @@ final class ExportPickerDialog extends JDialog
         content.add(buildFooter(), BorderLayout.SOUTH);
 
         updateButtons();
-        pack();
-        setLocationRelativeTo(owner);
+        Dialogs.finish(this, owner);
     }
 
     private JPanel buildSelectBar()
