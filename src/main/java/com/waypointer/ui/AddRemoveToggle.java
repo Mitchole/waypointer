@@ -44,6 +44,7 @@ final class AddRemoveToggle extends JLabel
             BorderFactory.createEmptyBorder(4, 7, 4, 7)));
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         applyState(false);
+        HoverHint.shared().attach(this, () -> currentId == null ? "Add waypoint" : "Remove waypoint");
 
         addMouseListener(new MouseAdapter()
         {
@@ -83,14 +84,12 @@ final class AddRemoveToggle extends JLabel
         if (currentId == null)
         {
             setText(ADD_GLYPH);
-            setToolTipText("Add waypoint");
             getAccessibleContext().setAccessibleName("Add to library");
             base = ColorScheme.PROGRESS_COMPLETE_COLOR;
         }
         else
         {
             setText(REMOVE_GLYPH);
-            setToolTipText("Remove waypoint");
             getAccessibleContext().setAccessibleName("Remove from library");
             base = ColorScheme.PROGRESS_ERROR_COLOR;
         }

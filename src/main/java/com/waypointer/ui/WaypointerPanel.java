@@ -141,8 +141,8 @@ public class WaypointerPanel extends PluginPanel
         markRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
         markRow.add(markBtn, BorderLayout.CENTER);
         JButton overflowBtn = new JButton("⋮"); // U+22EE vertical ellipsis
-        overflowBtn.setToolTipText("More");
         overflowBtn.getAccessibleContext().setAccessibleName("More options");
+        HoverHint.shared().attach(overflowBtn, () -> "More");
         Styles.secondaryButton(overflowBtn);
         Dimension overflowSize = new Dimension(30, markBtn.getPreferredSize().height);
         overflowBtn.setPreferredSize(overflowSize);
@@ -333,7 +333,7 @@ public class WaypointerPanel extends PluginPanel
         searchField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR, 1),
             BorderFactory.createEmptyBorder(4, 6, 4, 22)));
-        searchField.setToolTipText("Search waypoints");
+        HoverHint.shared().attach(searchField, () -> "Search waypoints");
         // One reusable debounce timer; restarted per keystroke rather than reallocated. Reads the
         // field text live at fire time, so no per-keystroke capture is needed.
         searchDebounceTimer = new Timer(120, e -> {

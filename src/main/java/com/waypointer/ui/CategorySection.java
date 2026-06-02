@@ -179,8 +179,8 @@ public class CategorySection extends CollapsibleSection
             menuTrigger.setFont(menuTrigger.getFont().deriveFont(Font.BOLD));
             menuTrigger.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 4));
             menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            menuTrigger.setToolTipText("Category options");
             menuTrigger.getAccessibleContext().setAccessibleName("Category options");
+            HoverHint.shared().attach(menuTrigger, () -> "Category options");
             menuTrigger.addMouseListener(new MouseAdapter() {
                 @Override public void mouseClicked(MouseEvent e)
                 {

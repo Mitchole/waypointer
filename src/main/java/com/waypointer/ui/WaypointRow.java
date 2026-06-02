@@ -41,6 +41,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
     // Non-null only outside select mode (select mode hides the Play button). Held so the panel can
     // retint it in place on a path-target change instead of rebuilding the whole body tree (#67).
     private JButton playButton;
+    private boolean activePathState;
 
     /** Start building a row for {@code waypoint}. Booleans default false; callbacks default no-op. */
     public static Spec spec(Waypoint waypoint)
@@ -169,8 +170,8 @@ public class WaypointRow extends JPanel implements DropIndicatable
             dragHandle.setOpaque(false);
             dragHandle.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
             dragHandle.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
-            dragHandle.setToolTipText("Drag to reorder");
             dragHandle.getAccessibleContext().setAccessibleName("Reorder waypoint");
+            HoverHint.shared().attach(dragHandle, () -> "Drag to reorder");
             add(dragHandle, BorderLayout.WEST);
         }
         else
@@ -209,8 +210,9 @@ public class WaypointRow extends JPanel implements DropIndicatable
         if (s.selectMode) return;
         JButton play = new JButton("▶"); // black right-pointing triangle
         this.playButton = play;
+        this.activePathState = s.active;
         PlayButton.style(play, s.active);
-        play.setToolTipText(s.active ? "Pathing here" : "Path to here");
+        HoverHint.shared().attach(play, () -> activePathState ? "Pathing here" : "Path to here");
         play.getAccessibleContext().setAccessibleName(
             s.waypoint.getName() == null || s.waypoint.getName().isEmpty()
                 ? "Path to waypoint"
@@ -237,8 +239,8 @@ public class WaypointRow extends JPanel implements DropIndicatable
     public void setActive(boolean active)
     {
         if (playButton == null) return;
+        activePathState = active;
         PlayButton.style(playButton, active);
-        playButton.setToolTipText(active ? "Pathing here" : "Path to here");
         playButton.repaint();
     }
 
