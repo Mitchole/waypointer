@@ -672,7 +672,7 @@ public class WaypointerPanel extends PluginPanel
         // Faint up-arrow (#24) at the top of the body, aimed up past the search bar at the orange
         // Mark button. Only painted here, so it vanishes the moment the first waypoint exists.
         JLabel arrow = new JLabel("↑", SwingConstants.CENTER);
-        arrow.setForeground(new Color(0x6e, 0x6e, 0x6e));
+        arrow.setForeground(Styles.FAINT_TEXT);
         arrow.setFont(arrow.getFont().deriveFont(28f));
         arrow.setBorder(BorderFactory.createEmptyBorder(12, 0, 0, 0));
         wrap.add(arrow, BorderLayout.NORTH);
