@@ -7,3 +7,4 @@ out/
 *.class
 .DS_Store
 test-output.txt
+*.mp4
