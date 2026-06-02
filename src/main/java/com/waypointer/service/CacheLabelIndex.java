@@ -81,30 +81,41 @@ public class CacheLabelIndex
         int bestDist = Integer.MAX_VALUE;
         int bestCount = Integer.MAX_VALUE;
 
-        for (Entry e : candidates(x, y, plane, CITY_RADIUS))
+        int chunks = (CITY_RADIUS >> CHUNK_SHIFT) + 1;
+        int cx = x >> CHUNK_SHIFT;
+        int cy = y >> CHUNK_SHIFT;
+        for (int dxc = -chunks; dxc <= chunks; dxc++)
         {
-            if (WorldPointPacker.getPlane(e.packed) != plane) continue;
-            int dist = Math.max(
-                Math.abs(WorldPointPacker.getX(e.packed) - x),
-                Math.abs(WorldPointPacker.getY(e.packed) - y));
-
-            // Unique-name POIs get sub-area radius so they're not eclipsed by a city label just
-            // because the player is more than 3 tiles from the exact label tile.
-            boolean promoted = e.textScale == 0 && nameCounts.getOrDefault(e.name, 1) == 1;
-            int radius = promoted ? SUB_AREA_RADIUS : radiusFor(e.textScale);
-            if (dist > radius) continue;
-
-            int rank = promoted ? 1 : rankFor(e.textScale);
-            int count = nameCounts.getOrDefault(e.name, 1);
-            // Lower rank = tighter tier; tie-break by lower name count; then closer distance.
-            if (rank < bestRank
-                || (rank == bestRank && count < bestCount)
-                || (rank == bestRank && count == bestCount && dist < bestDist))
+            for (int dyc = -chunks; dyc <= chunks; dyc++)
             {
-                best = e;
-                bestRank = rank;
-                bestDist = dist;
-                bestCount = count;
+                List<Entry> bucket = byChunk.get(rawChunkKey(cx + dxc, cy + dyc, plane));
+                if (bucket == null) continue;
+                for (Entry e : bucket)
+                {
+                    if (WorldPointPacker.getPlane(e.packed) != plane) continue;
+                    int dist = Math.max(
+                        Math.abs(WorldPointPacker.getX(e.packed) - x),
+                        Math.abs(WorldPointPacker.getY(e.packed) - y));
+
+                    // Unique-name POIs get sub-area radius so they're not eclipsed by a city label
+                    // just because the player is more than 3 tiles from the exact label tile.
+                    boolean promoted = e.textScale == 0 && nameCounts.getOrDefault(e.name, 1) == 1;
+                    int radius = promoted ? SUB_AREA_RADIUS : radiusFor(e.textScale);
+                    if (dist > radius) continue;
+
+                    int rank = promoted ? 1 : rankFor(e.textScale);
+                    int count = nameCounts.getOrDefault(e.name, 1);
+                    // Lower rank = tighter tier; tie-break by lower name count; then closer distance.
+                    if (rank < bestRank
+                        || (rank == bestRank && count < bestCount)
+                        || (rank == bestRank && count == bestCount && dist < bestDist))
+                    {
+                        best = e;
+                        bestRank = rank;
+                        bestDist = dist;
+                        bestCount = count;
+                    }
+                }
             }
         }
         if (best == null) return null;
@@ -139,23 +150,6 @@ public class CacheLabelIndex
             case 1: return LookupHit.Tier.SUB_AREA;
             default: return LookupHit.Tier.CITY;
         }
-    }
-
-    private List<Entry> candidates(int x, int y, int plane, int maxRadius)
-    {
-        int chunks = (maxRadius >> CHUNK_SHIFT) + 1;
-        List<Entry> out = new ArrayList<>();
-        int cx = x >> CHUNK_SHIFT;
-        int cy = y >> CHUNK_SHIFT;
-        for (int dx = -chunks; dx <= chunks; dx++)
-        {
-            for (int dy = -chunks; dy <= chunks; dy++)
-            {
-                List<Entry> bucket = byChunk.get(rawChunkKey(cx + dx, cy + dy, plane));
-                if (bucket != null) out.addAll(bucket);
-            }
-        }
-        return out;
     }
 
     private void addEntry(Entry e)
