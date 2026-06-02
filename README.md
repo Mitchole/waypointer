@@ -10,12 +10,15 @@ Save your favourite Old School RuneScape locations and travel to them in one cli
 [![Java 11](https://img.shields.io/badge/Java-11-blue.svg)](https://adoptium.net/)
 [![RuneLite Plugin](https://img.shields.io/badge/RuneLite-Plugin-red.svg)](https://runelite.net/)
 
-> **[ Screenshot ]** The Waypointer panel docked in the RuneLite sidebar, two or three categories expanded with a handful of saved waypoints.
+> **[ Screenshot ]** The Waypointer panel docked in the RuneLite sidebar, the nearest-landmark bar across the top and two or three categories expanded below.
 
 Waypointer is a sidebar panel for the places you keep going back to: banks, bosses, farm
 patches, teleport spots. Mark a tile, name it, file it under a category. Click Play on any
 waypoint and the [Shortest Path](https://github.com/Skretzo/shortest-path) plugin draws the
 route to it on your world map and minimap.
+
+It also keeps a one-click bar to the nearest bank, altar, or anvil, and lets you string
+waypoints into guided **Routes** for farm runs and agility laps.
 
 ---
 
@@ -25,6 +28,8 @@ route to it on your world map and minimap.
 - [Saving a waypoint](#saving-a-waypoint)
 - [Organising your library](#organising-your-library)
 - [Travelling to a waypoint](#travelling-to-a-waypoint)
+- [The nearest-landmark bar](#the-nearest-landmark-bar)
+- [Routes](#routes)
 - [Preset waypoints](#preset-waypoints)
 - [Searching](#searching)
 - [Sharing](#sharing)
@@ -40,20 +45,24 @@ route to it on your world map and minimap.
    it yourself; see [DEVELOPER.md](DEVELOPER.md).)*
 2. For one-click travel, install the [Shortest Path](https://github.com/Skretzo/shortest-path)
    plugin too. Everything else in Waypointer works without it, but the Play button needs it.
-3. Open the Waypointer panel from the RuneLite sidebar (the pin icon).
-4. Your library starts empty. Add your own waypoints, or open the **Presets** tab at the top
-   of the panel to start from a curated set.
+3. Open the Waypointer panel from the RuneLite sidebar (the pin icon). The tabs across the top
+   are **My Waypoints**, **Presets**, and **Routes**.
+4. Your library starts empty. Add your own waypoints, or open the **Presets** tab to start
+   from a curated set.
 
 > **[ Video ]** A 20-second tour: open the panel, mark a tile, give it a name and category, click Play, watch the route appear.
 
 ## Saving a waypoint
 
-Three ways to capture a tile:
+Four ways to capture a tile:
 
 - **Mark current location** saves the tile your character is standing on.
 - **Right-click the world map** and choose `Save as Waypoint`.
-- **Shift right-click a tile in the 3D world** and choose `Save as Waypoint`. This one is off
-  by default; turn it on in [Settings](#settings).
+- **Shift right-click a tile in the 3D world** and choose `Save as Waypoint`.
+- **Right-click an NPC or object** and choose `Save as Waypoint`. The name and tile at the
+  moment you click become the defaults.
+
+The last two are off by default; turn them on in [Settings](#settings).
 
 Each one opens a small dialog where you set the name and pick a category. Stand inside a known
 bank, altar, anvil, furnace, fairy ring, dungeon entrance, boss arena, or other named
@@ -65,6 +74,8 @@ landmark, and the name is filled in for you.
 
 - Sort waypoints into **categories** you name yourself. A fixed `Uncategorized` bucket holds
   anything you have not filed.
+- **Pin** a waypoint to lift it into a section at the very top of the panel, above the
+  categories, for the handful you path to constantly.
 - Drag the `⠿` handle on a row to reorder a waypoint, or to move it into another category.
 - Drag a category header to reorder the categories.
 - Give any category or waypoint an **icon** from the in-game sprite picker.
@@ -77,15 +88,50 @@ landmark, and the name is filled in for you.
 ## Travelling to a waypoint
 
 Click `Play` on a waypoint. Waypointer hands the tile to Shortest Path, which draws the route
-on the world map and minimap. To cancel a route, use **Stop pathing** in the overflow (`⋮`)
-menu.
+on the world map and minimap. While a path is active, a **Pathing to** strip sits at the top of
+the panel; clear it with **Stop pathing** in the overflow (`⋮`) menu.
+
+A couple of safety nets, both on by default and both toggleable in [Settings](#settings):
+
+- Rows whose tile is in the Wilderness carry a skull, and Playing one asks you to confirm
+  first.
+- **Auto-path to death location** starts a route back to where you died the moment it happens,
+  so you can run for your gravestone without fishing for the tile.
 
 > **[ Video ]** Clicking Play on a saved bank, then following the highlighted path on the minimap to the door.
 
+## The nearest-landmark bar
+
+Across the top of the panel is a row of landmark buttons: bank, altar, anvil, and the like.
+Click one and Waypointer paths to the nearest landmark of that type from wherever you are
+standing, no saved waypoint needed. The `⋮` button on the bar lets you choose which landmark
+types show and in what order. Hide the whole bar from [Settings](#settings) if you would
+rather not have it.
+
+## Routes
+
+A **Route** is an ordered list of stops you run one after another: a herb farm run, an agility
+lap, a wintertodt prep loop. Open the **Routes** tab to build and run them.
+
+A route is made of steps, and there are two kinds:
+
+- **Waypoint steps** path to a tile and advance on their own once you arrive.
+- **Manual steps** are a line of text ("climb the ladder", "bank everything") that wait for
+  you to press Next.
+
+Build a route by adding steps from your library, marking your current tile as you walk it, or
+typing a manual instruction. Turn on **repeat** for a loop that starts over at the end.
+
+Run a route from the playback bar: **Back**, **Next**, **Stop**, and a step counter. Set a
+**next-step hotkey** in [Settings](#settings) to advance without leaving the game, and keep the
+in-game route box on screen so the current step is always visible. Share a route with anyone
+using an `RT1:` code.
+
+> **[ Screenshot ]** The Routes tab mid-run: the playback bar with its step counter, and the in-game route box showing the current step.
+
 ## Preset waypoints
 
-New to the plugin, or picking up content you have not mapped yet? Open the **Presets** tab at
-the top of the panel.
+New to the plugin, or picking up content you have not mapped yet? Open the **Presets** tab.
 
 It holds curated sets covering Slayer masters, herb and tree patches, bosses, raids,
 runecrafting altars, and more. Expand a set and click `+` on a waypoint to drop it into your
@@ -101,7 +147,8 @@ goes back to how you left it.
 
 ## Sharing
 
-- Copy a share code for a single waypoint (`WP1:`) or your whole library (`WPL1:`).
+- Copy a share code for a single waypoint (`WP1:`), your whole library (`WPL1:`), or a route
+  (`RT1:`).
 - Paste someone else's code through **Import library...** in the overflow menu.
 
 ## Settings
@@ -109,12 +156,23 @@ goes back to how you left it.
 | Setting | Default | What it does |
 |---|---|---|
 | Right-click tiles to save | Off | Adds `Save as Waypoint` to the Shift right-click menu on tiles in the 3D world. |
+| Right-click NPCs and objects to save | Off | Adds `Save as Waypoint` to the right-click menu on NPCs and objects. |
+| Show 'nearest landmark' bar | On | Shows the one-click row of nearest-landmark shortcuts at the top of the panel. |
+| Show 'Pathing to' banner | On | Shows a status strip at the top of the panel while a path is active. |
+| Confirm before pathing into Wilderness | On | Asks before Playing a waypoint whose tile is in the Wilderness. |
+| Show wilderness skull on row | On | Marks rows whose destination is in the Wilderness with a skull. |
+| Auto-path to death location | Off | Starts a path back to your death tile when you die. Needs Shortest Path. |
+| Newest pin at top | On | Orders pinned waypoints with the most recently pinned first. |
+| Enable Routes | On | Shows the Routes tab. Off hides the feature. |
+| Route: next step hotkey | Unset | Key that advances the current route step while a route runs. |
+| Show in-game route box | On | Draws the read-only current-step box in the game window during a route. |
 
 ## Requirements
 
 - RuneLite.
-- The [Shortest Path](https://github.com/Skretzo/shortest-path) plugin, for the Play button.
-  Capturing, organising, searching, and sharing all work without it.
+- The [Shortest Path](https://github.com/Skretzo/shortest-path) plugin, for the Play button,
+  the nearest-landmark bar, and routes. Capturing, organising, searching, and sharing all work
+  without it.
 
 ## License
 
