@@ -230,6 +230,25 @@ public class NearestLandmarkBarTest
             iconRow.getPreferredSize().height >= maxBottom);
     }
 
+    @Test
+    public void iconRowStaysSingleRowWhenWidthMomentarilyCollapses()
+    {
+        // Regression: on first launch the icon row's width transiently collapses toward a
+        // single button while the panel is being realised. The wrap layout used to honour that
+        // narrow width, stacking all five default buttons one-per-row and leaving a tall gap
+        // above the search field that only a Customize toggle could clear. The row only ever
+        // renders in the fixed-width sidebar, so a momentarily narrow width must not inflate the
+        // reported height -- it should stay a single row.
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson);
+
+        Container iconRow = (Container) bar.getComponent(0);
+        iconRow.setSize(34, 10); // one BUTTON_SIZE wide -- the collapsed transient width
+
+        int height = iconRow.getPreferredSize().height;
+        assertTrue("icon row must report a single-row height when momentarily narrow, was " + height,
+            height <= 40);
+    }
+
     // Returns only the landmark buttons in the icon row (all buttons except the trailing overflow).
     private static List<JButton> findLandmarkButtons(NearestLandmarkBar bar)
     {

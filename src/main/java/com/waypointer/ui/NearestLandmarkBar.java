@@ -382,28 +382,19 @@ public final class NearestLandmarkBar extends JPanel
             }
         }
 
-        // Width available to the row. Once the row has been laid out we use its own width; before
-        // that (the first preferred-size query, while widths are still zero) we climb to the first
-        // sized ancestor and back out the insets we passed through, so the wrap count is correct on
-        // the very first layout pass rather than after a later revalidate. The fixed sidebar width
-        // is the last-resort fallback if nothing is sized yet.
+        // Width available to the row. The bar only ever renders in the fixed-width RuneLite
+        // sidebar, so the row's real width is always close to PANEL_WIDTH (less the surrounding
+        // 8 px panel insets). During early or transient layout passes the live width can briefly
+        // collapse toward a single button; honouring that would wrap every icon onto its own row
+        // and report a tall preferred height. The narrow row then drives a narrow preferred
+        // *width*, which feeds back into an ever-narrower row -- a stuck state a later revalidate
+        // cannot break, leaving a tall gap above the search field until the picker is toggled.
+        // Trust the live width only once it is near the real sidebar width; otherwise fall back to
+        // PANEL_WIDTH so the row stays a single line and the bar can grow back to full width.
         private static int availableWidth(Container target)
         {
-            int reserved = 0;
-            Container c = target;
-            while (c != null && c.getWidth() <= 0)
-            {
-                Container parent = c.getParent();
-                if (parent != null)
-                {
-                    Insets in = parent.getInsets();
-                    reserved += in.left + in.right;
-                }
-                c = parent;
-            }
-            if (c == null) return PluginPanel.PANEL_WIDTH;
-            if (c == target) return target.getWidth();
-            return Math.max(0, c.getWidth() - reserved);
+            int live = target.getWidth();
+            return live >= PluginPanel.PANEL_WIDTH - 32 ? live : PluginPanel.PANEL_WIDTH;
         }
     }
 }
