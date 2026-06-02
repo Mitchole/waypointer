@@ -6,46 +6,46 @@ import static org.junit.Assert.assertFalse;
 import com.waypointer.testsupport.Headless;
 import org.junit.Test;
 
-public class LandmarkHoverPopoverTest
+public class HoverHintTest
 {
 	@Test
-	public void newPopoverIsNotVisibleAndHasEmptyLabel()
+	public void newHintIsNotVisibleAndHasEmptyLabel()
 	{
 		Headless.assumeDisplay();
-		LandmarkHoverPopover popover = new LandmarkHoverPopover();
-		assertFalse("a freshly-constructed popover must not be visible",
-			popover.visibleIntentForTest());
+		HoverHint hint = new HoverHint();
+		assertFalse("a freshly-constructed hint must not be visible",
+			hint.visibleIntentForTest());
 		assertEquals("label text starts empty until attach fires",
-			"", popover.labelTextForTest());
+			"", hint.labelTextForTest());
 	}
 
 	@Test
-	public void mouseEnterShowsPopoverWithSupplierText()
+	public void mouseEnterShowsHintWithSupplierText()
 	{
 		Headless.assumeDisplay();
-		LandmarkHoverPopover popover = new LandmarkHoverPopover();
+		HoverHint hint = new HoverHint();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);
-		popover.attach(btn, () -> "Bank");
+		hint.attach(btn, () -> "Bank");
 
 		btn.dispatchEvent(new java.awt.event.MouseEvent(btn,
 			java.awt.event.MouseEvent.MOUSE_ENTERED,
 			System.currentTimeMillis(), 0, 0, 0, 0, false));
 
 		org.junit.Assert.assertTrue("mouseEntered must flip visibleIntent",
-			popover.visibleIntentForTest());
+			hint.visibleIntentForTest());
 		assertEquals("label must reflect the supplier value",
-			"Bank", popover.labelTextForTest());
+			"Bank", hint.labelTextForTest());
 	}
 
 	@Test
-	public void mouseExitHidesPopover()
+	public void mouseExitHidesHint()
 	{
 		Headless.assumeDisplay();
-		LandmarkHoverPopover popover = new LandmarkHoverPopover();
+		HoverHint hint = new HoverHint();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);
-		popover.attach(btn, () -> "Altar");
+		hint.attach(btn, () -> "Altar");
 
 		btn.dispatchEvent(new java.awt.event.MouseEvent(btn,
 			java.awt.event.MouseEvent.MOUSE_ENTERED,
@@ -55,23 +55,23 @@ public class LandmarkHoverPopoverTest
 			System.currentTimeMillis(), 0, 0, 0, 0, false));
 
 		assertFalse("mouseExited must flip visibleIntent off",
-			popover.visibleIntentForTest());
+			hint.visibleIntentForTest());
 	}
 
 	@Test
 	public void mouseEnterRereadsSupplierEachTime()
 	{
 		Headless.assumeDisplay();
-		LandmarkHoverPopover popover = new LandmarkHoverPopover();
+		HoverHint hint = new HoverHint();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);
 		String[] current = {"Bank"};
-		popover.attach(btn, () -> current[0]);
+		hint.attach(btn, () -> current[0]);
 
 		btn.dispatchEvent(new java.awt.event.MouseEvent(btn,
 			java.awt.event.MouseEvent.MOUSE_ENTERED,
 			System.currentTimeMillis(), 0, 0, 0, 0, false));
-		assertEquals("Bank", popover.labelTextForTest());
+		assertEquals("Bank", hint.labelTextForTest());
 
 		current[0] = "Anvil";
 		btn.dispatchEvent(new java.awt.event.MouseEvent(btn,
@@ -81,60 +81,69 @@ public class LandmarkHoverPopoverTest
 			java.awt.event.MouseEvent.MOUSE_ENTERED,
 			System.currentTimeMillis(), 0, 0, 0, 0, false));
 		assertEquals("supplier must be re-read on every enter",
-			"Anvil", popover.labelTextForTest());
+			"Anvil", hint.labelTextForTest());
 	}
 
 	@Test
 	public void disposeIsIdempotent()
 	{
 		Headless.assumeDisplay();
-		LandmarkHoverPopover popover = new LandmarkHoverPopover();
-		popover.dispose();
+		HoverHint hint = new HoverHint();
+		hint.dispose();
 		assertFalse("dispose must leave visibleIntent false",
-			popover.visibleIntentForTest());
-		popover.dispose(); // second call must not change anything observable
+			hint.visibleIntentForTest());
+		hint.dispose();
 		assertFalse("visibleIntent must still be false after second dispose",
-			popover.visibleIntentForTest());
+			hint.visibleIntentForTest());
 	}
 
 	@Test
 	public void afterDisposeMouseEnterIsNoOp()
 	{
 		Headless.assumeDisplay();
-		LandmarkHoverPopover popover = new LandmarkHoverPopover();
+		HoverHint hint = new HoverHint();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);
-		popover.attach(btn, () -> "Bank");
-		popover.dispose();
+		hint.attach(btn, () -> "Bank");
+		hint.dispose();
 
 		btn.dispatchEvent(new java.awt.event.MouseEvent(btn,
 			java.awt.event.MouseEvent.MOUSE_ENTERED,
 			System.currentTimeMillis(), 0, 0, 0, 0, false));
 
 		assertFalse("after dispose, mouseEntered must not flip visibleIntent",
-			popover.visibleIntentForTest());
+			hint.visibleIntentForTest());
 		assertEquals("after dispose, label text must be unchanged",
-			"", popover.labelTextForTest());
+			"", hint.labelTextForTest());
 	}
 
 	@Test
 	public void disposeWhileShowingHidesTheWindow()
 	{
 		Headless.assumeDisplay();
-		LandmarkHoverPopover popover = new LandmarkHoverPopover();
+		HoverHint hint = new HoverHint();
 		javax.swing.JButton btn = new javax.swing.JButton();
 		btn.setSize(34, 34);
-		popover.attach(btn, () -> "Bank");
+		hint.attach(btn, () -> "Bank");
 
-		// Pop the popover open via a synthetic hover.
 		btn.dispatchEvent(new java.awt.event.MouseEvent(btn,
 			java.awt.event.MouseEvent.MOUSE_ENTERED,
 			System.currentTimeMillis(), 0, 0, 0, 0, false));
-		org.junit.Assert.assertTrue("popover should be visible before dispose",
-			popover.visibleIntentForTest());
+		org.junit.Assert.assertTrue("hint should be visible before dispose",
+			hint.visibleIntentForTest());
 
-		popover.dispose();
+		hint.dispose();
 		assertFalse("dispose called while showing must drop visibleIntent",
-			popover.visibleIntentForTest());
+			hint.visibleIntentForTest());
+	}
+
+	@Test
+	public void sharedReturnsAStableInstance()
+	{
+		Headless.assumeDisplay();
+		HoverHint a = HoverHint.shared();
+		HoverHint b = HoverHint.shared();
+		org.junit.Assert.assertNotNull("shared() must never return null", a);
+		org.junit.Assert.assertSame("shared() must return the same instance", a, b);
 	}
 }

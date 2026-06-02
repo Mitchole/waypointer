@@ -69,7 +69,6 @@ public final class NearestLandmarkBar extends JPanel
     // text and click targets reflect the current data. Closed in dispose(); the field is
     // nullable because the BboxIndex mock in unit tests returns null from subscribe(...).
     private final com.waypointer.util.Listeners.Subscription bboxSub;
-    private final LandmarkHoverPopover popover = new LandmarkHoverPopover();
 
     public void setToasts(Toasts toasts)
     {
@@ -135,14 +134,12 @@ public final class NearestLandmarkBar extends JPanel
     public void dispose()
     {
         if (bboxSub != null) bboxSub.close();
-        popover.dispose();
     }
 
     /**
-     * Rebuilds the icon row from the current selection. Old buttons are released along
-     * with their popover listeners — the listeners reference the popover but cannot fire
-     * because the old buttons leave the component hierarchy. New buttons get a fresh
-     * popover.attach in the per-type loop and on the overflow button.
+     * Rebuilds the icon row from the current selection. Old buttons leave the component
+     * hierarchy along with their hover listeners; new buttons get a fresh
+     * HoverHint.shared().attach in the per-type loop and on the overflow button.
      */
     private void rebuildBar()
     {
@@ -157,7 +154,7 @@ public final class NearestLandmarkBar extends JPanel
             applySprite(b, type);
             primaryButtons.put(type, b);
             iconRow.add(b);
-            popover.attach(b, () -> type.displayName());
+            HoverHint.shared().attach(b, () -> type.displayName());
         }
 
         overflowBtn = makeButton();
@@ -169,7 +166,7 @@ public final class NearestLandmarkBar extends JPanel
             repaint();
         });
         iconRow.add(overflowBtn);
-        popover.attach(overflowBtn, () -> "Customise");
+        HoverHint.shared().attach(overflowBtn, () -> "Customise");
 
         applyEnabledState();
         iconRow.revalidate();

@@ -13,23 +13,43 @@ import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
 /**
- * Immediate-hover popover used by {@link NearestLandmarkBar}. Owns one borderless
- * {@link JWindow} with a single styled {@link JLabel}. The window is reused across
- * every attached target — only one popover is ever visible at a time.
+ * Immediate-hover hint: a dark-themed borderless {@link JWindow} with a single styled
+ * {@link JLabel} that appears the instant the cursor enters an attached component, four
+ * pixels above it. The house style for affordance hints across the panel, replacing the
+ * native (delayed, light-on-dark) Swing tooltip.
+ *
+ * <p>Most call sites use the process-shared instance via {@link #shared()} -- one reused
+ * window for the whole plugin UI, never more than one visible at a time. The instance API
+ * (constructor + {@link #attach} + {@link #dispose}) is retained for unit tests.
  *
  * <p>Headless safety: tests run without a display, so visibility is tracked in
  * {@code visibleIntent} and {@link JWindow#setVisible} calls are skipped in headless
  * environments. Production code reads visibility through the window; tests read it
  * through {@link #visibleIntentForTest()}.
  */
-final class LandmarkHoverPopover
+final class HoverHint
 {
+	private static HoverHint shared;
+
+	/**
+	 * Process-shared hint. Lazily created on first use and kept for the JVM session: a single
+	 * invisible window is cheap and is reused across every panel rebuild and plugin
+	 * enable/disable cycle, so nothing accumulates. {@code attach} only ever adds a listener to
+	 * the (freshly built) target component, so re-enabling the plugin re-attaches new components
+	 * to the same window without stacking.
+	 */
+	static HoverHint shared()
+	{
+		if (shared == null) shared = new HoverHint();
+		return shared;
+	}
+
 	private final JWindow window;
 	private final JLabel label;
 	private boolean visibleIntent;
 	private boolean disposed;
 
-	LandmarkHoverPopover()
+	HoverHint()
 	{
 		this.label = new JLabel("");
 		this.label.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
@@ -40,8 +60,6 @@ final class LandmarkHoverPopover
 		this.label.setOpaque(true);
 		this.label.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
-		// Skip JWindow allocation in headless JVMs (CI). All show/hide call sites
-		// already guard on displayAvailable(), so a null window is safe.
 		if (displayAvailable())
 		{
 			this.window = new JWindow();
@@ -58,25 +76,19 @@ final class LandmarkHoverPopover
 	boolean visibleIntentForTest() { return visibleIntent; }
 	String labelTextForTest() { return label.getText(); }
 
-	// Guard used by attach/positionAbove (added in later tasks): JWindow.setVisible and
-	// Component.getLocationOnScreen both throw HeadlessException when no display exists.
 	private static boolean displayAvailable()
 	{
 		return !GraphicsEnvironment.isHeadless();
 	}
 
 	/**
-	 * Attach this popover to {@code target}. While the cursor is inside the target,
-	 * the popover shows the value of {@code textSupplier.get()} four pixels above the
-	 * target, horizontally centred. The supplier is re-read on every enter so the
-	 * text follows late-arriving updates (e.g. a rebuild changing a button's meaning).
+	 * Attach this hint to {@code target}. While the cursor is inside the target, the hint shows
+	 * {@code textSupplier.get()} four pixels above it, horizontally centred. The supplier is
+	 * re-read on every enter so the text follows late updates (e.g. a button changing meaning).
 	 *
-	 * <p>Attach is single-use per target component. Calling {@code attach} twice on the
-	 * same target registers two listeners, which would race on every hover event. The
-	 * existing caller in {@link NearestLandmarkBar} rebuilds its buttons from scratch
-	 * on every panel rebuild, so re-attaching is naturally avoided. If a future caller
-	 * needs to detach, add a {@code detach(JComponent)} method then — don't make this
-	 * idempotent by stealth.
+	 * <p>Attach is single-use per target component: calling it twice on the same target registers
+	 * two listeners which would race on every hover. Callers rebuild their components from scratch
+	 * on every panel rebuild, so re-attaching is naturally avoided.
 	 *
 	 * <p>Attach is a no-op after {@link #dispose()}.
 	 */
@@ -90,7 +102,7 @@ final class LandmarkHoverPopover
 				String text = textSupplier.get();
 				label.setText(text == null ? "" : text);
 				visibleIntent = true;
-				if (window == null) return; // headless: state updated, no window to show.
+				if (window == null) return;
 				window.pack();
 				positionAbove(target);
 				window.setVisible(true);
@@ -117,9 +129,9 @@ final class LandmarkHoverPopover
 	}
 
 	/**
-	 * Releases the popover's {@link JWindow}. Subsequent {@link #attach} calls still
-	 * register listeners but those listeners short-circuit because {@code disposed}
-	 * is sticky. Safe to call multiple times.
+	 * Releases the hint's {@link JWindow}. Subsequent {@link #attach} calls still register
+	 * listeners but those listeners short-circuit because {@code disposed} is sticky. Safe to
+	 * call multiple times.
 	 */
 	void dispose()
 	{
