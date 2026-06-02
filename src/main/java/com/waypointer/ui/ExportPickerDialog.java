@@ -68,6 +68,7 @@ final class ExportPickerDialog extends JDialog
         content.add(buildFooter(), BorderLayout.SOUTH);
 
         updateButtons();
+        getRootPane().setDefaultButton(copyBtn);
         Dialogs.finish(this, owner);
     }
 
@@ -92,8 +93,8 @@ final class ExportPickerDialog extends JDialog
         footer.setBackground(ColorScheme.DARK_GRAY_COLOR);
         JButton cancel = new JButton("Cancel");
         Styles.secondaryButton(cancel);
-        Styles.secondaryButton(copyBtn);
         Styles.secondaryButton(saveBtn);
+        Styles.primaryButton(copyBtn);
         cancel.addActionListener(e -> dispose());
         copyBtn.addActionListener(e -> copyCode());
         saveBtn.addActionListener(e -> saveToFile());

@@ -69,6 +69,7 @@ final class ImportPickerDialog extends JDialog
         content.add(buildFooter(), BorderLayout.SOUTH);
 
         updateImportButton();
+        getRootPane().setDefaultButton(importBtn);
         Dialogs.finish(this, owner);
     }
 
@@ -106,7 +107,7 @@ final class ImportPickerDialog extends JDialog
         footer.setBackground(ColorScheme.DARK_GRAY_COLOR);
         JButton cancel = new JButton("Cancel");
         Styles.secondaryButton(cancel);
-        Styles.secondaryButton(importBtn);
+        Styles.primaryButton(importBtn);
         cancel.addActionListener(e -> dispose());
         importBtn.addActionListener(e -> onImport());
         footer.add(cancel);
