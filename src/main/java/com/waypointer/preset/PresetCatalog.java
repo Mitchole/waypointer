@@ -65,7 +65,7 @@ public class PresetCatalog
         return cached;
     }
 
-    public void applyOverrides(PresetOverridesSnapshot s)
+    private void applyOverrides(PresetOverridesSnapshot s)
     {
         this.lastOverrides = s;
         rebuild();

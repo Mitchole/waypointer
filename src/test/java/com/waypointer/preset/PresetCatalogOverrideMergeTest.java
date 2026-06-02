@@ -31,7 +31,7 @@ public class PresetCatalogOverrideMergeTest
         Map<String, CategoryOverride> by = new LinkedHashMap<>();
         by.put("Bosses", new CategoryOverride("Bosses", "Overridden", null,
             Arrays.asList(new Waypoint("NewVork", "", 5, 5, 0))));
-        c.applyOverrides(new PresetOverridesSnapshot(1, by, new ArrayList<>(),
+        c.reload(new PresetOverridesSnapshot(1, by, new ArrayList<>(),
             new ArrayList<>(), new ArrayList<>()));
 
         Preset out = findCat(c, "Bosses");
@@ -47,7 +47,7 @@ public class PresetCatalogOverrideMergeTest
                 new PresetWaypoint("Keep", "", 1, 1, 0),
                 new PresetWaypoint("Drop", "", 2, 2, 0)));
         PresetCatalog c = catalog(Arrays.asList(bundled));
-        c.applyOverrides(new PresetOverridesSnapshot(1,
+        c.reload(new PresetOverridesSnapshot(1,
             new LinkedHashMap<>(), new ArrayList<>(), new ArrayList<>(),
             Arrays.asList(new DeletedWaypoint("Skilling", "Drop", 2, 2, 0))));
         Preset out = findCat(c, "Skilling");
@@ -60,7 +60,7 @@ public class PresetCatalogOverrideMergeTest
     {
         Preset bundled = new Preset("ToDrop", null, null, new ArrayList<>());
         PresetCatalog c = catalog(Arrays.asList(bundled));
-        c.applyOverrides(new PresetOverridesSnapshot(1,
+        c.reload(new PresetOverridesSnapshot(1,
             new LinkedHashMap<>(), new ArrayList<>(),
             Arrays.asList("ToDrop"), new ArrayList<>()));
         assertNull(findCat(c, "ToDrop"));
@@ -70,7 +70,7 @@ public class PresetCatalogOverrideMergeTest
     public void addedCategoriesAppearInOutput()
     {
         PresetCatalog c = catalog(new ArrayList<>());
-        c.applyOverrides(new PresetOverridesSnapshot(1, new LinkedHashMap<>(),
+        c.reload(new PresetOverridesSnapshot(1, new LinkedHashMap<>(),
             Arrays.asList(new CategoryOverride("NewCat", "", null,
                 Arrays.asList(new Waypoint("X", "", 1, 1, 0)))),
             new ArrayList<>(), new ArrayList<>()));
@@ -83,7 +83,7 @@ public class PresetCatalogOverrideMergeTest
         Preset bundled = new Preset("Bosses", null, null,
             Arrays.asList(new PresetWaypoint("V", "", 1, 1, 0)));
         PresetCatalog c = catalog(Arrays.asList(bundled));
-        c.applyOverrides(PresetOverridesSnapshot.empty());
+        c.reload(PresetOverridesSnapshot.empty());
         assertEquals(1, findCat(c, "Bosses").getWaypoints().size());
     }
 
