@@ -334,6 +334,7 @@ public class WaypointerPanel extends PluginPanel
             BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR, 1),
             BorderFactory.createEmptyBorder(4, 6, 4, 22)));
         HoverHint.shared().attach(searchField, () -> "Search waypoints");
+        searchField.getAccessibleContext().setAccessibleName("Search waypoints");
         // One reusable debounce timer; restarted per keystroke rather than reallocated. Reads the
         // field text live at fire time, so no per-keystroke capture is needed.
         searchDebounceTimer = new Timer(120, e -> {
