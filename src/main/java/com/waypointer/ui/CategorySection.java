@@ -1,8 +1,10 @@
 package com.waypointer.ui;
 
 import com.waypointer.model.Category;
+import com.waypointer.model.CategorySortMode;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
+import com.waypointer.service.Wilderness;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -12,14 +14,17 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -48,7 +53,7 @@ public class CategorySection extends CollapsibleSection
         boolean selectMode,
         BulkSelection selection,
         BiConsumer<Waypoint, Boolean> onRowSelectClick,
-        BiConsumer<java.util.List<UUID>, Boolean> onHeaderSelectToggle)
+        BiConsumer<List<UUID>, Boolean> onHeaderSelectToggle)
     {
         super(collapsed, onCollapseChange);
         this.category = category;
@@ -94,7 +99,7 @@ public class CategorySection extends CollapsibleSection
             }
             headerRow.repaint();
         };
-        if (dnd != null) dnd.attachCategoryHeader(headerLabel, headerIndicator, category.getId(), this);
+        if (dnd != null) dnd.attachCategoryHeader(headerLabel, headerIndicator, category.getId(), this, headerRow);
 
         // Optional icon on the LEFT of the header row.
         if (!selectMode && category.getIconId() != null && spriteManager != null)
@@ -110,7 +115,7 @@ public class CategorySection extends CollapsibleSection
         // deselects all of this category's currently-visible waypoints.
         if (selectMode)
         {
-            java.util.List<UUID> catIds = new java.util.ArrayList<>();
+            List<UUID> catIds = new ArrayList<>();
             for (Waypoint w : waypoints) catIds.add(w.getId());
             TriStateBox headerBox = new TriStateBox();
             switch (selection.categoryState(catIds))
@@ -145,15 +150,15 @@ public class CategorySection extends CollapsibleSection
             JMenuItem setColour = new JMenuItem("Set colour...");
             setColour.addActionListener(e -> { if (actions.onSetColour != null) actions.onSetColour.run(); });
 
-            javax.swing.JMenu sortBy = new javax.swing.JMenu("Sort by");
-            com.waypointer.model.CategorySortMode active =
-                category.getSortMode() == null ? com.waypointer.model.CategorySortMode.MANUAL : category.getSortMode();
+            JMenu sortBy = new JMenu("Sort by");
+            CategorySortMode active =
+                category.getSortMode() == null ? CategorySortMode.MANUAL : category.getSortMode();
             sortBy.add(buildSortItem("Manual",
-                com.waypointer.model.CategorySortMode.MANUAL, active, actions));
+                CategorySortMode.MANUAL, active, actions));
             sortBy.add(buildSortItem("Name (A-Z)",
-                com.waypointer.model.CategorySortMode.NAME, active, actions));
+                CategorySortMode.NAME, active, actions));
             sortBy.add(buildSortItem("Date added (newest first)",
-                com.waypointer.model.CategorySortMode.DATE_ADDED, active, actions));
+                CategorySortMode.DATE_ADDED, active, actions));
 
             JMenuItem selectMultiple = new JMenuItem("Select multiple");
             selectMultiple.addActionListener(e -> { if (actions.onEnterSelect != null) actions.onEnterSelect.run(); });
@@ -192,7 +197,7 @@ public class CategorySection extends CollapsibleSection
         // sort mode is non-MANUAL (reorder is auto), or the panel passed a null dnd because
         // a search filter is active and drop targets would refer to invisible neighbours.
         boolean sortDisablesDrag = category.getSortMode() != null
-            && category.getSortMode() != com.waypointer.model.CategorySortMode.MANUAL;
+            && category.getSortMode() != CategorySortMode.MANUAL;
         boolean dragDisabled = sortDisablesDrag || dnd == null;
 
         for (Waypoint w : waypoints)
@@ -202,7 +207,7 @@ public class CategorySection extends CollapsibleSection
             WaypointRow row = WaypointRow.spec(w)
                 .active(active)
                 .pinned(w.isPinned())
-                .wilderness(com.waypointer.service.Wilderness.isInWilderness(w.getPackedWorldPoint()))
+                .wilderness(Wilderness.isInWilderness(w.getPackedWorldPoint()))
                 .dragDisabled(dragDisabled)
                 .onPlay(() -> onRowAction.accept(w, RowAction.PLAY))
                 .onClickBody(() -> onRowAction.accept(w, RowAction.EXPAND))
@@ -262,11 +267,11 @@ public class CategorySection extends CollapsibleSection
     }
 
     private static JMenuItem buildSortItem(String label,
-        com.waypointer.model.CategorySortMode mode,
-        com.waypointer.model.CategorySortMode active,
+        CategorySortMode mode,
+        CategorySortMode active,
         Actions actions)
     {
-        javax.swing.JCheckBoxMenuItem item = new javax.swing.JCheckBoxMenuItem(label, mode == active);
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem(label, mode == active);
         item.addActionListener(e -> {
             if (actions.onSetSortMode != null) actions.onSetSortMode.accept(mode);
         });
@@ -283,12 +288,12 @@ public class CategorySection extends CollapsibleSection
         final Runnable onDelete;
         final Runnable onSetIcon;
         final Runnable onSetColour;
-        final java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode;
+        final Consumer<CategorySortMode> onSetSortMode;
         final Runnable onEnterSelect;
 
         public Actions(Runnable onRename, Runnable onDelete, Runnable onSetIcon,
             Runnable onSetColour,
-            java.util.function.Consumer<com.waypointer.model.CategorySortMode> onSetSortMode,
+            Consumer<CategorySortMode> onSetSortMode,
             Runnable onEnterSelect)
         {
             this.onRename = onRename;

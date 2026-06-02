@@ -1,20 +1,22 @@
 package com.waypointer.ui;
 
+import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
 import com.waypointer.service.WaypointStore;
+import java.awt.AlphaComposite;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.JComponent;
@@ -35,11 +37,7 @@ public class DragAndDropHandler
     // 5 px squared: how far the mouse must move before a press becomes a drag.
     private static final int DRAG_THRESHOLD_SQ = 25;
 
-    private static final int AUTO_EXPAND_DELAY_MS = 600;
-
-    private final AutoExpandController autoExpand = new AutoExpandController();
-    private javax.swing.Timer pendingExpandTimer;
-    private CategorySection pendingExpandTarget;
+    private final SpringLoadController springLoad = new SpringLoadController();
 
     private final WaypointStore store;
     private final Runnable onChange;
@@ -52,11 +50,6 @@ public class DragAndDropHandler
     // The indicator that's currently visually active. Tracked so canImport on a new
     // target can clear the old one before lighting itself up.
     private DropIndicatable activeIndicator;
-
-    // Lookup from category id to its rendered section, populated when each category header
-    // is attached. Used by hover-driven auto-expand to mutate transient expanded state on
-    // the matching section. Naturally per-cycle: the handler is rebuilt per panel rebuild.
-    private final Map<UUID, CategorySection> sectionsByCategoryId = new HashMap<>();
 
     public DragAndDropHandler(WaypointStore store, Runnable onChange)
     {
@@ -75,7 +68,7 @@ public class DragAndDropHandler
 
             @Override protected Transferable createTransferable(JComponent c)
             {
-                return new java.awt.datatransfer.StringSelection(WAYPOINT_PREFIX + waypointId);
+                return new StringSelection(WAYPOINT_PREFIX + waypointId);
             }
 
             @Override public boolean canImport(TransferSupport s)
@@ -91,10 +84,7 @@ public class DragAndDropHandler
                     }
                     return false;
                 }
-                cancelPendingExpand();
-                revertSections(autoExpand.onHover(categoryId));
-                onHoverEnter(indicatable, decideMode(payload, TargetKind.WAYPOINT_ROW));
-                return true;
+                return beginHover(indicatable, decideMode(payload, TargetKind.WAYPOINT_ROW), categoryId);
             }
 
             @Override public boolean importData(TransferSupport s)
@@ -112,7 +102,7 @@ public class DragAndDropHandler
                         store.moveWaypointToCategory(dragged, categoryId);
                     }
                     moveBefore(categoryId, dragged, waypointId);
-                    resolveAutoExpandOnDrop(categoryId);
+                    springLoad.resolveOnDrop(categoryId);
                     onChange.run();
                     return true;
                 }
@@ -132,16 +122,16 @@ public class DragAndDropHandler
     }
 
     public void attachCategoryHeader(JComponent dragTarget, DropIndicatable indicatable,
-        UUID categoryId, CategorySection section)
+        UUID categoryId, CategorySection section, JComponent snapshotComponent)
     {
-        sectionsByCategoryId.put(categoryId, section);
+        springLoad.register(categoryId, section);
         dragTarget.setTransferHandler(new TransferHandler()
         {
             @Override public int getSourceActions(JComponent c) { return MOVE; }
 
             @Override protected Transferable createTransferable(JComponent c)
             {
-                return new java.awt.datatransfer.StringSelection(CATEGORY_PREFIX + categoryId);
+                return new StringSelection(CATEGORY_PREFIX + categoryId);
             }
 
             @Override public boolean canImport(TransferSupport s)
@@ -155,21 +145,21 @@ public class DragAndDropHandler
                         indicatable.setDropIndicator(DropIndicatorMode.NONE);
                         activeIndicator = null;
                     }
-                    cancelPendingExpand();
+                    springLoad.cancelExpand();
                     return false;
                 }
                 // Spring-load: hover a collapsed header with a waypoint payload schedules an auto-expand.
                 boolean isWaypoint = payload != null && payload.startsWith(WAYPOINT_PREFIX);
                 if (isWaypoint && section != null && section.isCollapsed())
                 {
-                    scheduleAutoExpand(section);
+                    springLoad.scheduleExpand(section);
                 }
                 else
                 {
-                    cancelPendingExpand();
+                    springLoad.cancelExpand();
                 }
-                // Revert auto-expanded sections we have drifted out of.
-                revertSections(autoExpand.onHover(categoryId));
+                // Common hover tail (cannot use beginHover here: the schedule/cancel decision above must run first).
+                springLoad.onHover(categoryId);
                 onHoverEnter(indicatable, decideMode(payload, TargetKind.CATEGORY_HEADER));
                 return true;
             }
@@ -182,7 +172,7 @@ public class DragAndDropHandler
                 {
                     UUID dragged = UUID.fromString(payload.substring(WAYPOINT_PREFIX.length()));
                     store.moveWaypointToCategory(dragged, categoryId);
-                    resolveAutoExpandOnDrop(categoryId);
+                    springLoad.resolveOnDrop(categoryId);
                     onChange.run();
                     return true;
                 }
@@ -191,8 +181,7 @@ public class DragAndDropHandler
                     UUID dragged = UUID.fromString(payload.substring(CATEGORY_PREFIX.length()));
                     if (dragged.equals(categoryId)) return false;
                     swapCategoryOrder(dragged, categoryId);
-                    cancelPendingExpand();
-                    revertSections(autoExpand.onDragEnd());
+                    springLoad.onDragEnd();
                     onChange.run();
                     return true;
                 }
@@ -200,7 +189,7 @@ public class DragAndDropHandler
             }
         });
         clearActions.add(() -> indicatable.setDropIndicator(DropIndicatorMode.NONE));
-        DragGestureListener gesture = new DragGestureListener(dragTarget);
+        DragGestureListener gesture = new DragGestureListener(dragTarget, snapshotComponent);
         dragTarget.addMouseListener(gesture);
         dragTarget.addMouseMotionListener(gesture);
     }
@@ -229,10 +218,7 @@ public class DragAndDropHandler
                     }
                     return false;
                 }
-                cancelPendingExpand();
-                revertSections(autoExpand.onHover(categoryId));
-                onHoverEnter(indicatable, DropIndicatorMode.BORDER_AND_TINT);
-                return true;
+                return beginHover(indicatable, DropIndicatorMode.BORDER_AND_TINT, categoryId);
             }
 
             @Override public boolean importData(TransferSupport s)
@@ -241,7 +227,7 @@ public class DragAndDropHandler
                 if (!tailZoneAccepts(payload)) return false;
                 UUID dragged = UUID.fromString(payload.substring(WAYPOINT_PREFIX.length()));
                 store.moveWaypointToCategory(dragged, categoryId);
-                resolveAutoExpandOnDrop(categoryId);
+                springLoad.resolveOnDrop(categoryId);
                 onChange.run();
                 return true;
             }
@@ -249,16 +235,29 @@ public class DragAndDropHandler
         clearActions.add(() -> indicatable.setDropIndicator(DropIndicatorMode.NONE));
     }
 
+    // Shared canImport tail: clear any pending spring-load, do hover bookkeeping for this
+    // category, and light up this target's indicator. Returns true (canImport accepts).
+    private boolean beginHover(DropIndicatable indicatable, DropIndicatorMode mode, UUID categoryId)
+    {
+        springLoad.cancelExpand();
+        springLoad.onHover(categoryId);
+        onHoverEnter(indicatable, mode);
+        return true;
+    }
+
     private final class DragGestureListener extends MouseAdapter
         implements MouseMotionListener
     {
         private final JComponent dragSource;
+        private final JComponent snapshotSource; // what the ghost image paints (row, not the label)
         private Point pressPoint;
         private boolean dragStarted;
 
-        DragGestureListener(JComponent dragSource)
+        DragGestureListener(JComponent dragSource) { this(dragSource, dragSource); }
+        DragGestureListener(JComponent dragSource, JComponent snapshotSource)
         {
             this.dragSource = dragSource;
+            this.snapshotSource = snapshotSource;
         }
 
         @Override public void mousePressed(MouseEvent e)
@@ -271,8 +270,7 @@ public class DragAndDropHandler
         {
             pressPoint = null;
             dragStarted = false;
-            cancelPendingExpand();
-            revertSections(autoExpand.onDragEnd());
+            springLoad.onDragEnd();
             clearAllIndicators();
         }
 
@@ -287,7 +285,7 @@ public class DragAndDropHandler
                 TransferHandler th = dragSource.getTransferHandler();
                 if (th != null)
                 {
-                    th.setDragImage(snapshotForDrag(dragSource));
+                    th.setDragImage(snapshotForDrag(snapshotSource));
                     th.setDragImageOffset(new Point(pressPoint));
                     th.exportAsDrag(dragSource, e, TransferHandler.MOVE);
                 }
@@ -327,57 +325,6 @@ public class DragAndDropHandler
         activeIndicator = null;
     }
 
-    private void cancelPendingExpand()
-    {
-        if (pendingExpandTimer != null)
-        {
-            pendingExpandTimer.stop();
-            pendingExpandTimer = null;
-        }
-        pendingExpandTarget = null;
-    }
-
-    /**
-     * Schedule a transient expand of {@code section} after the spring-load delay,
-     * unless that section is already the pending target.
-     */
-    private void scheduleAutoExpand(CategorySection section)
-    {
-        if (pendingExpandTarget == section) return;
-        cancelPendingExpand();
-        pendingExpandTarget = section;
-        pendingExpandTimer = new javax.swing.Timer(AUTO_EXPAND_DELAY_MS, e ->
-        {
-            section.setExpandedTransient(true);
-            autoExpand.recordTransientExpand(section.getCategoryId());
-            pendingExpandTimer = null;
-            pendingExpandTarget = null;
-        });
-        pendingExpandTimer.setRepeats(false);
-        pendingExpandTimer.start();
-    }
-
-    private void revertSections(Set<UUID> ids)
-    {
-        for (UUID id : ids)
-        {
-            CategorySection s = sectionsByCategoryId.get(id);
-            if (s != null) s.setExpandedTransient(false);
-        }
-    }
-
-    private void resolveAutoExpandOnDrop(UUID destCategoryId)
-    {
-        cancelPendingExpand();
-        AutoExpandController.DropResolution r = autoExpand.onDropAt(destCategoryId);
-        revertSections(r.getToRevert());
-        if (r.getToConfirm() != null)
-        {
-            CategorySection s = sectionsByCategoryId.get(r.getToConfirm());
-            if (s != null) s.confirmTransientExpand();
-        }
-    }
-
     private static String readPayload(Transferable t)
     {
         if (t == null) return null;
@@ -411,7 +358,7 @@ public class DragAndDropHandler
     private void swapCategoryOrder(UUID dragged, UUID target)
     {
         List<UUID> order = new ArrayList<>();
-        for (com.waypointer.model.Category c : store.getCategoriesOrdered()) order.add(c.getId());
+        for (Category c : store.getCategoriesOrdered()) order.add(c.getId());
         List<UUID> moved = move(order, dragged, target);
         if (moved == null) return;
         store.reorderCategories(moved);
@@ -460,25 +407,15 @@ public class DragAndDropHandler
         return out;
     }
 
-    private static java.awt.image.BufferedImage snapshotForDrag(JComponent source)
+    private static BufferedImage snapshotForDrag(JComponent target)
     {
-        // Category header drag source is the narrow JLabel; widen the snapshot to the
-        // enclosing row so the ghost shows the whole section sliver, not a tiny label.
-        JComponent paintTarget = source;
-        if (source instanceof javax.swing.JLabel
-            && source.getParent() instanceof JComponent
-            && source.getParent().getParent() instanceof JComponent)
-        {
-            // headerLabel is inside centerWrap which is inside headerRow.
-            paintTarget = (JComponent) source.getParent().getParent();
-        }
-        int w = Math.max(1, paintTarget.getWidth());
-        int h = Math.max(1, paintTarget.getHeight());
-        java.awt.image.BufferedImage img =
-            new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-        java.awt.Graphics2D g = img.createGraphics();
-        g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.60f));
-        paintTarget.paint(g);
+        int w = Math.max(1, target.getWidth());
+        int h = Math.max(1, target.getHeight());
+        BufferedImage img =
+            new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.60f));
+        target.paint(g);
         g.dispose();
         return img;
     }
