@@ -174,10 +174,7 @@ public class RoutePlaybackEngine
         if (s == null || s.getType() != StepType.WAYPOINT) return;
         int target = s.getPackedWorldPoint();
         if (target == WorldPointPacker.UNDEFINED || playerLoc == null) return;
-        if (playerLoc.getPlane() != WorldPointPacker.getPlane(target)) return;
-        int dx = playerLoc.getX() - WorldPointPacker.getX(target);
-        int dy = playerLoc.getY() - WorldPointPacker.getY(target);
-        if (dx * dx + dy * dy <= ARRIVAL_RADIUS_TILES * ARRIVAL_RADIUS_TILES)
+        if (WorldPointPacker.arrived(target, playerLoc, ARRIVAL_RADIUS_TILES))
         {
             advance();
         }

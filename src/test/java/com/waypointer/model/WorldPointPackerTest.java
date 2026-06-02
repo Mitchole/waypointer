@@ -33,4 +33,26 @@ public class WorldPointPackerTest
         assertEquals(WorldPointPacker.UNDEFINED, WorldPointPacker.UNDEFINED);
         assertNotEquals(WorldPointPacker.UNDEFINED, WorldPointPacker.pack(new WorldPoint(0, 0, 0)));
     }
+
+    @Test
+    public void arrivedTrueWithinRadiusSamePlane()
+    {
+        int target = WorldPointPacker.pack(new WorldPoint(3200, 3200, 0));
+        assertTrue(WorldPointPacker.arrived(target, new WorldPoint(3200, 3200, 0), 3));
+        assertTrue(WorldPointPacker.arrived(target, new WorldPoint(3203, 3200, 0), 3));
+    }
+
+    @Test
+    public void arrivedFalseOutsideRadius()
+    {
+        int target = WorldPointPacker.pack(new WorldPoint(3200, 3200, 0));
+        assertFalse(WorldPointPacker.arrived(target, new WorldPoint(3203, 3203, 0), 3));
+    }
+
+    @Test
+    public void arrivedFalseOnDifferentPlane()
+    {
+        int target = WorldPointPacker.pack(new WorldPoint(3200, 3200, 0));
+        assertFalse(WorldPointPacker.arrived(target, new WorldPoint(3200, 3200, 1), 3));
+    }
 }

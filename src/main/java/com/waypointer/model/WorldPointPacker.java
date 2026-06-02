@@ -38,4 +38,17 @@ public final class WorldPointPacker
     public static int getX(int packed) { return packed & X_MASK; }
     public static int getY(int packed) { return (packed >>> X_BITS) & Y_MASK; }
     public static int getPlane(int packed) { return (packed >>> (X_BITS + Y_BITS)) & 0x3; }
+
+    /**
+     * True if {@code player} is within {@code radiusTiles} of the packed target on the same plane,
+     * measured as a Euclidean disc ({@code dx*dx + dy*dy <= r*r}). Shared by the waypoint and route
+     * arrival checks so the metric stays consistent. Different plane is never "arrived".
+     */
+    public static boolean arrived(int packedTarget, WorldPoint player, int radiusTiles)
+    {
+        if (player.getPlane() != getPlane(packedTarget)) return false;
+        int dx = player.getX() - getX(packedTarget);
+        int dy = player.getY() - getY(packedTarget);
+        return dx * dx + dy * dy <= radiusTiles * radiusTiles;
+    }
 }

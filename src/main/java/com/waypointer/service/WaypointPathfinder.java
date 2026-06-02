@@ -92,11 +92,8 @@ public class WaypointPathfinder
         WorldPoint pp = p.getWorldLocation();
         if (pp == null) return;
         // Don't auto-clear across planes, or a 2nd-floor waypoint vanishes the moment the
-        // player walks under the building.
-        if (pp.getPlane() != WorldPointPacker.getPlane(activeTarget)) return;
-        int dx = pp.getX() - WorldPointPacker.getX(activeTarget);
-        int dy = pp.getY() - WorldPointPacker.getY(activeTarget);
-        if (dx * dx + dy * dy <= ARRIVAL_RADIUS_TILES * ARRIVAL_RADIUS_TILES)
+        // player walks under the building - WorldPointPacker.arrived enforces same-plane.
+        if (WorldPointPacker.arrived(activeTarget, pp, ARRIVAL_RADIUS_TILES))
         {
             activeTarget = WorldPointPacker.UNDEFINED;
             activeName = null;
