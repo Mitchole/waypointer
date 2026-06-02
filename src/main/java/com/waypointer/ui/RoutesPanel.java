@@ -55,6 +55,7 @@ public class RoutesPanel extends JPanel
     private Listeners.Subscription engineSub;
     private Listeners.Subscription recorderSub;
     private RouteEditorPanel openEditor;
+    private Toasts toasts = Toasts.NO_OP;
 
     @Inject
     public RoutesPanel(RouteStore store, RoutePlaybackEngine engine, RouteRecorder recorder,
@@ -252,8 +253,7 @@ public class RoutesPanel extends JPanel
         String code = shareCodec.encodeRoute(r);
         java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()
             .setContents(new java.awt.datatransfer.StringSelection(code), null);
-        JOptionPane.showMessageDialog(this, "Route code copied to clipboard.",
-            "Export", JOptionPane.INFORMATION_MESSAGE);
+        toasts.show("Route code copied to clipboard.");
     }
 
     private void importFromCode()
@@ -285,8 +285,7 @@ public class RoutesPanel extends JPanel
                 store.addManualStep(created.getId(), s.getLabel());
             }
         }
-        JOptionPane.showMessageDialog(this, "Imported route: " + imported.getName(),
-            "Import", JOptionPane.INFORMATION_MESSAGE);
+        toasts.show("Imported route: " + imported.getName());
     }
 
     /**
@@ -299,8 +298,7 @@ public class RoutesPanel extends JPanel
         java.util.List<com.waypointer.model.Waypoint> all = waypointStore.getLibrary().getWaypoints();
         if (all.isEmpty())
         {
-            JOptionPane.showMessageDialog(this, "No saved waypoints to choose from.",
-                "From saved", JOptionPane.INFORMATION_MESSAGE);
+            toasts.show("No saved waypoints to choose from.");
             return;
         }
         java.util.List<WaypointChoice> choices = new java.util.ArrayList<>();
@@ -341,6 +339,16 @@ public class RoutesPanel extends JPanel
         if (engineSub != null) { engineSub.close(); engineSub = null; }
         if (recorderSub != null) { recorderSub.close(); recorderSub = null; }
     }
+
+    /** Injected by {@link TabHost} after the shared overlay is built. */
+    void setToasts(Toasts toasts)
+    {
+        this.toasts = toasts == null ? Toasts.NO_OP : toasts;
+    }
+
+    // Test seams.
+    Toasts getToastsForTest() { return toasts; }
+    void addFromLibraryForTest(UUID routeId) { addFromLibrary(routeId); }
 
     @Override public Dimension getPreferredSize() { return new Dimension(PluginPanel.PANEL_WIDTH, 0); }
     @Override public Dimension getMinimumSize() { return new Dimension(PluginPanel.PANEL_WIDTH, 0); }
