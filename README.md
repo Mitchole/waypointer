@@ -20,6 +20,10 @@ route to it on your world map and minimap.
 It also keeps a one-click bar to the nearest bank, altar, or anvil, and lets you string
 waypoints into guided **Routes** for farm runs and agility laps.
 
+> **Waypointer needs the [Shortest Path](https://github.com/Skretzo/shortest-path) plugin.**
+> It does the actual pathfinding behind every Play button, the nearest-landmark bar, and
+> routes. Install it from the Plugin Hub before you start.
+
 ---
 
 ## Contents
@@ -41,10 +45,10 @@ waypoints into guided **Routes** for farm runs and agility laps.
 
 ## Getting started
 
-1. Install Waypointer from the RuneLite Plugin Hub. *(Coming soon. Until then you can build
+1. Install the [Shortest Path](https://github.com/Skretzo/shortest-path) plugin from the
+   RuneLite Plugin Hub. Waypointer relies on it for all pathfinding.
+2. Install Waypointer from the RuneLite Plugin Hub. *(Coming soon. Until then you can build
    it yourself; see [DEVELOPER.md](DEVELOPER.md).)*
-2. For one-click travel, install the [Shortest Path](https://github.com/Skretzo/shortest-path)
-   plugin too. Everything else in Waypointer works without it, but the Play button needs it.
 3. Open the Waypointer panel from the RuneLite sidebar (the pin icon). The tabs across the top
    are **My Waypoints**, **Presets**, and **Routes**.
 4. Your library starts empty. Add your own waypoints, or open the **Presets** tab to start
@@ -170,9 +174,9 @@ goes back to how you left it.
 ## Requirements
 
 - RuneLite.
-- The [Shortest Path](https://github.com/Skretzo/shortest-path) plugin, for the Play button,
-  the nearest-landmark bar, and routes. Capturing, organising, searching, and sharing all work
-  without it.
+- The [Shortest Path](https://github.com/Skretzo/shortest-path) plugin. Waypointer hands every
+  destination to it for pathfinding, so install it first. Without it the Play button, the
+  nearest-landmark bar, and routes have nothing to draw a path with.
 
 ## License
 
