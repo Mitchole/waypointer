@@ -7,7 +7,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Window;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
@@ -24,7 +23,6 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import net.runelite.api.SpriteID;
@@ -69,12 +67,9 @@ public class IconPickerDialog extends JDialog
         this.currentCategoryIdx = findCategoryFor(currentIconId);
         recomputePagination();
 
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
 
-        JPanel root = new JPanel(new BorderLayout(0, 6));
-        root.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        root.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        JPanel root = Dialogs.applyDarkContentPane(this, 0, 6);
 
         JLabel title = new JLabel("Choose an icon", SwingConstants.LEFT);
         title.setForeground(Color.WHITE);
@@ -107,13 +102,11 @@ public class IconPickerDialog extends JDialog
 
         root.add(center, BorderLayout.CENTER);
 
-        setContentPane(root);
-        bindEscapeToClose(root);
+        Dialogs.bindEscape(this);
 
         renderPage(currentPage);
 
-        pack();
-        setLocationRelativeTo(owner);
+        Dialogs.finish(this, owner);
     }
 
     private void recomputePagination()
@@ -322,16 +315,6 @@ public class IconPickerDialog extends JDialog
         c.setBackground(hovering
             ? ColorScheme.DARKER_GRAY_HOVER_COLOR
             : ColorScheme.DARKER_GRAY_COLOR);
-    }
-
-    private void bindEscapeToClose(JComponent root)
-    {
-        root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-            .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
-        root.getActionMap().put("close", new javax.swing.AbstractAction()
-        {
-            @Override public void actionPerformed(java.awt.event.ActionEvent e) { dispose(); }
-        });
     }
 
     private static List<CategoryView> buildCategoryViews(IconCatalog catalog)
