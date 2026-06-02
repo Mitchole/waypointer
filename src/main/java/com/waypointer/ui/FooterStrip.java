@@ -1,7 +1,5 @@
 package com.waypointer.ui;
 
-import com.waypointer.model.Category;
-import com.waypointer.service.WaypointStore;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -34,13 +32,11 @@ final class FooterStrip extends JPanel
         "Search by name or category",
     };
 
-    private final WaypointStore store;
     private final int tipIndex = Math.floorMod(System.nanoTime(), TIPS.length);
     private final JLabel label = new JLabel("", SwingConstants.CENTER);
 
-    FooterStrip(WaypointStore store)
+    FooterStrip()
     {
-        this.store = store;
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -57,15 +53,10 @@ final class FooterStrip extends JPanel
             + categories + (categories == 1 ? " category" : " categories");
     }
 
-    /** Recompute the counts from the store and refresh the label. Called from each rebuild. */
-    void refresh()
+    /** Refresh the label from counts the caller already computed. {@code waypoints} is the full
+     * library total; {@code categories} is non-empty categories only. */
+    void refresh(int waypoints, int categories)
     {
-        int waypoints = store.getLibrary().getWaypoints().size();
-        int categories = 0;
-        for (Category c : store.getCategoriesOrdered())
-        {
-            if (!store.getWaypointsInCategory(c.getId()).isEmpty()) categories++;
-        }
         label.setText("<html><div style='text-align:center;'>"
             + "<span style='color:#9b9b9b;'>" + countText(waypoints, categories) + "</span><br>"
             + "<span style='color:#6e6e6e;font-style:italic;'>" + TIPS[tipIndex] + "</span>"

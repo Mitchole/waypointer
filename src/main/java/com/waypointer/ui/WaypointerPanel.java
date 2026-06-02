@@ -234,7 +234,7 @@ public class WaypointerPanel extends PluginPanel
         this.categoryMenu = new CategoryMenuController(store, spriteManager, iconCatalog,
             toastOverlay, this);
 
-        this.footer = new FooterStrip(store);
+        this.footer = new FooterStrip();
 
         storeSub = store.subscribe(this::scheduleRebuild);
         pathSub = pathfinder.subscribe(this::onActivePathChanged);
@@ -553,6 +553,7 @@ public class WaypointerPanel extends PluginPanel
 
         List<Category> cats = store.getCategoriesOrdered();
         long totalWaypoints = snap.getWaypoints().size();
+        int nonEmptyCategoryCount = 0;
         if (totalWaypoints == 0 && cats.size() <= 1)
         {
             if (!isFiltering) renderEmpty();
@@ -566,6 +567,9 @@ public class WaypointerPanel extends PluginPanel
             for (Category c : cats)
             {
                 List<Waypoint> all = store.getWaypointsInCategory(c.getId());
+                // Count against the unfiltered list, before the continues below, so the footer
+                // total stays filter-independent (matches the old FooterStrip self-walk).
+                if (!all.isEmpty()) nonEmptyCategoryCount++;
                 List<Waypoint> ws = filterWaypoints(c, all, loweredFilter);
 
                 // Hide empty Uncategorized always.
@@ -622,7 +626,7 @@ public class WaypointerPanel extends PluginPanel
         // Footer (#23) sits below the glue: pinned to the viewport bottom on a short list,
         // scrolls in after the last section on a long one. Divider separates it from the list.
         body.add(buildSectionDivider());
-        footer.refresh();
+        footer.refresh((int) totalWaypoints, nonEmptyCategoryCount);
         body.add(footer);
         body.revalidate();
         body.repaint();
