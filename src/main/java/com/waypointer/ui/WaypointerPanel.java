@@ -336,6 +336,14 @@ public class WaypointerPanel extends PluginPanel
             BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR, 1),
             BorderFactory.createEmptyBorder(4, 6, 4, 22)));
         searchField.setToolTipText("Search waypoints");
+        // One reusable debounce timer; restarted per keystroke rather than reallocated. Reads the
+        // field text live at fire time, so no per-keystroke capture is needed.
+        searchDebounceTimer = new Timer(120, e -> {
+            String txt = searchField.getText();
+            currentFilter = txt == null ? "" : txt.trim();
+            rebuild();
+        });
+        searchDebounceTimer.setRepeats(false);
         searchField.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override public void insertUpdate(DocumentEvent e)  { onFilterChanged(); }
@@ -474,15 +482,7 @@ public class WaypointerPanel extends PluginPanel
 
     private void onFilterChanged()
     {
-        String txt = searchField.getText();
-        final String typed = txt == null ? "" : txt.trim();
-        if (searchDebounceTimer != null && searchDebounceTimer.isRunning()) searchDebounceTimer.stop();
-        searchDebounceTimer = new Timer(120, e -> {
-            currentFilter = typed;
-            rebuild();
-        });
-        searchDebounceTimer.setRepeats(false);
-        searchDebounceTimer.start();
+        searchDebounceTimer.restart();
     }
 
     public void rebuild()
