@@ -363,7 +363,7 @@ public class CategorySection extends CollapsibleSection
                     setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
                     setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createMatteBorder(2, 0, 0, 0, ColorScheme.BRAND_ORANGE),
-                        resting));
+                        BorderFactory.createEmptyBorder(2, 10, 2, 4)));
                     break;
                 case NONE:
                 case TINT:
