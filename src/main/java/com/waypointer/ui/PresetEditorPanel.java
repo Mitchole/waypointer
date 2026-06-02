@@ -171,7 +171,7 @@ public class PresetEditorPanel extends JPanel
         capture.readCurrentLocation(packed -> {
             if (packed == WorldPointPacker.UNDEFINED)
             {
-                showToast("Log in to capture a tile.");
+                showMessage("Log in to capture a tile.");
                 return;
             }
             overrides.upsertWaypoint(category, null,
@@ -185,7 +185,7 @@ public class PresetEditorPanel extends JPanel
     private void openAddCategory()
     {
         closeInline();
-        activeInline = new AddCategoryForm(overrides, this::closeInline, this::showToast);
+        activeInline = new AddCategoryForm(overrides, this::closeInline, this::showMessage);
         rebuild();
     }
 
@@ -225,7 +225,7 @@ public class PresetEditorPanel extends JPanel
     {
         if (!pathfinder.isAvailable())
         {
-            showToast("Install the Shortest Path plugin to navigate.");
+            showMessage("Install the Shortest Path plugin to navigate.");
             return;
         }
         pathfinder.requestPath(WorldPointPacker.pack(w.getX(), w.getY(), w.getPlane()), w.getName());
@@ -243,13 +243,13 @@ public class PresetEditorPanel extends JPanel
         }
         catch (IOException ex)
         {
-            showToast("Couldn't read that file. Check permissions.");
+            showMessage("Couldn't read that file. Check permissions.");
             return;
         }
         List<Preset> imported = catalog.parse(json);
         if (imported.isEmpty())
         {
-            showToast("No presets found in that file.");
+            showMessage("No presets found in that file.");
             return;
         }
         PresetImportResolver resolver =
@@ -271,7 +271,7 @@ public class PresetEditorPanel extends JPanel
                 new Waypoint(w.getName(), w.getDescription() == null ? "" : w.getDescription(),
                     w.getX(), w.getY(), w.getPlane()));
         }
-        showToast("Imported " + resolver.staged().size() + " waypoints.");
+        showMessage("Imported " + resolver.staged().size() + " waypoints.");
     }
 
     private void runExport()
@@ -279,7 +279,7 @@ public class PresetEditorPanel extends JPanel
         String json = presetOverridesCodec.encode(overrides.getSnapshot());
         Toolkit.getDefaultToolkit().getSystemClipboard()
             .setContents(new StringSelection(json), null);
-        showToast("Override snapshot copied to clipboard.");
+        showMessage("Override snapshot copied to clipboard.");
     }
 
     private String findCategoryOf(List<Preset> presets, PresetWaypoint target)
@@ -294,7 +294,7 @@ public class PresetEditorPanel extends JPanel
         return null;
     }
 
-    private void showToast(String msg)
+    private void showMessage(String msg)
     {
         JOptionPane.showMessageDialog(this, msg, "Waypointer", JOptionPane.INFORMATION_MESSAGE);
     }
