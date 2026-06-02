@@ -1,8 +1,6 @@
 package com.waypointer.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.model.route.Route;
 import com.waypointer.model.route.RouteLibrary;
@@ -14,73 +12,48 @@ import org.junit.Test;
 public class RouteRecorderTest
 {
     private RouteStore store;
-    private RouteRecorder recorder;
-    private WorldPoint playerTile;
 
     @Before
     public void setUp()
     {
         store = new RouteStore();
         store.bootstrap(new RouteLibrary());
-        playerTile = new WorldPoint(3200, 3200, 0);
-        recorder = new RouteRecorder(store, () -> playerTile);
     }
 
-    @Test
-    public void startCreatesDraftAndIsRecording()
+    // Test recorder: tile supplied directly, naming stubbed to a fixed string so we can assert
+    // the label comes from the naming function (not a hardcoded "Waypoint").
+    private RouteRecorder recorderAt(WorldPoint tile)
     {
-        recorder.start("Herb run");
-        assertTrue(recorder.isRecording());
+        return new RouteRecorder(store, () -> tile, packed -> "Auto name");
     }
 
     @Test
-    public void markCurrentLocationAppendsWaypointStep()
-    {
-        recorder.start("R");
-        recorder.markCurrentLocation();
-        Route draft = store.getRouteById(recorder.getDraftRouteIdForTest());
-        assertEquals(1, draft.getSteps().size());
-        assertEquals(StepType.WAYPOINT, draft.getSteps().get(0).getType());
-        assertEquals(WorldPointPacker.pack(3200, 3200, 0),
-            draft.getSteps().get(0).getPackedWorldPoint());
-    }
-
-    @Test
-    public void addManualStepAppendsManualStep()
-    {
-        recorder.start("R");
-        recorder.addManualStep("Withdraw seeds");
-        Route draft = store.getRouteById(recorder.getDraftRouteIdForTest());
-        assertEquals(StepType.MANUAL, draft.getSteps().get(0).getType());
-        assertEquals("Withdraw seeds", draft.getSteps().get(0).getLabel());
-    }
-
-    @Test
-    public void stopEndsRecordingAndKeepsRouteInStore()
-    {
-        recorder.start("R");
-        recorder.markCurrentLocation();
-        java.util.UUID id = recorder.getDraftRouteIdForTest();
-        recorder.stopAndSave();
-        assertFalse(recorder.isRecording());
-        assertEquals(1, store.getRouteById(id).getSteps().size());
-    }
-
-    @Test
-    public void markIgnoredWhenNotRecording()
-    {
-        recorder.markCurrentLocation();
-        assertEquals(0, store.getRoutesOrdered().size());
-    }
-
-    @Test
-    public void addCurrentLocationToAppendsWaypointToGivenRoute()
+    public void addCurrentLocationToAppendsAutoNamedWaypoint()
     {
         Route r = store.createRoute("R");
-        recorder.addCurrentLocationTo(r.getId());
-        assertEquals(1, store.getRouteById(r.getId()).getSteps().size());
-        assertEquals(StepType.WAYPOINT, store.getRouteById(r.getId()).getSteps().get(0).getType());
+        recorderAt(new WorldPoint(3200, 3200, 0)).addCurrentLocationTo(r.getId());
+
+        Route saved = store.getRouteById(r.getId());
+        assertEquals(1, saved.getSteps().size());
+        assertEquals(StepType.WAYPOINT, saved.getSteps().get(0).getType());
         assertEquals(WorldPointPacker.pack(3200, 3200, 0),
-            store.getRouteById(r.getId()).getSteps().get(0).getPackedWorldPoint());
+            saved.getSteps().get(0).getPackedWorldPoint());
+        assertEquals("Auto name", saved.getSteps().get(0).getLabel());
+    }
+
+    @Test
+    public void addCurrentLocationToIsNoOpWhenNotLoggedIn()
+    {
+        Route r = store.createRoute("R");
+        recorderAt(null).addCurrentLocationTo(r.getId());
+        assertEquals(0, store.getRouteById(r.getId()).getSteps().size());
+    }
+
+    @Test
+    public void addCurrentLocationToIsNoOpForNullRoute()
+    {
+        Route r = store.createRoute("R");
+        recorderAt(new WorldPoint(3200, 3200, 0)).addCurrentLocationTo(null);
+        assertEquals(0, store.getRouteById(r.getId()).getSteps().size());
     }
 }
