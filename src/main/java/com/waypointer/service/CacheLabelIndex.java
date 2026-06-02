@@ -64,7 +64,7 @@ public class CacheLabelIndex
 
     private CacheLabelIndex(boolean skipResourceLoad)
     {
-        // package-private ctor used only by forTesting()
+        // Test seam: only forTesting() calls this.
     }
 
     public int size() { return all.size(); }

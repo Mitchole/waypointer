@@ -12,6 +12,8 @@ final class TabStrip extends EnumTabStrip<TabStrip.Tab>
 {
     enum Tab { MY_WAYPOINTS, PRESETS, ROUTES, DEV }
 
+    // Test seam: defaults to the two always-present tabs. Production uses the (Consumer, List)
+    // ctor via TabHost so it can include Dev only when dev mode is on.
     TabStrip(Consumer<Tab> onSelect)
     {
         this(onSelect, Arrays.asList(Tab.MY_WAYPOINTS, Tab.PRESETS));

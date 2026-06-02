@@ -96,7 +96,7 @@ public class BboxIndex
 
     private BboxIndex(boolean skipResourceLoad)
     {
-        // package-private; only used by forTesting() -- no overrides to subscribe to.
+        // Test seam: only forTesting() calls this -- no overrides to subscribe to.
         this.overridesSub = null;
     }
 
