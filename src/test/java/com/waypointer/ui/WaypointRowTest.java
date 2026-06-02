@@ -77,4 +77,36 @@ public class WaypointRowTest
         Waypoint w = wp("Home", "Personal");
         assertEquals(WaypointRow.buildHoverTooltip(w), WaypointRow.buildHoverTooltip(w, null));
     }
+
+    @Test
+    public void accessibleNamePlainWhenNoState()
+    {
+        assertEquals("Varrock", WaypointRow.accessibleName("Varrock", false, false));
+    }
+
+    @Test
+    public void accessibleNameAppendsWilderness()
+    {
+        assertEquals("Chaos Altar (in Wilderness)",
+            WaypointRow.accessibleName("Chaos Altar", true, false));
+    }
+
+    @Test
+    public void accessibleNameAppendsPinned()
+    {
+        assertEquals("Home (pinned)", WaypointRow.accessibleName("Home", false, true));
+    }
+
+    @Test
+    public void accessibleNameAppendsBothInOrder()
+    {
+        assertEquals("Rev Caves (in Wilderness) (pinned)",
+            WaypointRow.accessibleName("Rev Caves", true, true));
+    }
+
+    @Test
+    public void accessibleNameNullBaseIsEmptyPrefix()
+    {
+        assertEquals(" (pinned)", WaypointRow.accessibleName(null, false, true));
+    }
 }

@@ -196,6 +196,8 @@ public class WaypointRow extends JPanel implements DropIndicatable
         name.setToolTipText(buildHoverTooltip(s.waypoint, s.originCategoryName));
         name.setForeground(s.isWilderness ? new Color(220, 130, 130) : Color.WHITE);
         name.setFont(name.getFont().deriveFont(Font.BOLD));
+        name.getAccessibleContext().setAccessibleName(
+            accessibleName(s.waypoint.getName(), s.isWilderness, s.isPinned));
         if (s.waypoint.getIconId() != null && s.spriteManager != null)
         {
             name.setIconTextGap(6);
@@ -267,6 +269,19 @@ public class WaypointRow extends JPanel implements DropIndicatable
                 break;
         }
         repaint();
+    }
+
+    /**
+     * Screen-reader name for a row: the waypoint name plus parenthetical state tags so the
+     * wilderness skull and pinned glyph -- which are visual-only on the label -- are spoken.
+     * Mirrors the Play button, which already names its path target.
+     */
+    static String accessibleName(String baseName, boolean wilderness, boolean pinned)
+    {
+        StringBuilder sb = new StringBuilder(baseName == null ? "" : baseName);
+        if (wilderness) sb.append(" (in Wilderness)");
+        if (pinned) sb.append(" (pinned)");
+        return sb.toString();
     }
 
     /**
