@@ -4,7 +4,7 @@
 
 # Waypointer
 
-Save your favourite Old School RuneScape locations and travel to them in one click.
+Save Old School RuneScape locations and travel to them in one click.
 
 [![License: BSD-2-Clause](https://img.shields.io/badge/License-BSD_2--Clause-orange.svg)](LICENSE)
 [![Java 11](https://img.shields.io/badge/Java-11-blue.svg)](https://adoptium.net/)
