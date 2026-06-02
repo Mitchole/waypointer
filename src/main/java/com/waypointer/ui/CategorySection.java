@@ -22,7 +22,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -219,22 +218,8 @@ public class CategorySection extends CollapsibleSection
                 .selected(selection.ids().contains(w.getId()))
                 .onSelectClick(shift -> onRowSelectClick.accept(w, shift))
                 .build();
-            row.setAlignmentX(LEFT_ALIGNMENT);
-            body.add(row);
-            if (dnd != null) dnd.attachWaypointRow(row, row.getDragHandle(),
-                row, w.getId(), category.getId());
-            if (inlineProvider != null)
-            {
-                Component inline = inlineProvider.apply(w);
-                if (inline != null)
-                {
-                    if (inline instanceof JComponent)
-                    {
-                        ((JComponent) inline).setAlignmentX(LEFT_ALIGNMENT);
-                    }
-                    body.add(inline);
-                }
-            }
+            if (dnd != null) dnd.attachWaypointRow(row, row.getDragHandle(), row, w.getId(), category.getId());
+            addRow(row, w, inlineProvider);
         }
         if (waypoints.isEmpty())
         {

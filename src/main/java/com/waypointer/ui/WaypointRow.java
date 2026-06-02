@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import com.waypointer.model.Waypoint;
+import com.waypointer.util.Text;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -208,7 +209,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
         if (s.selectMode) return;
         JButton play = new JButton("▶"); // black right-pointing triangle
         this.playButton = play;
-        Styles.playIconButton(play, s.active);
+        PlayButton.style(play, s.active);
         play.setToolTipText(s.active ? "Pathing here" : "Path to here");
         play.getAccessibleContext().setAccessibleName(
             s.waypoint.getName() == null || s.waypoint.getName().isEmpty()
@@ -236,7 +237,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
     public void setActive(boolean active)
     {
         if (playButton == null) return;
-        Styles.playIconButton(playButton, active);
+        PlayButton.style(playButton, active);
         playButton.setToolTipText(active ? "Pathing here" : "Path to here");
         playButton.repaint();
     }
@@ -279,8 +280,8 @@ public class WaypointRow extends JPanel implements DropIndicatable
         String firstLine = nl < 0 ? notes : notes.substring(0, nl);
         firstLine = firstLine.trim();
         if (firstLine.isEmpty()) return name;
-        return "<html>" + Styles.escapeHtml(name) + "<br><span style='color:#bbb'>"
-            + Styles.escapeHtml(firstLine) + "</span></html>";
+        return "<html>" + Text.escapeHtml(name) + "<br><span style='color:#bbb'>"
+            + Text.escapeHtml(firstLine) + "</span></html>";
     }
 
     /** Extended tooltip with optional origin-category line. Null origin = same as the one-arg form. */
@@ -292,7 +293,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
         }
         String name = w.getName() == null ? "" : w.getName();
         String notes = w.getNotes();
-        StringBuilder html = new StringBuilder("<html>").append(Styles.escapeHtml(name));
+        StringBuilder html = new StringBuilder("<html>").append(Text.escapeHtml(name));
         if (notes != null && !notes.isEmpty())
         {
             int nl = notes.indexOf('\n');
@@ -300,12 +301,12 @@ public class WaypointRow extends JPanel implements DropIndicatable
             if (!firstLine.isEmpty())
             {
                 html.append("<br><span style='color:#bbb'>")
-                    .append(Styles.escapeHtml(firstLine))
+                    .append(Text.escapeHtml(firstLine))
                     .append("</span>");
             }
         }
         html.append("<br><span style='color:#bbb'><i>in ")
-            .append(Styles.escapeHtml(originCategoryName))
+            .append(Text.escapeHtml(originCategoryName))
             .append("</i></span></html>");
         return html.toString();
     }

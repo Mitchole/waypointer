@@ -11,7 +11,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.swing.BorderFactory;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import net.runelite.client.game.SpriteManager;
 
@@ -58,20 +57,7 @@ public class PinnedSection extends CollapsibleSection
                 .spriteManager(spriteManager)
                 .originCategoryName(originName)
                 .build();
-            row.setAlignmentX(LEFT_ALIGNMENT);
-            body.add(row);
-            if (inlineProvider != null)
-            {
-                Component inline = inlineProvider.apply(w);
-                if (inline != null)
-                {
-                    if (inline instanceof JComponent)
-                    {
-                        ((JComponent) inline).setAlignmentX(LEFT_ALIGNMENT);
-                    }
-                    body.add(inline);
-                }
-            }
+            addRow(row, w, inlineProvider);
         }
 
         attachBody();

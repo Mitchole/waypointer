@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import com.waypointer.model.WorldPointPacker;
+import com.waypointer.util.Text;
 import com.waypointer.preset.Preset;
 import com.waypointer.preset.PresetWaypoint;
 import java.awt.BorderLayout;
@@ -194,7 +195,7 @@ class PresetSection extends JPanel
         if (desc != null && !desc.trim().isEmpty())
         {
             JLabel descLabel = new JLabel("<html><div style='padding:4px 9px 4px 22px;'>"
-                + Styles.escapeHtml(desc) + "</div></html>");
+                + Text.escapeHtml(desc) + "</div></html>");
             descLabel.setForeground(Color.GRAY);
             descLabel.setFont(FontManager.getRunescapeSmallFont());
             descLabel.setAlignmentX(LEFT_ALIGNMENT);
@@ -223,10 +224,10 @@ class PresetSection extends JPanel
 
         String descHtml = wp.getDescription() == null || wp.getDescription().trim().isEmpty()
             ? ""
-            : "<br><span style='color:#7d7d7d;'>" + Styles.escapeHtml(wp.getDescription())
+            : "<br><span style='color:#7d7d7d;'>" + Text.escapeHtml(wp.getDescription())
                 + "</span>";
         JLabel label = new JLabel("<html>"
-            + Styles.escapeHtml(wp.getName()) + descHtml + "</html>");
+            + Text.escapeHtml(wp.getName()) + descHtml + "</html>");
         label.setForeground(Color.WHITE);
         // BasicHTML's <div style='width:Npx'> trick is unreliable: JLabel still reports
         // its preferredSize at the unwrapped text width, which overflows the viewport and

@@ -488,12 +488,31 @@ public class WaypointerPanel extends PluginPanel
     public void rebuild()
     {
         body.removeAll();
-        Library snap = store.getLibrary();
-        java.util.List<UUID> visibleIds = new ArrayList<>();
-        // Lowercase once for the whole render pass; per-row matchers reuse this string.
         String loweredFilter = currentFilter.toLowerCase(Locale.ROOT);
         boolean isFiltering = !loweredFilter.isEmpty();
+        List<UUID> visibleIds = new ArrayList<>();
 
+        addBanners();
+        boolean pinnedRendered = addPinnedSection(loweredFilter, isFiltering);
+        CategoryRender cat = addCategorySections(loweredFilter, isFiltering, pinnedRendered, visibleIds);
+
+        if (isFiltering && !pinnedRendered && !cat.rendered) addNoMatchLabel();
+
+        bulkSelect.setVisibleOrderedIds(visibleIds);
+        addFooter(cat.totalWaypoints, cat.nonEmptyCategoryCount);
+        body.revalidate();
+        body.repaint();
+    }
+
+    private static final class CategoryRender
+    {
+        boolean rendered;
+        int nonEmptyCategoryCount;
+        int totalWaypoints;
+    }
+
+    private void addBanners()
+    {
         if (!pathfinder.isAvailable() && !config.shortestPathBannerDismissed())
         {
             body.add(PanelBanners.shortestPathMissing(config, this::scheduleRebuild));
@@ -502,10 +521,12 @@ public class WaypointerPanel extends PluginPanel
         {
             body.add(PanelBanners.loadFailedReset(persistence, store, this));
         }
+    }
 
+    private boolean addPinnedSection(String loweredFilter, boolean isFiltering)
+    {
         // Synthetic Pinned section: render before normal categories. Honors the active filter
         // (pinned waypoints not matching the filter hide here, same as in their real category).
-        boolean rendered = false;
         List<Waypoint> allPinned = store.getPinnedWaypoints(config.newestPinAtTop());
         List<Waypoint> visiblePinned;
         if (loweredFilter.isEmpty())
@@ -543,18 +564,18 @@ public class WaypointerPanel extends PluginPanel
                 spriteManager,
                 w -> store.getCategoryById(w.getCategoryId()));
             body.add(pinnedSec);
-            rendered = true;
+            return true;
         }
+        return false;
+    }
 
-        // A section was rendered as the immediate previous body child. Used to insert a 1-px
-        // divider between adjacent section blocks (banners + empty state don't count, so the
-        // flag resets after the pinned/category-loop block decides what to add).
-        boolean prevWasSection = rendered;
-
+    private CategoryRender addCategorySections(String loweredFilter, boolean isFiltering,
+        boolean prevWasSection, List<UUID> visibleIds)
+    {
+        CategoryRender result = new CategoryRender();
         List<Category> cats = store.getCategoriesOrdered();
-        long totalWaypoints = snap.getWaypoints().size();
-        int nonEmptyCategoryCount = 0;
-        if (totalWaypoints == 0 && cats.size() <= 1)
+        result.totalWaypoints = store.getLibrary().getWaypoints().size();
+        if (result.totalWaypoints == 0 && cats.size() <= 1)
         {
             if (!isFiltering) renderEmpty();
         }
@@ -569,7 +590,7 @@ public class WaypointerPanel extends PluginPanel
                 List<Waypoint> all = store.getWaypointsInCategory(c.getId());
                 // Count against the unfiltered list, before the continues below, so the footer
                 // total stays filter-independent (matches the old FooterStrip self-walk).
-                if (!all.isEmpty()) nonEmptyCategoryCount++;
+                if (!all.isEmpty()) result.nonEmptyCategoryCount++;
                 List<Waypoint> ws = filterWaypoints(c, all, loweredFilter);
 
                 // Hide empty Uncategorized always.
@@ -605,31 +626,31 @@ public class WaypointerPanel extends PluginPanel
                     bulkSelect::onHeaderSelectToggle);
                 if (prevWasSection) body.add(buildSectionDivider());
                 body.add(section);
-                rendered = true;
+                result.rendered = true;
                 prevWasSection = true;
             }
         }
+        return result;
+    }
 
-        if (isFiltering && !rendered)
-        {
-            JLabel none = new JLabel("<html><div style='text-align:center;padding:24px;color:#9b9b9b;'>"
-                + "No waypoints match.</div></html>", SwingConstants.CENTER);
-            none.setAlignmentX(Component.LEFT_ALIGNMENT);
-            none.setForeground(Color.LIGHT_GRAY);
-            body.add(none);
-        }
+    private void addNoMatchLabel()
+    {
+        JLabel none = new JLabel("<html><div style='text-align:center;padding:24px;color:#9b9b9b;'>"
+            + "No waypoints match.</div></html>", SwingConstants.CENTER);
+        none.setAlignmentX(Component.LEFT_ALIGNMENT);
+        none.setForeground(Color.LIGHT_GRAY);
+        body.add(none);
+    }
 
-        bulkSelect.setVisibleOrderedIds(visibleIds);
-
+    private void addFooter(int totalWaypoints, int nonEmptyCategoryCount)
+    {
         // Push remaining vertical space to the bottom so sections stack tight at the top.
         body.add(Box.createVerticalGlue());
         // Footer (#23) sits below the glue: pinned to the viewport bottom on a short list,
         // scrolls in after the last section on a long one. Divider separates it from the list.
         body.add(buildSectionDivider());
-        footer.refresh((int) totalWaypoints, nonEmptyCategoryCount);
+        footer.refresh(totalWaypoints, nonEmptyCategoryCount);
         body.add(footer);
-        body.revalidate();
-        body.repaint();
     }
 
     private List<Waypoint> filterWaypoints(Category c, List<Waypoint> all, String loweredFilter)

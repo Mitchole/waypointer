@@ -1,7 +1,9 @@
 package com.waypointer.ui;
 
+import com.waypointer.model.Waypoint;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -9,8 +11,10 @@ import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
@@ -109,6 +113,27 @@ abstract class CollapsibleSection extends JPanel
     public Dimension getMaximumSize()
     {
         return Styles.capHeight(this);
+    }
+
+    // Appends a built row plus its optional inline editor to the body, both left-aligned. Shared
+    // by CategorySection and PinnedSection, which build their own WaypointRow.spec(...) (the spec
+    // config differs) but stack rows identically.
+    protected void addRow(WaypointRow row, Waypoint w, Function<Waypoint, Component> inlineProvider)
+    {
+        row.setAlignmentX(LEFT_ALIGNMENT);
+        body.add(row);
+        if (inlineProvider != null)
+        {
+            Component inline = inlineProvider.apply(w);
+            if (inline != null)
+            {
+                if (inline instanceof JComponent)
+                {
+                    ((JComponent) inline).setAlignmentX(LEFT_ALIGNMENT);
+                }
+                body.add(inline);
+            }
+        }
     }
 
     public boolean isCollapsed() { return collapsed; }

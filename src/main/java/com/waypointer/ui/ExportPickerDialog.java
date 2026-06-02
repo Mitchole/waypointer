@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import com.waypointer.codec.LibraryJsonCodec;
+import com.waypointer.util.Text;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.LibrarySubsetBuilder;
@@ -137,7 +138,7 @@ final class ExportPickerDialog extends JDialog
         if (subset.getCategories().size() == 1)
         {
             return "waypointer-"
-                + Styles.sanitizeFilenameSegment(subset.getCategories().get(0).getName())
+                + Text.sanitizeFilenameSegment(subset.getCategories().get(0).getName())
                 + "-" + stamp + ".json";
         }
         return "waypointer-library-" + stamp + ".json";

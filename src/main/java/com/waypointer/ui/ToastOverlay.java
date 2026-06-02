@@ -1,5 +1,6 @@
 package com.waypointer.ui;
 
+import com.waypointer.util.Text;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -145,7 +146,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     public void show(String text, String actionLabelText, Runnable onClick, Severity severity)
     {
         applyMessage(text, severity);
-        this.actionLabel.setText("<html><u>" + Styles.escapeHtml(actionLabelText) + "</u></html>");
+        this.actionLabel.setText("<html><u>" + Text.escapeHtml(actionLabelText) + "</u></html>");
         this.actionLabel.setVisible(true);
 
         // Replace any previous listener so a stale runnable from the prior toast doesn't fire.
@@ -174,7 +175,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     {
         message.setForeground(colorFor(severity));
         String glyph = glyphFor(severity);
-        message.setText("<html>" + Styles.escapeHtml(glyph + "  " + text) + "</html>");
+        message.setText("<html>" + Text.escapeHtml(glyph + "  " + text) + "</html>");
     }
 
     private static Color colorFor(Severity severity)

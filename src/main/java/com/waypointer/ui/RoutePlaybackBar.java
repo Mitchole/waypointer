@@ -2,6 +2,7 @@ package com.waypointer.ui;
 
 import com.waypointer.model.route.Route;
 import com.waypointer.service.RoutePlaybackEngine;
+import com.waypointer.util.Text;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -58,7 +59,7 @@ final class RoutePlaybackBar extends JPanel
         {
             String text = "Step " + (engine.getCurrentIndex() + 1) + " / " + r.getSteps().size();
             if (r.isRepeating()) text += "  Lap " + engine.getLap();
-            label.setText("<html><b>" + Styles.escapeHtml(r.getName()) + "</b><br>"
+            label.setText("<html><b>" + Text.escapeHtml(r.getName()) + "</b><br>"
                 + text + "</html>");
         }
         setVisible(r != null);

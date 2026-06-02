@@ -3,6 +3,7 @@ package com.waypointer.ui;
 import com.waypointer.WaypointerConfig;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.WaypointPathfinder;
+import com.waypointer.util.Text;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import javax.swing.BorderFactory;
@@ -57,7 +58,7 @@ final class ActivePathBanner extends JPanel
         {
             String name = pathfinder.getActiveName();
             label.setText("<html><font color='" + ARROW_HEX + "'>→</font> "
-                + "Pathing to " + Styles.escapeHtml(name) + "</html>");
+                + "Pathing to " + Text.escapeHtml(name) + "</html>");
         }
         setVisible(visible);
     }
