@@ -75,10 +75,13 @@ final class PanelBanners
         JButton reset = new JButton("Reset library");
         Styles.secondaryButton(reset);
         reset.addActionListener(e -> {
-            int ok = JOptionPane.showConfirmDialog(dialogParent,
+            // Cancel is the default-focused button so a stray Enter can't discard the files.
+            String[] options = {"Cancel", "Reset"};
+            int choice = JOptionPane.showOptionDialog(dialogParent,
                 "This will discard the unreadable library files. Continue?",
-                "Reset library", JOptionPane.OK_CANCEL_OPTION);
-            if (ok != JOptionPane.OK_OPTION) return;
+                "Reset library", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                null, options, options[0]);
+            if (choice != 1) return;
             try { Files.deleteIfExists(persistence.libraryFile()); }
             catch (IOException ignored) {}
             try { Files.deleteIfExists(persistence.backupFile()); }
@@ -113,10 +116,13 @@ final class PanelBanners
         JButton reset = new JButton("Reset routes");
         Styles.secondaryButton(reset);
         reset.addActionListener(e -> {
-            int ok = JOptionPane.showConfirmDialog(dialogParent,
+            // Cancel is the default-focused button so a stray Enter can't discard the files.
+            String[] options = {"Cancel", "Reset"};
+            int choice = JOptionPane.showOptionDialog(dialogParent,
                 "This will discard the unreadable route files. Continue?",
-                "Reset routes", JOptionPane.OK_CANCEL_OPTION);
-            if (ok != JOptionPane.OK_OPTION) return;
+                "Reset routes", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                null, options, options[0]);
+            if (choice != 1) return;
             try { Files.deleteIfExists(persistence.routesFile()); }
             catch (IOException ignored) {}
             try { Files.deleteIfExists(persistence.backupFile()); }

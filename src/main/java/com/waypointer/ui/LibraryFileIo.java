@@ -39,10 +39,13 @@ final class LibraryFileIo
         File target = fc.getSelectedFile();
         if (target.exists())
         {
-            int ok = JOptionPane.showConfirmDialog(parent,
+            // Cancel is the default-focused button so a stray Enter can't overwrite the file.
+            String[] options = {"Cancel", "Overwrite"};
+            int choice = JOptionPane.showOptionDialog(parent,
                 target.getName() + " already exists. Overwrite?",
-                "Confirm overwrite", JOptionPane.OK_CANCEL_OPTION);
-            if (ok != JOptionPane.OK_OPTION) return;
+                "Confirm overwrite", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                null, options, options[0]);
+            if (choice != 1) return;
         }
         try
         {
