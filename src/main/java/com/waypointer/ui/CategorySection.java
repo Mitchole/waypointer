@@ -223,12 +223,11 @@ public class CategorySection extends CollapsibleSection
         }
         if (waypoints.isEmpty())
         {
-            JLabel empty = new JLabel("(empty - drag here)");
-            empty.setForeground(Color.GRAY);
-            empty.setOpaque(false);
-            empty.setBorder(BorderFactory.createEmptyBorder(2, 12, 2, 4));
-            empty.setAlignmentX(LEFT_ALIGNMENT);
+            EmptyDropZone empty = new EmptyDropZone();
             body.add(empty);
+            // When dnd == null (a search filter is active) the zone is shown for affordance
+            // but not wired as a drop target, mirroring the non-empty tail zone.
+            if (dnd != null) dnd.attachTailZone(empty, empty, category.getId());
         }
         else
         {
@@ -327,6 +326,58 @@ public class CategorySection extends CollapsibleSection
                     break;
             }
             repaint();
+        }
+    }
+
+    /**
+     * Visible drop affordance shown in place of rows when a category is empty. Carries the
+     * "(empty - drag here)" hint with a dashed resting border so it reads as a target, and
+     * lights up with the shared orange-top-border + tint vocabulary when a waypoint is dragged
+     * over it. Wired through {@link DragAndDropHandler#attachTailZone}, so a drop appends the
+     * waypoint to this category -- matching {@link TailDropZone} on non-empty categories.
+     */
+    private static final class EmptyDropZone extends JPanel implements DropIndicatable
+    {
+        private final Border resting = BorderFactory.createCompoundBorder(
+            BorderFactory.createDashedBorder(Styles.MUTED_TEXT),
+            BorderFactory.createEmptyBorder(2, 10, 2, 4));
+
+        EmptyDropZone()
+        {
+            setLayout(new BorderLayout());
+            setOpaque(false);
+            setAlignmentX(LEFT_ALIGNMENT);
+            setBorder(resting);
+            JLabel label = new JLabel("(empty - drag here)");
+            label.setForeground(Styles.MUTED_TEXT);
+            add(label, BorderLayout.WEST);
+        }
+
+        @Override
+        public void setDropIndicator(DropIndicatorMode mode)
+        {
+            switch (mode)
+            {
+                case BORDER_AND_TINT:
+                    setOpaque(true);
+                    setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
+                    setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(2, 0, 0, 0, ColorScheme.BRAND_ORANGE),
+                        resting));
+                    break;
+                case NONE:
+                case TINT:
+                default:
+                    setOpaque(false);
+                    setBorder(resting);
+                    break;
+            }
+            repaint();
+        }
+
+        @Override public Dimension getMaximumSize()
+        {
+            return Styles.capHeight(this);
         }
     }
 }
