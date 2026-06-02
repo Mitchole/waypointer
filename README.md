@@ -10,7 +10,7 @@ Save Old School RuneScape locations and travel to them in one click.
 [![Java 11](https://img.shields.io/badge/Java-11-blue.svg)](https://adoptium.net/)
 [![RuneLite Plugin](https://img.shields.io/badge/RuneLite-Plugin-red.svg)](https://runelite.net/)
 
-> **[ Screenshot ]** The Waypointer panel docked in the RuneLite sidebar, the nearest-landmark bar across the top and two or three categories expanded below.
+> **[ Screenshot ]** The Waypointer panel docked in the RuneLite sidebar, the nearest-landmark bar across the top and two or three categories expanded below. (Will be "panel.png")
 
 Waypointer is a sidebar panel for the places you keep going back to: banks, bosses, farm
 patches, teleport spots. Mark a tile, name it, file it under a category. Click Play on any
@@ -54,7 +54,7 @@ waypoints into guided **Routes** for farm runs and agility laps.
 4. Your library starts empty. Add your own waypoints, or open the **Presets** tab to start
    from a curated set.
 
-> **[ Video ]** A 20-second tour: open the panel, mark a tile, give it a name and category, click Play, watch the route appear.
+> **[ Video ]** A 20-second tour: open the panel, mark a tile, give it a name and category, click Play, watch the route appear. (will be "tour.mp4"
 
 ## Saving a waypoint
 
@@ -72,7 +72,7 @@ Each one opens a small dialog where you set the name and pick a category. Stand 
 bank, altar, anvil, furnace, fairy ring, dungeon entrance, boss arena, or other named
 landmark, and the name is filled in for you.
 
-> **[ Screenshot ]** The capture dialog open over the game, name pre-filled from the landmark under the player, category dropdown showing.
+> **[ Screenshot ]** The capture dialog open over the game, name pre-filled from the landmark under the player, category dropdown showing. (will be "capture.png")
 
 ## Organising your library
 
@@ -87,7 +87,7 @@ landmark, and the name is filled in for you.
 - Click a row for an inline editor over its name, category, notes, and tile. `Recapture`
   rewrites the waypoint to wherever you are standing now.
 
-> **[ Screenshot ]** One category expanded with its inline editor open on a waypoint, showing the name, notes, and category fields.
+> **[ Screenshot ]** One category expanded with its inline editor open on a waypoint, showing the name, notes, and category fields. (will be "editor.png")
 
 ## Travelling to a waypoint
 
@@ -102,7 +102,7 @@ A couple of safety nets, both on by default and both toggleable in [Settings](#s
 - **Auto-path to death location** starts a route back to where you died the moment it happens,
   so you can run for your gravestone without fishing for the tile.
 
-> **[ Video ]** Clicking Play on a saved bank, then following the highlighted path on the minimap to the door.
+> **[ Video ]** Clicking Play on a saved bank, then following the highlighted path on the minimap to the door. (will be "waypoint.mp4")
 
 ## The nearest-landmark bar
 
@@ -131,7 +131,7 @@ Run a route from the playback bar: **Back**, **Next**, **Stop**, and a step coun
 in-game route box on screen so the current step is always visible. Share a route with anyone
 using an `RT1:` code.
 
-> **[ Screenshot ]** The Routes tab mid-run: the playback bar with its step counter, and the in-game route box showing the current step.
+> **[ Screenshot ]** The Routes tab mid-run: the playback bar with its step counter, and the in-game route box showing the current step. (will be "route.png")
 
 ## Preset waypoints
 
