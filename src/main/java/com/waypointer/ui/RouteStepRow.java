@@ -15,8 +15,6 @@ import net.runelite.client.ui.FontManager;
 /** One step row in {@link RouteEditorPanel}: glyph + label + delete. Click the label to edit. */
 final class RouteStepRow extends JPanel
 {
-    private final RouteStep step;
-
     // ◉ = filled circle (WAYPOINT), ✎ = pencil (MANUAL), ✕ = multiply/close
     private static final String GLYPH_WAYPOINT = "◉";
     private static final String GLYPH_MANUAL   = "✎";
@@ -24,7 +22,6 @@ final class RouteStepRow extends JPanel
 
     RouteStepRow(int index, RouteStep step, Runnable onEdit, Consumer<RouteStep> onDelete)
     {
-        this.step = step;
         setLayout(new BorderLayout(6, 0));
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
         setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
@@ -51,8 +48,6 @@ final class RouteStepRow extends JPanel
     {
         return type == StepType.WAYPOINT ? GLYPH_WAYPOINT : GLYPH_MANUAL;
     }
-
-    RouteStep getStep() { return step; }
 
     @Override
     public Dimension getMaximumSize() { return Styles.capHeight(this); }

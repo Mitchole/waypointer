@@ -87,16 +87,6 @@ public class RoutePlaybackEngine
         return r.getSteps().get(currentIndex);
     }
 
-    @Nullable
-    public RouteStep getNextStep()
-    {
-        Route r = active;
-        if (r == null) return null;
-        int n = currentIndex + 1;
-        if (n >= r.getSteps().size()) return null;
-        return r.getSteps().get(n);
-    }
-
     public void start(Route route)
     {
         if (route == null || route.getSteps().isEmpty()) return;

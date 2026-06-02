@@ -199,8 +199,6 @@ public class RouteStore
         listeners.fire();
     }
 
-    public int listenerCountForTest() { return listeners.size(); }
-
     // ---- Debounced persistence wiring ----
 
     // Must be initialized after `listeners` above -- it captures that reference at construction.

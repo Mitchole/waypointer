@@ -241,8 +241,6 @@ public class WaypointRow extends JPanel implements DropIndicatable
         playButton.repaint();
     }
 
-    public Waypoint getWaypoint() { return waypoint; }
-
     public JLabel getDragHandle() { return dragHandle; }
 
     @Override
