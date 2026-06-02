@@ -168,7 +168,7 @@ public class WaypointRow extends JPanel implements DropIndicatable
             dragHandle = new JLabel("⠿"); // braille pattern dots-123456
             dragHandle.setForeground(new Color(120, 120, 120));
             dragHandle.setOpaque(false);
-            dragHandle.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
+            dragHandle.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 6));
             dragHandle.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
             dragHandle.getAccessibleContext().setAccessibleName("Reorder waypoint");
             HoverHint.shared().attach(dragHandle, () -> "Drag to reorder");

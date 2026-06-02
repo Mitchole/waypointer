@@ -177,7 +177,7 @@ public class CategorySection extends CollapsibleSection
             JLabel menuTrigger = new JLabel("⋮"); // U+22EE vertical ellipsis
             menuTrigger.setForeground(Color.LIGHT_GRAY);
             menuTrigger.setFont(menuTrigger.getFont().deriveFont(Font.BOLD));
-            menuTrigger.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 4));
+            menuTrigger.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 6));
             menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             menuTrigger.getAccessibleContext().setAccessibleName("Category options");
             HoverHint.shared().attach(menuTrigger, () -> "Category options");

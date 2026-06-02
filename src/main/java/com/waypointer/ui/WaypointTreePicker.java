@@ -169,21 +169,26 @@ final class WaypointTreePicker extends JPanel
             setBackground(ColorScheme.DARK_GRAY_COLOR);
             setAlignmentX(LEFT_ALIGNMENT);
             setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 0));
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-            box.addMouseListener(new MouseAdapter() {
-                @Override public void mouseClicked(MouseEvent e)
-                {
-                    model.setWaypointChecked(waypoint.getId(),
-                        !model.isWaypointChecked(waypoint.getId()));
-                    owner.refresh();
-                    fireChanged();
-                }
-            });
+            MouseAdapter toggle = new MouseAdapter() {
+                @Override public void mouseClicked(MouseEvent e) { toggleChecked(); }
+            };
+            box.addMouseListener(toggle);
+            addMouseListener(toggle);
 
             JLabel name = new JLabel(waypoint.getName());
             name.setForeground(Color.WHITE);
+            name.addMouseListener(toggle);
             add(box);
             add(name);
+        }
+
+        private void toggleChecked()
+        {
+            model.setWaypointChecked(waypoint.getId(), !model.isWaypointChecked(waypoint.getId()));
+            owner.refresh();
+            fireChanged();
         }
 
         void refresh()
