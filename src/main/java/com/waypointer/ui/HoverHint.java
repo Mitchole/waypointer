@@ -37,6 +37,7 @@ final class HoverHint
 	 * enable/disable cycle, so nothing accumulates. {@code attach} only ever adds a listener to
 	 * the (freshly built) target component, so re-enabling the plugin re-attaches new components
 	 * to the same window without stacking.
+	 * Do not call {@link #dispose()} on the shared instance -- {@code disposed} is sticky and would permanently silence all hints for the session.
 	 */
 	static HoverHint shared()
 	{

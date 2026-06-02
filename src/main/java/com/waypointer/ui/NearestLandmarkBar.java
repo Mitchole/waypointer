@@ -230,7 +230,7 @@ public final class NearestLandmarkBar extends JPanel
     {
         // setEnabled(false) triggers Swing's setDisabledIcon swap (see applySprite),
         // which is the only visible signal we need. Tooltips were replaced by the
-        // immediate hover popover in rebuildBar.
+        // immediate hover hint in rebuildBar.
         for (JButton b : primaryButtons.values()) b.setEnabled(loggedIn);
         // The customize button stays enabled regardless of login state.
         if (overflowBtn != null) overflowBtn.setEnabled(true);
