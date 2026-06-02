@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/main/resources/com/waypointer/icon.png" alt="Waypointer" width="128" height="128">
+  <img src="waypointer-iconpng.png" alt="Waypointer" width="200">
 </p>
 
 # Waypointer
