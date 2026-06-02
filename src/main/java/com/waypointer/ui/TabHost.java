@@ -44,6 +44,7 @@ public class TabHost extends PluginPanel
     private java.util.List<TabStrip.Tab> visibleTabs;
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cards = new JPanel(cardLayout);
+    private final ToastOverlay sharedToasts = new ToastOverlay(cards);
 
     private Listeners.Subscription pathSub;
     private TabStrip.Tab active = TabStrip.Tab.MY_WAYPOINTS;
@@ -78,7 +79,8 @@ public class TabHost extends PluginPanel
         cards.add(presetBrowserPanel, CARD_PRESETS);
         cards.add(routesPanel, CARD_ROUTES);
         cards.add(devPanel.getRoot(), CARD_DEV);
-        add(cards, BorderLayout.CENTER);
+        add(sharedToasts, BorderLayout.CENTER);
+        routesPanel.setToasts(sharedToasts);
 
         rebuildStrip();
 

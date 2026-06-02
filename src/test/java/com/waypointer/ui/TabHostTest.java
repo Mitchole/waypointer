@@ -218,6 +218,64 @@ public class TabHostTest
         assertEquals(3, host.visibleTabCountForTest());
     }
 
+    @Test
+    public void routesPanelReceivesSharedToastOverlay()
+    {
+        WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
+        when(pathfinder.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+
+        PresetCatalog catalog = mock(PresetCatalog.class);
+        when(catalog.getPresets()).thenReturn(Collections.emptyList());
+
+        WaypointerConfig config = mock(WaypointerConfig.class);
+        when(config.showPathingBanner()).thenReturn(true);
+        when(config.categoryCollapsedJson()).thenReturn("{}");
+        when(config.shortestPathBannerDismissed()).thenReturn(true);
+        when(config.landmarkSelectionJson()).thenReturn("");
+        when(config.routesEnabled()).thenReturn(true);
+        when(config.devModeEnabled()).thenReturn(false);
+
+        WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
+        when(persistence.isRefusingSaves()).thenReturn(false);
+
+        NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
+            mock(BboxIndex.class), pathfinder, mock(Client.class), mock(ClientThread.class),
+            mock(SpriteManager.class), config, new Gson());
+
+        WaypointerPanel waypointerPanel = new WaypointerPanel(
+            store, mock(WaypointCapture.class), pathfinder, config,
+            new CollapseStateCodec(new Gson()), persistence, mock(SpriteManager.class),
+            null, null, nearestLandmarkBar, mock(Client.class), mock(ClientThread.class),
+            mock(WildernessConfirmGate.class), mock(WaypointShareCodec.class),
+            mock(LibraryJsonCodec.class));
+        PresetBrowserPanel presetPanel =
+            new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
+
+        DevPanel devPanel = mock(DevPanel.class);
+        when(devPanel.getRoot()).thenReturn(new javax.swing.JPanel());
+
+        RouteStore routeStore = mock(RouteStore.class);
+        when(routeStore.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        when(routeStore.getRoutesOrdered()).thenReturn(Collections.emptyList());
+        RoutePlaybackEngine routeEngine = mock(RoutePlaybackEngine.class);
+        when(routeEngine.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        RouteRecorder routeRecorder = mock(RouteRecorder.class);
+        RouteStorePersistence routePersistence = mock(RouteStorePersistence.class);
+        when(routePersistence.isRefusingSaves()).thenReturn(false);
+        RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder,
+            mock(com.waypointer.codec.RouteShareCodec.class),
+            mock(com.waypointer.service.WaypointStore.class), routePersistence);
+
+        new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config,
+            mock(ClientToolbar.class));
+
+        assertEquals(false, routesPanel.getToastsForTest() == Toasts.NO_OP);
+        org.junit.Assert.assertTrue(routesPanel.getToastsForTest() instanceof ToastOverlay);
+    }
+
     private static TabHost buildHost()
     {
         WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
