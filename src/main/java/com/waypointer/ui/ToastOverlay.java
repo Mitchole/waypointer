@@ -44,6 +44,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     private int entryFrame;
     private int currentCardY = -1;
     private static final int PULSE_DURATION_MS = 120;
+    private static final Color RESTING_BORDER_COLOR = ColorScheme.LIGHT_GRAY_COLOR;
     private Timer pulseTimer;
     private int pulseCount;
 
@@ -55,7 +56,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
 
         card.setLayout(new BorderLayout(8, 0));
         card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        card.setBorder(cardBorder(ColorScheme.LIGHT_GRAY_COLOR));
+        card.setBorder(cardBorder(RESTING_BORDER_COLOR));
 
         message.setFont(FontManager.getRunescapeSmallFont());
         card.add(message, BorderLayout.CENTER);
@@ -132,7 +133,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         pulseCount++;
         card.setBorder(cardBorder(ColorScheme.BRAND_ORANGE));
         if (pulseTimer != null && pulseTimer.isRunning()) pulseTimer.stop();
-        pulseTimer = new Timer(PULSE_DURATION_MS, e -> card.setBorder(cardBorder(ColorScheme.LIGHT_GRAY_COLOR)));
+        pulseTimer = new Timer(PULSE_DURATION_MS, e -> card.setBorder(cardBorder(RESTING_BORDER_COLOR)));
         pulseTimer.setRepeats(false);
         pulseTimer.start();
     }
