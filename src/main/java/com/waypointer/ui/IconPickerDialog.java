@@ -9,8 +9,6 @@ import java.awt.GridLayout;
 import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,14 +23,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import net.runelite.api.SpriteID;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 
 /** Modal icon picker for a category or waypoint. Category dropdown drives a 5x10 grid
  *  paginated 50 per page. ESC closes without changing anything. Opens to the category and
  *  page containing the current icon when there is one. */
-@SuppressWarnings("deprecation") // SpriteID is deprecated upstream but still the public surface.
 public class IconPickerDialog extends JDialog
 {
     private static final int PAGE_SIZE = 50;
@@ -330,11 +326,8 @@ public class IconPickerDialog extends JDialog
                     c.getSpriteIds()));
             }
         }
-        if (out.isEmpty())
-        {
-            // Catalog missing or empty; preserve old behavior with one big "All" page.
-            out.add(new CategoryView("All (" + LegacyAllIds.IDS.size() + ")", LegacyAllIds.IDS));
-        }
+        // If the bundled catalog is missing or malformed the picker simply shows no
+        // categories; "None" stays selectable. This only happens with a corrupt jar.
         return out;
     }
 
@@ -343,37 +336,5 @@ public class IconPickerDialog extends JDialog
         final String label;
         final List<Integer> ids;
         CategoryView(String label, List<Integer> ids) { this.label = label; this.ids = ids; }
-    }
-
-    /** Reflection over SpriteID, sorted ascending. Built lazily only if the JSON catalog
-     *  can't be loaded. */
-    private static final class LegacyAllIds
-    {
-        static final List<Integer> IDS = load();
-
-        private static List<Integer> load()
-        {
-            List<Integer> ids = new ArrayList<>();
-            try
-            {
-                for (Field f : SpriteID.class.getDeclaredFields())
-                {
-                    int mods = f.getModifiers();
-                    if (Modifier.isPublic(mods) && Modifier.isStatic(mods) && Modifier.isFinal(mods)
-                        && f.getType() == int.class)
-                    {
-                        try { ids.add(f.getInt(null)); }
-                        catch (IllegalAccessException ignored) {}
-                    }
-                }
-            }
-            catch (Throwable t) { ids.clear(); }
-            if (ids.isEmpty())
-            {
-                ids.add(0); ids.add(1); ids.add(2);
-            }
-            Collections.sort(ids);
-            return Collections.unmodifiableList(ids);
-        }
     }
 }

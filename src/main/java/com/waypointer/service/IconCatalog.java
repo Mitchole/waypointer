@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 /** Loads icon-categories.json once and exposes it as an ordered list of named categories.
  *  Each category is a sorted, immutable list of sprite ids. Used by IconPickerDialog so the
  *  user sees a curated set rather than every SpriteID. Returns an empty list if the resource
- *  is missing or malformed; the picker then falls back to reflecting over SpriteID. */
+ *  is missing or malformed; the picker then shows no categories ("None" stays selectable). */
 @Singleton
 @Slf4j
 public final class IconCatalog
@@ -74,7 +74,7 @@ public final class IconCatalog
         }
         catch (Exception e)
         {
-            log.warn("Failed to load icon catalog; picker will fall back to all-sprites view.", e);
+            log.warn("Failed to load icon catalog; icon picker will show no categories.", e);
             return new ArrayList<>();
         }
     }
