@@ -14,6 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import javax.swing.border.Border;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
@@ -42,6 +43,9 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     private int entryTargetY;
     private int entryFrame;
     private int currentCardY = -1;
+    private static final int PULSE_DURATION_MS = 120;
+    private Timer pulseTimer;
+    private int pulseCount;
 
     public ToastOverlay(JComponent content)
     {
@@ -51,9 +55,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
 
         card.setLayout(new BorderLayout(8, 0));
         card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR, 1),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+        card.setBorder(cardBorder(ColorScheme.LIGHT_GRAY_COLOR));
 
         message.setFont(FontManager.getRunescapeSmallFont());
         card.add(message, BorderLayout.CENTER);
@@ -94,7 +96,9 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     {
         if (card.isVisible())
         {
-            // Replace-in-place: no animation.
+            // Replace-in-place: the card stays put, so a slide would be invisible. Flash the
+            // border to brand orange briefly so two quick actions don't read as one.
+            pulse();
             return;
         }
         entryAnimationCount++;
@@ -114,6 +118,23 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
             if (entryFrame >= ANIMATION_FRAMES) ((Timer) e.getSource()).stop();
         });
         entryTimer.start();
+    }
+
+    private static Border cardBorder(Color line)
+    {
+        return BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(line, 1),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12));
+    }
+
+    private void pulse()
+    {
+        pulseCount++;
+        card.setBorder(cardBorder(ColorScheme.BRAND_ORANGE));
+        if (pulseTimer != null && pulseTimer.isRunning()) pulseTimer.stop();
+        pulseTimer = new Timer(PULSE_DURATION_MS, e -> card.setBorder(cardBorder(ColorScheme.LIGHT_GRAY_COLOR)));
+        pulseTimer.setRepeats(false);
+        pulseTimer.start();
     }
 
     private void restartAutoHide(int durationMs)
@@ -210,6 +231,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
     Timer autoHideTimerForTest() { return autoHideTimer; }
     JLabel actionLabelForTest() { return actionLabel; }
     int entryAnimationCountForTest() { return entryAnimationCount; }
+    int pulseCountForTest() { return pulseCount; }
 
     int cardCurrentYForTest()
     {

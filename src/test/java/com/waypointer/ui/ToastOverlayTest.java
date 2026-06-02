@@ -147,4 +147,23 @@ public class ToastOverlayTest
         org.junit.Assert.assertTrue("card must settle above the bottom edge, got y=" + settledY,
             settledY < 300);
     }
+
+    @Test
+    public void replaceInPlacePulsesWithoutReanimatingEntry()
+    {
+        ToastOverlay overlay = new ToastOverlay(new JLabel("inner"));
+        overlay.setSize(200, 300);
+
+        overlay.show("first");
+        int entryAfterFirst = overlay.entryAnimationCountForTest();
+        org.junit.Assert.assertEquals("first show() slides in, it must not pulse",
+            0, overlay.pulseCountForTest());
+
+        overlay.show("second");
+
+        org.junit.Assert.assertEquals("replace must not re-run the slide entry",
+            entryAfterFirst, overlay.entryAnimationCountForTest());
+        org.junit.Assert.assertEquals("replace must pulse exactly once",
+            1, overlay.pulseCountForTest());
+    }
 }
