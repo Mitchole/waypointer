@@ -1,6 +1,7 @@
 package com.waypointer.service;
 
 import com.waypointer.model.Category;
+import com.waypointer.model.CategorySortMode;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
 import com.waypointer.util.Listeners;
@@ -41,14 +42,7 @@ public class WaypointStore
 
     private volatile Library library = new Library();
     private final Listeners listeners = new Listeners();
-
-    // Memoized derived views; invalidated by every mutation via notifyChanged().
-    private List<Category> cachedCategoriesOrdered;
-    private Map<UUID, List<Waypoint>> cachedWaypointsByCategory;
-
-    // Lazy-rebuilt UUID->object indexes; null means "dirty, rebuild on next access".
-    private Map<UUID, Category> categoryIndex;
-    private Map<UUID, Waypoint> waypointIndex;
+    private final LibraryViews views = new LibraryViews(() -> library);
 
     // Packed-point -> NPC name for waypoints that target an NPC. Read from the client thread by
     // NpcHighlightOverlay.render() (~50fps); rebuilt eagerly on every mutation in fireChanged().
@@ -66,12 +60,6 @@ public class WaypointStore
      * plugin disable/enable.
      */
     private Runnable lastUndo;
-
-    private void invalidateIndexes()
-    {
-        categoryIndex = null;
-        waypointIndex = null;
-    }
 
     /**
      * Default notify path for every mutation: clears the undo slot, then fires. Clearing here
@@ -93,9 +81,7 @@ public class WaypointStore
 
     private void fireChanged()
     {
-        cachedCategoriesOrdered = null;
-        cachedWaypointsByCategory = null;
-        invalidateIndexes();
+        views.invalidate();
         rebuildNpcNameSnapshot();
         listeners.fire();
     }
@@ -153,16 +139,7 @@ public class WaypointStore
             .orElseThrow(() -> new IllegalStateException("Uncategorized sentinel missing"));
     }
 
-    public Category getCategoryById(UUID id)
-    {
-        if (categoryIndex == null)
-        {
-            Map<UUID, Category> idx = new HashMap<>(library.getCategories().size() * 2);
-            for (Category c : library.getCategories()) idx.put(c.getId(), c);
-            categoryIndex = idx;
-        }
-        return categoryIndex.get(id);
-    }
+    public Category getCategoryById(UUID id) { return views.getCategoryById(id); }
 
     public Category getCategoryByName(String name)
     {
@@ -171,74 +148,11 @@ public class WaypointStore
             .findFirst().orElse(null);
     }
 
-    public Waypoint getWaypointById(UUID id)
-    {
-        if (waypointIndex == null)
-        {
-            Map<UUID, Waypoint> idx = new HashMap<>(library.getWaypoints().size() * 2);
-            for (Waypoint w : library.getWaypoints()) idx.put(w.getId(), w);
-            waypointIndex = idx;
-        }
-        return waypointIndex.get(id);
-    }
+    public Waypoint getWaypointById(UUID id) { return views.getWaypointById(id); }
 
-    public List<Category> getCategoriesOrdered()
-    {
-        if (cachedCategoriesOrdered == null)
-        {
-            List<Category> sorted = new ArrayList<>(library.getCategories());
-            sorted.sort((a, b) -> {
-                int tierA = a.isUncategorized() ? 0 : (a.isBundled() ? 2 : 1);
-                int tierB = b.isUncategorized() ? 0 : (b.isBundled() ? 2 : 1);
-                if (tierA != tierB) return Integer.compare(tierA, tierB);
-                return Integer.compare(a.getSortOrder(), b.getSortOrder());
-            });
-            cachedCategoriesOrdered = Collections.unmodifiableList(sorted);
-        }
-        return cachedCategoriesOrdered;
-    }
+    public List<Category> getCategoriesOrdered() { return views.getCategoriesOrdered(); }
 
-    public List<Waypoint> getWaypointsInCategory(UUID categoryId)
-    {
-        if (cachedWaypointsByCategory == null)
-        {
-            Map<UUID, List<Waypoint>> grouped = new HashMap<>();
-            for (Waypoint w : library.getWaypoints())
-            {
-                grouped.computeIfAbsent(w.getCategoryId(), k -> new ArrayList<>()).add(w);
-            }
-            for (Map.Entry<UUID, List<Waypoint>> e : grouped.entrySet())
-            {
-                Category cat = getCategoryById(e.getKey());
-                com.waypointer.model.CategorySortMode mode =
-                    cat == null ? null : cat.getSortMode();
-                e.getValue().sort(comparatorFor(mode));
-            }
-            cachedWaypointsByCategory = grouped;
-        }
-        List<Waypoint> bucket = cachedWaypointsByCategory.get(categoryId);
-        return bucket == null ? Collections.emptyList() : Collections.unmodifiableList(bucket);
-    }
-
-    private static Comparator<Waypoint> comparatorFor(com.waypointer.model.CategorySortMode mode)
-    {
-        if (mode == null || mode == com.waypointer.model.CategorySortMode.MANUAL)
-        {
-            return Comparator.comparingInt(Waypoint::getSortOrder);
-        }
-        if (mode == com.waypointer.model.CategorySortMode.NAME)
-        {
-            return Comparator
-                .comparing((Waypoint w) -> w.getName() == null ? "" : w.getName().toLowerCase(java.util.Locale.ROOT))
-                .thenComparing(w -> w.getCreatedAt() == null ? Instant.EPOCH : w.getCreatedAt())
-                .thenComparing(Waypoint::getId);
-        }
-        return Comparator
-            .comparing((Waypoint w) -> w.getCreatedAt() == null ? Instant.EPOCH : w.getCreatedAt(),
-                Comparator.reverseOrder())
-            .thenComparing(w -> w.getName() == null ? "" : w.getName().toLowerCase(java.util.Locale.ROOT))
-            .thenComparing(Waypoint::getId);
-    }
+    public List<Waypoint> getWaypointsInCategory(UUID categoryId) { return views.getWaypointsInCategory(categoryId); }
 
     public Category createCategory(String name)
     {
@@ -348,7 +262,7 @@ public class WaypointStore
         notifyChanged();
     }
 
-    public void setCategorySortMode(UUID categoryId, com.waypointer.model.CategorySortMode mode)
+    public void setCategorySortMode(UUID categoryId, CategorySortMode mode)
     {
         Category c = getCategoryById(categoryId);
         if (c == null) return;
@@ -590,7 +504,7 @@ public class WaypointStore
         // populated by the getCategoryById call above is now stale. Without this, Phase 2's
         // category-exists check below returns null for every freshly-added category and the
         // waypoint falls through to Uncategorized.
-        invalidateIndexes();
+        views.invalidateIndexes();
 
         // Phase 2: waypoints
         Set<UUID> existingWpIds = library.getWaypoints().stream()
