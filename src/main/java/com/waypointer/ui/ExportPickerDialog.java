@@ -1,7 +1,5 @@
 package com.waypointer.ui;
 
-import com.waypointer.codec.LibraryJsonCodec;
-import com.waypointer.util.Text;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.LibrarySubsetBuilder;
@@ -22,28 +20,25 @@ import net.runelite.client.ui.ColorScheme;
 
 /**
  * Modal export dialog: tick any mix of categories / waypoints from the live library, then copy a
- * share code or save a JSON file. Opens with everything checked, unless an initial waypoint
- * selection is supplied (issue #28 bulk export passes its selected ids to pre-check that subset).
- * Both confirm buttons stay disabled while the selection is empty.
+ * share code to the clipboard. Opens with everything checked, unless an initial waypoint selection
+ * is supplied (issue #28 bulk export passes its selected ids to pre-check that subset). The copy
+ * button stays disabled while the selection is empty.
  */
 final class ExportPickerDialog extends JDialog
 {
     private final WaypointStore store;
     private final WaypointShareCodec shareCodec;
-    private final LibraryJsonCodec libraryCodec;
     private final Toasts toasts;
     private final WaypointPickerModel model;
     private final WaypointTreePicker tree;
     private final JButton copyBtn = new JButton("Copy code");
-    private final JButton saveBtn = new JButton("Save to file...");
 
     ExportPickerDialog(Window owner, WaypointStore store, WaypointShareCodec shareCodec,
-        LibraryJsonCodec libraryCodec, Toasts toasts, Set<UUID> initialWaypointIds)
+        Toasts toasts, Set<UUID> initialWaypointIds)
     {
         super(owner, "Export waypoints", Dialog.ModalityType.APPLICATION_MODAL);
         this.store = store;
         this.shareCodec = shareCodec;
-        this.libraryCodec = libraryCodec;
         this.toasts = toasts == null ? Toasts.NO_OP : toasts;
 
         this.model = new WaypointPickerModel(store.getLibrary());
@@ -93,13 +88,10 @@ final class ExportPickerDialog extends JDialog
         footer.setBackground(ColorScheme.DARK_GRAY_COLOR);
         JButton cancel = new JButton("Cancel");
         Styles.secondaryButton(cancel);
-        Styles.secondaryButton(saveBtn);
         Styles.primaryButton(copyBtn);
         cancel.addActionListener(e -> dispose());
         copyBtn.addActionListener(e -> copyCode());
-        saveBtn.addActionListener(e -> saveToFile());
         footer.add(cancel);
-        footer.add(saveBtn);
         footer.add(copyBtn);
         return footer;
     }
@@ -108,7 +100,6 @@ final class ExportPickerDialog extends JDialog
     {
         boolean enabled = !model.isEmptySelection();
         copyBtn.setEnabled(enabled);
-        saveBtn.setEnabled(enabled);
     }
 
     private Library buildSubset()
@@ -121,27 +112,10 @@ final class ExportPickerDialog extends JDialog
     {
         Library subset = buildSubset();
         String code = shareCodec.encodeLibrary(subset);
-        new LibraryFileIo(libraryCodec, this, toasts)
-            .copyShareCodeToClipboard(code, subset.getWaypoints().size());
+        java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()
+            .setContents(new java.awt.datatransfer.StringSelection(code), null);
+        toasts.show(String.format("Library code copied - %d waypoints.",
+            subset.getWaypoints().size()));
         dispose();
-    }
-
-    private void saveToFile()
-    {
-        Library subset = buildSubset();
-        new LibraryFileIo(libraryCodec, this, toasts)
-            .exportLibraryToFile(subset, suggestedName(subset));
-    }
-
-    private static String suggestedName(Library subset)
-    {
-        String stamp = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
-        if (subset.getCategories().size() == 1)
-        {
-            return "waypointer-"
-                + Text.sanitizeFilenameSegment(subset.getCategories().get(0).getName())
-                + "-" + stamp + ".json";
-        }
-        return "waypointer-library-" + stamp + ".json";
     }
 }

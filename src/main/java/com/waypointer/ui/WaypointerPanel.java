@@ -218,7 +218,7 @@ public class WaypointerPanel extends PluginPanel
         add(toastOverlay, BorderLayout.CENTER);
 
         this.bulkSelect = new BulkSelectController(
-            store, toastOverlay, shareCodec, libraryCodec,
+            store, toastOverlay, shareCodec,
             new BulkSelectController.Host()
             {
                 @Override public void rebuild() { scheduleRebuild(); }

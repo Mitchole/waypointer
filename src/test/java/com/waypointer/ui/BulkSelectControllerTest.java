@@ -1,6 +1,5 @@
 package com.waypointer.ui;
 
-import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
@@ -37,7 +36,6 @@ public class BulkSelectControllerTest
             store,
             Toasts.NO_OP,
             mock(WaypointShareCodec.class),
-            mock(LibraryJsonCodec.class),
             host);
     }
 

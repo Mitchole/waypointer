@@ -1,6 +1,5 @@
 package com.waypointer.ui;
 
-import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
@@ -33,7 +32,6 @@ final class BulkSelectController
     private final WaypointStore store;
     private final Toasts toasts;
     private final WaypointShareCodec shareCodec;
-    private final LibraryJsonCodec libraryCodec;
     private final Host host;
     private final BulkActionBar bar;
 
@@ -45,12 +43,11 @@ final class BulkSelectController
     private final List<UUID> visibleOrderedIds = new ArrayList<>();
 
     BulkSelectController(WaypointStore store, Toasts toasts,
-        WaypointShareCodec shareCodec, LibraryJsonCodec libraryCodec, Host host)
+        WaypointShareCodec shareCodec, Host host)
     {
         this.store = store;
         this.toasts = toasts;
         this.shareCodec = shareCodec;
-        this.libraryCodec = libraryCodec;
         this.host = host;
         this.bar = new BulkActionBar(
             this::exitSelectMode,
@@ -158,7 +155,7 @@ final class BulkSelectController
     {
         if (selection.isEmpty()) return;
         Window owner = host.windowAncestor();
-        new ExportPickerDialog(owner, store, shareCodec, libraryCodec, toasts,
+        new ExportPickerDialog(owner, store, shareCodec, toasts,
             selection.ids()).setVisible(true);
         // Selection is non-destructive for export; leave it intact.
     }
