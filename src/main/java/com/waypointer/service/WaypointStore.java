@@ -5,7 +5,6 @@ import com.waypointer.model.CategorySortMode;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
 import com.waypointer.util.Listeners;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -27,12 +25,6 @@ import lombok.extern.slf4j.Slf4j;
  * In-memory CRUD over a {@link Library}. Mutations are confined to the EDT and notify
  * registered listeners synchronously. Persistence is layered on by
  * {@link WaypointStorePersistence}.
- *
- * <p>The {@code library} reference is {@code volatile} because the debounced-save supplier
- * reads it off the EDT (the shutdown-hook flush runs on a JVM shutdown thread). The volatile
- * guarantees safe publication of the reference; it does not make multi-step mutations atomic,
- * and none is needed -- the flush only requires a consistent reference, not a transactional
- * snapshot.
  */
 @Slf4j
 @Singleton
@@ -40,6 +32,10 @@ public class WaypointStore
 {
     private static final String UNCATEGORIZED_NAME = "Uncategorized";
 
+    /**
+     * Live in-memory library. {@code volatile} for safe publication of the reference to the
+     * render thread's NPC-name snapshot reads; multi-step mutations remain EDT-confined.
+     */
     private volatile Library library = new Library();
     private final Listeners listeners = new Listeners();
     private final LibraryViews views = new LibraryViews(() -> library);
@@ -582,36 +578,32 @@ public class WaypointStore
         return listeners.size();
     }
 
-    // ---- Debounced persistence wiring ----
+    // ---- Persistence wiring (write-through) ----
 
-    // Must be initialized after `listeners` above -- it captures that reference at construction.
-    private final PersistenceBinding<Library> persistenceBinding = new PersistenceBinding<>(listeners);
+    private Listeners.Subscription saveSub;
 
-    public void enableDebouncedPersistence(
-        WaypointStorePersistence p,
-        ScheduledExecutorService exec,
-        Duration debounceWindow)
+    /**
+     * Subscribe a write-through saver fired synchronously on every mutation. Idempotent. The
+     * saver should read the live library (e.g. {@code () -> persistence.save(getLibrary())}); a
+     * later {@link #bootstrap(Library)} that swaps the library is picked up automatically.
+     */
+    public void enablePersistence(Runnable saver)
     {
-        // The supplier reads the field live, so a later bootstrap() that swaps the library
-        // (e.g. a profile switch) is picked up without re-wiring the saver.
-        persistenceBinding.enable(p, exec, debounceWindow, () -> library);
+        if (saveSub != null) return;
+        saveSub = listeners.subscribe(saver);
     }
 
     /**
-     * Detaches the persistence subscription, cancels any pending debounced save, and stops
-     * further saves from being scheduled by mutations. Idempotent. Used by tests and by
-     * {@link com.waypointer.WaypointerPlugin#shutDown()} so plugin reload cycles don't leave
-     * dangling listeners or orphaned scheduled tasks behind.
+     * Detach the saver. Idempotent. Called from {@link com.waypointer.WaypointerPlugin#shutDown()}
+     * so plugin reload cycles do not stack savers.
      */
-    public void disableDebouncedPersistence()
+    public void disablePersistence()
     {
-        persistenceBinding.disable();
-    }
-
-    /** Cancels any pending debounced save, then writes the current library synchronously. */
-    public void flushPendingSave()
-    {
-        persistenceBinding.flush();
+        if (saveSub != null)
+        {
+            saveSub.close();
+            saveSub = null;
+        }
     }
 
     private int nextWaypointSortOrder(UUID categoryId)
