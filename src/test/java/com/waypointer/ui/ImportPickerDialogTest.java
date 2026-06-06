@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 public class ImportPickerDialogTest
 {
     private WaypointShareCodec shareCodec;
-    private LibraryJsonCodec libraryCodec;
 
     @Before
     public void setUp()
@@ -41,7 +40,7 @@ public class ImportPickerDialogTest
                 (com.google.gson.JsonDeserializer<Instant>) (e, t, c) ->
                     Instant.parse(e.getAsString()))
             .create();
-        libraryCodec = new LibraryJsonCodec(gson);
+        LibraryJsonCodec libraryCodec = new LibraryJsonCodec(gson);
         shareCodec = new WaypointShareCodec(gson, libraryCodec);
     }
 
@@ -57,7 +56,7 @@ public class ImportPickerDialogTest
 
     private ImportPickerDialog newDialog(WaypointStore store)
     {
-        return new ImportPickerDialog(null, store, shareCodec, libraryCodec, Toasts.NO_OP);
+        return new ImportPickerDialog(null, store, shareCodec, Toasts.NO_OP);
     }
 
     @Test
@@ -77,27 +76,7 @@ public class ImportPickerDialogTest
     }
 
     @Test
-    public void fileSourceDecodesAndPopulatesTree() throws Exception
-    {
-        Headless.assumeDisplay();
-        String json = libraryCodec.encode(oneWaypointLibrary());
-        java.io.File tmp = java.io.File.createTempFile("waypointer-import", ".json");
-        tmp.deleteOnExit();
-        java.nio.file.Files.write(tmp.toPath(),
-            json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-
-        WaypointStore store = new WaypointStore();
-        store.bootstrap(new Library());
-        ImportPickerDialog d = newDialog(store);
-
-        Library decoded = d.decodeFileOrNull(tmp);
-        assertNotNull(decoded);
-        d.populate(decoded);
-        assertTrue(d.hasLoadedSource());
-    }
-
-    @Test
-    public void malformedSourceLeavesTreeEmpty() throws Exception
+    public void malformedSourceLeavesTreeEmpty()
     {
         Headless.assumeDisplay();
         WaypointStore store = new WaypointStore();
@@ -106,11 +85,6 @@ public class ImportPickerDialogTest
 
         assertNull(d.decodeCodeOrNull("not a real code"));         // no magic
         assertNull(d.decodeCodeOrNull("WPL1:@@@not-base64@@@"));    // right magic, junk body
-        java.io.File junk = java.io.File.createTempFile("waypointer-junk", ".json");
-        junk.deleteOnExit();
-        java.nio.file.Files.write(junk.toPath(),
-            "{not valid json".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        assertNull(d.decodeFileOrNull(junk));
         assertFalse(d.hasLoadedSource());
     }
 
