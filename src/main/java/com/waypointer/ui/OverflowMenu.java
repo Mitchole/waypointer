@@ -1,13 +1,9 @@
 package com.waypointer.ui;
 
-import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.WaypointStore;
-import com.waypointer.service.WaypointStorePersistence;
 import java.awt.Component;
-import java.awt.Desktop;
-import java.io.IOException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.JMenuItem;
@@ -26,17 +22,12 @@ final class OverflowMenu
 {
     private final WaypointStore store;
     private final WaypointShareCodec shareCodec;
-    private final LibraryJsonCodec libraryCodec;
-    private final WaypointStorePersistence persistence;
 
     @Inject
-    OverflowMenu(WaypointStore store, WaypointShareCodec shareCodec,
-        LibraryJsonCodec libraryCodec, WaypointStorePersistence persistence)
+    OverflowMenu(WaypointStore store, WaypointShareCodec shareCodec)
     {
         this.store = store;
         this.shareCodec = shareCodec;
-        this.libraryCodec = libraryCodec;
-        this.persistence = persistence;
     }
 
     /** Show the popup anchored just below {@code near}; uses {@code panel} as JOption parent. */
@@ -70,18 +61,14 @@ final class OverflowMenu
         JMenuItem exportItem = new JMenuItem("Export...");
         exportItem.addActionListener(e ->
             new ExportPickerDialog(SwingUtilities.getWindowAncestor(anchor), store, shareCodec,
-                libraryCodec, toasts, null).setVisible(true));
+                toasts, null).setVisible(true));
         menu.add(exportItem);
 
         JMenuItem importItem = new JMenuItem("Import...");
         importItem.addActionListener(e ->
             new ImportPickerDialog(SwingUtilities.getWindowAncestor(anchor), store, shareCodec,
-                libraryCodec, toasts).setVisible(true));
+                toasts).setVisible(true));
         menu.add(importItem);
-
-        JMenuItem openFolder = new JMenuItem("Open data folder");
-        openFolder.addActionListener(e -> openDataFolder(anchor));
-        menu.add(openFolder);
 
         menu.addSeparator();
 
@@ -99,15 +86,5 @@ final class OverflowMenu
         menu.add(reset);
 
         menu.show(near, 0, near.getHeight());
-    }
-
-    private void openDataFolder(Component anchor)
-    {
-        try { Desktop.getDesktop().open(persistence.getDir().toFile()); }
-        catch (IOException ex)
-        {
-            JOptionPane.showMessageDialog(anchor, "Could not open: " + ex.getMessage(),
-                "Waypointer", JOptionPane.WARNING_MESSAGE);
-        }
     }
 }
