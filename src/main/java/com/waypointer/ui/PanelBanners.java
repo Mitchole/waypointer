@@ -10,8 +10,6 @@ import com.waypointer.service.WaypointStorePersistence;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.io.IOException;
-import java.nio.file.Files;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -54,9 +52,9 @@ final class PanelBanners
 
     /**
      * Shown when the library and its backup both failed to load and the store is refusing saves.
-     * The Reset button confirms, deletes the unreadable files, and bootstraps a fresh library;
-     * the store's own listeners drive the subsequent rebuild. {@code dialogParent} owns the
-     * confirm dialog.
+     * The Reset button confirms, calls {@code persistence.clear()} to wipe the config key and
+     * lift the corrupt-saves freeze, then bootstraps a fresh library; the store's own listeners
+     * drive the subsequent rebuild. {@code dialogParent} owns the confirm dialog.
      */
     static JComponent loadFailedReset(WaypointStorePersistence persistence, WaypointStore store,
         Component dialogParent)
@@ -67,26 +65,21 @@ final class PanelBanners
         p.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(180, 40, 40)),
             BorderFactory.createEmptyBorder(6, 8, 6, 8)));
-        JLabel resetMsg = new JLabel("<html>Library failed to load - backup also unreadable.<br>"
-            + "Click Reset to start fresh, or fix the file at:<br><tt>"
-            + persistence.libraryFile() + "</tt></html>");
+        JLabel resetMsg = new JLabel("<html>Saved waypoints could not be read.<br>"
+            + "Click Reset to start fresh.</html>");
         resetMsg.setForeground(Color.WHITE);
         p.add(resetMsg, BorderLayout.CENTER);
         JButton reset = new JButton("Reset library");
         Styles.secondaryButton(reset);
         reset.addActionListener(e -> {
-            // Cancel is the default-focused button so a stray Enter can't discard the files.
+            // Cancel is the default-focused button so a stray Enter can't discard the data.
             String[] options = {"Cancel", "Reset"};
             int choice = JOptionPane.showOptionDialog(dialogParent,
-                "This will discard the unreadable library files. Continue?",
+                "This will discard the unreadable saved waypoints. Continue?",
                 "Reset library", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                 null, options, options[0]);
             if (choice != 1) return;
-            try { Files.deleteIfExists(persistence.libraryFile()); }
-            catch (IOException ignored) {}
-            try { Files.deleteIfExists(persistence.backupFile()); }
-            catch (IOException ignored) {}
-            persistence.allowSavesAfterReset();
+            persistence.clear();
             store.bootstrap(new Library());
         });
         p.add(reset, BorderLayout.EAST);
@@ -94,10 +87,11 @@ final class PanelBanners
     }
 
     /**
-     * Routes-tab equivalent of {@link #loadFailedReset}: shown when routes.json and its backup
-     * both failed to load and the route store is refusing saves. Reset confirms, deletes the
-     * unreadable files, clears the freeze, and bootstraps an empty route library; the store's
-     * own listeners drive the subsequent rebuild. {@code dialogParent} owns the confirm dialog.
+     * Routes-tab equivalent of {@link #loadFailedReset}: shown when the route config key is
+     * unreadable and the route store is refusing saves. Reset confirms, calls
+     * {@code persistence.clear()} to wipe the config key and lift the freeze, then bootstraps an
+     * empty route library; the store's own listeners drive the subsequent rebuild.
+     * {@code dialogParent} owns the confirm dialog.
      */
     static JComponent routeLoadFailedReset(RouteStorePersistence persistence, RouteStore store,
         Component dialogParent)
@@ -108,26 +102,20 @@ final class PanelBanners
         p.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(180, 40, 40)),
             BorderFactory.createEmptyBorder(6, 8, 6, 8)));
-        JLabel resetMsg = new JLabel("<html>Routes failed to load - backup also unreadable.<br>"
-            + "Click Reset to start fresh, or fix the file at:<br><tt>"
-            + persistence.routesFile() + "</tt></html>");
+        JLabel resetMsg = new JLabel("<html>Saved routes could not be read.<br>"
+            + "Click Reset to start fresh.</html>");
         resetMsg.setForeground(Color.WHITE);
         p.add(resetMsg, BorderLayout.CENTER);
         JButton reset = new JButton("Reset routes");
         Styles.secondaryButton(reset);
         reset.addActionListener(e -> {
-            // Cancel is the default-focused button so a stray Enter can't discard the files.
             String[] options = {"Cancel", "Reset"};
             int choice = JOptionPane.showOptionDialog(dialogParent,
-                "This will discard the unreadable route files. Continue?",
+                "This will discard the unreadable saved routes. Continue?",
                 "Reset routes", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                 null, options, options[0]);
             if (choice != 1) return;
-            try { Files.deleteIfExists(persistence.routesFile()); }
-            catch (IOException ignored) {}
-            try { Files.deleteIfExists(persistence.backupFile()); }
-            catch (IOException ignored) {}
-            persistence.allowSavesAfterReset();
+            persistence.clear();
             store.bootstrap(new RouteLibrary());
         });
         p.add(reset, BorderLayout.EAST);
