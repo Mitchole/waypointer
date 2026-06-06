@@ -2,107 +2,67 @@ package com.waypointer.service;
 
 import com.waypointer.codec.RouteJsonCodec;
 import com.waypointer.model.route.RouteLibrary;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.client.RuneLite;
+import net.runelite.client.config.ConfigManager;
 
 /**
- * Atomic load/save for routes.json (account-global, single slot). Falls back to a .bak on primary
- * corruption; on both unreadable returns an empty library. Mirrors {@link WaypointStorePersistence}
- * but without profile slots.
+ * Account-global route persistence backed by the RuneLite config system, replacing the old on-disk
+ * routes.json. Stores a single JSON blob under (group {@code waypointer}, key {@code routes}). A
+ * decode failure freezes saves until the routes reset banner clears it.
  */
 @Slf4j
 @Singleton
-public class RouteStorePersistence implements JsonSnapshotSink<RouteLibrary>
+public class RouteStorePersistence
 {
-    static final String ROUTES_FILENAME = "routes.json";
-    static final String BACKUP_FILENAME = "routes.json.bak";
+    static final String GROUP = "waypointer";
+    static final String KEY = "routes";
 
-    private final Path dir;
+    private final ConfigManager configManager;
     private final RouteJsonCodec codec;
     private volatile boolean refuseSavesUntilReset = false;
 
     @Inject
-    public RouteStorePersistence(RouteJsonCodec codec)
+    public RouteStorePersistence(ConfigManager configManager, RouteJsonCodec codec)
     {
-        this(RuneLite.RUNELITE_DIR.toPath().resolve("waypointer"), codec);
-    }
-
-    public RouteStorePersistence(Path dir, RouteJsonCodec codec)
-    {
-        this.dir = dir;
+        this.configManager = configManager;
         this.codec = codec;
-        try { Files.createDirectories(dir); }
-        catch (IOException e) { log.warn("Could not create waypointer dir {}", dir, e); }
     }
 
-    public Path routesFile() { return dir.resolve(ROUTES_FILENAME); }
-    public Path backupFile() { return dir.resolve(BACKUP_FILENAME); }
-
-    public boolean isRefusingSaves() { return refuseSavesUntilReset; }
-
-    /** Clears the corrupt-state freeze so the next save proceeds; driven by the Routes reset banner. */
-    public void allowSavesAfterReset() { refuseSavesUntilReset = false; }
-
-    // tryLoad returns null for an absent OR transiently-unreadable file (a clean miss) and only
-    // sets refuseSavesUntilReset on confirmed parse corruption. So a transient IO error falls
-    // through to an empty library with saves still enabled; only real corruption freezes saves.
-    public RouteLibrary loadOrEmpty()
+    public RouteLibrary load()
     {
-        RouteLibrary primary = tryLoad(routesFile());
-        if (primary != null) return primary;
-
-        log.warn("Primary routes file unreadable; trying backup at {}", backupFile());
-        RouteLibrary backup = tryLoad(backupFile());
-        if (backup != null)
-        {
-            log.warn("Loaded routes from backup; will overwrite primary on next save");
-            return backup;
-        }
-        return new RouteLibrary();
-    }
-
-    private RouteLibrary tryLoad(Path f)
-    {
-        String json = AtomicJsonFile.tryRead(f);
-        if (json == null) return null;
+        String json = configManager.getConfiguration(GROUP, KEY);
+        if (json == null || json.isEmpty()) return new RouteLibrary();
         try
         {
             return codec.decode(json);
         }
         catch (RuntimeException e)
         {
-            log.warn("Parse failure reading {}: {}", f, e.getMessage());
+            log.error("Routes config value unreadable; refusing saves until reset", e);
             refuseSavesUntilReset = true;
-            return null;
+            return new RouteLibrary();
         }
     }
 
-    @Override
-    public String serialize(RouteLibrary lib)
-    {
-        return codec.encode(lib);
-    }
-
-    @Override
-    public boolean writeBlocking(String json)
+    public void save(RouteLibrary lib)
     {
         if (refuseSavesUntilReset)
         {
-            log.warn("Route save refused: files are in a corrupt state pending reset");
-            return false;
+            log.warn("Route save refused: config is in a corrupt state pending reset");
+            return;
         }
-        Path tmp = dir.resolve(ROUTES_FILENAME + ".tmp");
-        return AtomicJsonFile.write(tmp, routesFile(), backupFile(), json);
+        configManager.setConfiguration(GROUP, KEY, codec.encode(lib));
     }
 
-    @Override
-    public boolean saveBlocking(RouteLibrary lib)
+    public void clear()
     {
-        return writeBlocking(serialize(lib));
+        configManager.unsetConfiguration(GROUP, KEY);
+        refuseSavesUntilReset = false;
     }
+
+    public boolean isRefusingSaves() { return refuseSavesUntilReset; }
+
+    public void allowSavesAfterReset() { refuseSavesUntilReset = false; }
 }

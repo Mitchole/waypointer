@@ -1,25 +1,31 @@
 package com.waypointer.service;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.waypointer.codec.RouteJsonCodec;
 import com.waypointer.model.route.Route;
 import com.waypointer.model.route.RouteLibrary;
 import com.waypointer.model.route.RouteStep;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.util.UUID;
-import org.junit.Rule;
+import net.runelite.client.config.ConfigManager;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class RouteStorePersistenceTest
 {
-    @Rule public TemporaryFolder tmp = new TemporaryFolder();
+    private ConfigManager configManager;
+    private RouteJsonCodec codec;
+    private RouteStorePersistence persistence;
 
     private static Gson buildGson()
     {
@@ -33,10 +39,12 @@ public class RouteStorePersistenceTest
             .create();
     }
 
-    private RouteStorePersistence newPersistence() throws Exception
+    @Before
+    public void setUp()
     {
-        Path dir = tmp.newFolder("waypointer").toPath();
-        return new RouteStorePersistence(dir, new RouteJsonCodec(buildGson()));
+        configManager = mock(ConfigManager.class);
+        codec = new RouteJsonCodec(buildGson());
+        persistence = new RouteStorePersistence(configManager, codec);
     }
 
     private RouteLibrary oneRoute()
@@ -49,55 +57,48 @@ public class RouteStorePersistenceTest
     }
 
     @Test
-    public void savesAndReloads() throws Exception
+    public void loadReturnsEmptyWhenNoConfigValue()
     {
-        RouteStorePersistence p = newPersistence();
-        assertTrue(p.saveBlocking(oneRoute()));
-        RouteLibrary loaded = p.loadOrEmpty();
+        when(configManager.getConfiguration("waypointer", "routes")).thenReturn(null);
+        assertEquals(0, persistence.load().getRoutes().size());
+    }
+
+    @Test
+    public void saveWritesEncodedRoutesToConfig()
+    {
+        RouteLibrary lib = oneRoute();
+        persistence.save(lib);
+        verify(configManager).setConfiguration("waypointer", "routes", codec.encode(lib));
+    }
+
+    @Test
+    public void saveAndLoadRoundTripThroughConfig()
+    {
+        RouteLibrary lib = oneRoute();
+        when(configManager.getConfiguration("waypointer", "routes")).thenReturn(codec.encode(lib));
+        RouteLibrary loaded = persistence.load();
         assertEquals(1, loaded.getRoutes().size());
         assertEquals("R1", loaded.getRoutes().get(0).getName());
     }
 
     @Test
-    public void missingFileLoadsEmpty() throws Exception
+    public void corruptValueFreezesSavesAndReturnsEmpty()
     {
-        RouteStorePersistence p = newPersistence();
-        assertEquals(0, p.loadOrEmpty().getRoutes().size());
+        when(configManager.getConfiguration("waypointer", "routes")).thenReturn("{ not json");
+        assertEquals(0, persistence.load().getRoutes().size());
+        assertTrue(persistence.isRefusingSaves());
+        persistence.save(oneRoute());
+        verify(configManager, never()).setConfiguration(anyString(), anyString(), any());
     }
 
     @Test
-    public void writeRefreshesBackup() throws Exception
+    public void clearUnsetsConfigAndLiftsFreeze()
     {
-        RouteStorePersistence p = newPersistence();
-        p.saveBlocking(oneRoute());
-        assertTrue(Files.exists(p.backupFile()));
-    }
-
-    @Test
-    public void corruptPrimaryFallsBackToBackup() throws Exception
-    {
-        RouteStorePersistence p = newPersistence();
-        p.saveBlocking(oneRoute());          // writes primary + backup
-        Files.write(p.routesFile(), "{ not json".getBytes());
-        RouteLibrary loaded = p.loadOrEmpty();
-        assertEquals(1, loaded.getRoutes().size());   // recovered from backup
-    }
-
-    @Test
-    public void refusesSavesWhenBothFilesCorruptThenAllowsAfterReset() throws Exception
-    {
-        RouteStorePersistence p = newPersistence();
-        p.saveBlocking(oneRoute());                          // create primary + backup
-        Files.write(p.routesFile(), "{ not json".getBytes());
-        Files.write(p.backupFile(), "{ also not json".getBytes());
-
-        RouteLibrary loaded = p.loadOrEmpty();               // both unreadable -> empty + freeze
-        assertEquals(0, loaded.getRoutes().size());
-        assertTrue(p.isRefusingSaves());
-        assertFalse(p.saveBlocking(oneRoute()));             // frozen: save refused
-
-        p.allowSavesAfterReset();                            // the path the reset banner now drives
-        assertFalse(p.isRefusingSaves());
-        assertTrue(p.saveBlocking(oneRoute()));              // save proceeds again
+        when(configManager.getConfiguration("waypointer", "routes")).thenReturn("{ bad");
+        persistence.load();
+        assertTrue(persistence.isRefusingSaves());
+        persistence.clear();
+        verify(configManager).unsetConfiguration("waypointer", "routes");
+        assertFalse(persistence.isRefusingSaves());
     }
 }
