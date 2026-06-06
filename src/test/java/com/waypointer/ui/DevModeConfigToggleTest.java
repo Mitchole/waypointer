@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import com.waypointer.WaypointerConfig;
-import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.preset.PresetCatalog;
@@ -115,8 +114,7 @@ public class DevModeConfigToggleTest
             mock(Client.class),
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
-            mock(WaypointShareCodec.class),
-            mock(LibraryJsonCodec.class));
+            mock(WaypointShareCodec.class));
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 

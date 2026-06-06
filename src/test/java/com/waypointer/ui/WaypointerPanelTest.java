@@ -2,7 +2,6 @@ package com.waypointer.ui;
 
 import com.google.gson.Gson;
 import com.waypointer.WaypointerConfig;
-import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.BboxIndex;
@@ -78,7 +77,6 @@ public class WaypointerPanelTest
             mock(Client.class),
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
-            mock(WaypointShareCodec.class),
-            mock(LibraryJsonCodec.class));
+            mock(WaypointShareCodec.class));
     }
 }

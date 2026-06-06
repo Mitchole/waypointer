@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import com.waypointer.WaypointerConfig;
-import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.model.WorldPointPacker;
@@ -196,8 +195,7 @@ public class TabHostTest
             mock(Client.class),
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
-            mock(WaypointShareCodec.class),
-            mock(LibraryJsonCodec.class));
+            mock(WaypointShareCodec.class));
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 
@@ -249,8 +247,7 @@ public class TabHostTest
             store, mock(WaypointCapture.class), pathfinder, config,
             new CollapseStateCodec(new Gson()), persistence, mock(SpriteManager.class),
             null, null, nearestLandmarkBar, mock(Client.class), mock(ClientThread.class),
-            mock(WildernessConfirmGate.class), mock(WaypointShareCodec.class),
-            mock(LibraryJsonCodec.class));
+            mock(WildernessConfirmGate.class), mock(WaypointShareCodec.class));
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 
@@ -331,8 +328,7 @@ public class TabHostTest
             mock(Client.class),
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
-            mock(WaypointShareCodec.class),
-            mock(LibraryJsonCodec.class));
+            mock(WaypointShareCodec.class));
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 

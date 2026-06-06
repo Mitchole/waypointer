@@ -1,7 +1,6 @@
 package com.waypointer.ui;
 
 import com.waypointer.WaypointerConfig;
-import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
@@ -73,7 +72,6 @@ public class WaypointerPanel extends PluginPanel
     private final ClientThread clientThread;
     private final WildernessConfirmGate wildernessGate;
     private final WaypointShareCodec shareCodec;
-    private final LibraryJsonCodec libraryCodec;
     private final CaptureForm captureForm;
     private final BulkSelectController bulkSelect;
     private final CategoryMenuController categoryMenu;
@@ -110,7 +108,7 @@ public class WaypointerPanel extends PluginPanel
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
         NearestLandmarkBar nearestLandmarkBar,
         Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate,
-        WaypointShareCodec shareCodec, LibraryJsonCodec libraryCodec)
+        WaypointShareCodec shareCodec)
     {
         super(false);
         this.store = store;
@@ -127,7 +125,6 @@ public class WaypointerPanel extends PluginPanel
         this.clientThread = clientThread;
         this.wildernessGate = wildernessGate;
         this.shareCodec = shareCodec;
-        this.libraryCodec = libraryCodec;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
 
         // Build the panel header: Mark current location with the overflow trigger pinned
