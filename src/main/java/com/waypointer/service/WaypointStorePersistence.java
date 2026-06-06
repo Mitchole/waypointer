@@ -2,187 +2,76 @@ package com.waypointer.service;
 
 import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.model.Library;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.client.RuneLite;
+import net.runelite.client.config.ConfigManager;
 
-// Atomic load/save for the library JSON. Falls back to a .bak on primary corruption.
-// If both files are unreadable, returns an empty library and refuses to overwrite either
-// file until the caller explicitly resets. Save splits into serialize() (snapshot on the
-// caller's thread) and writeBlocking() (I/O, safe on a scheduler thread). saveBlocking()
-// does both back-to-back.
+/**
+ * Per-account library persistence backed by the RuneLite config system (RSProfile-scoped),
+ * replacing the old on-disk library.json. {@link #load()} / {@link #save(Library)} read and write a
+ * single JSON blob under (group {@code waypointer}, key {@code library}) for the logged-in account;
+ * {@link #clear()} unsets it. A decode failure freezes saves so a corrupt value is not overwritten
+ * before the user resets via the panel banner.
+ */
 @Slf4j
 @Singleton
-public class WaypointStorePersistence implements JsonSnapshotSink<Library>
+public class WaypointStorePersistence
 {
-    static final String LIBRARY_FILENAME = "library.json";
-    static final String BACKUP_FILENAME = "library.json.bak";
+    static final String GROUP = "waypointer";
+    static final String KEY = "library";
 
-    private final Path dir;
+    private final ConfigManager configManager;
     private final LibraryJsonCodec codec;
     private volatile boolean refuseSavesUntilReset = false;
-    private volatile String activeProfileKey = null; // null == default slot (library.json)
 
     @Inject
-    public WaypointStorePersistence(LibraryJsonCodec codec)
+    public WaypointStorePersistence(ConfigManager configManager, LibraryJsonCodec codec)
     {
-        this(RuneLite.RUNELITE_DIR.toPath().resolve("waypointer"), codec);
-    }
-
-    public WaypointStorePersistence(Path dir, LibraryJsonCodec codec)
-    {
-        this.dir = dir;
+        this.configManager = configManager;
         this.codec = codec;
-        try { Files.createDirectories(dir); }
-        catch (IOException e) { log.warn("Could not create waypointer dir {}", dir, e); }
     }
 
-    public Path getDir() { return dir; }
-    public String getActiveProfileKey() { return activeProfileKey; }
-    public Path libraryFile() { return dir.resolve(fileNameFor(activeProfileKey)); }
-    public Path backupFile() { return dir.resolve(fileNameFor(activeProfileKey) + ".bak"); }
-
-    // Default slot keeps the legacy filename; per-account slots are library-<sanitized-key>.json.
-    static String fileNameFor(String key)
+    /**
+     * Loads the current account's library from RSProfile config. Returns an empty library when not
+     * logged in (no RS profile) or when nothing has been saved. Only a decode failure (corruption)
+     * freezes saves; an absent value is a clean empty.
+     */
+    public Library load()
     {
-        return key == null ? LIBRARY_FILENAME : "library-" + sanitizeKey(key) + ".json";
-    }
-
-    // Dots are intentionally preserved: real RS profile keys contain them (e.g. rsprofile.12345.STANDARD).
-    static String sanitizeKey(String key)
-    {
-        return key.replaceAll("[^A-Za-z0-9._-]", "_");
-    }
-
-    // Retarget which slot subsequent loads/saves use. Clears the corrupt-state freeze so a bad
-    // file in one slot never blocks saves in another; the new slot re-evaluates on its own load.
-    public void switchProfile(String key)
-    {
-        this.activeProfileKey = key;
-        this.refuseSavesUntilReset = false;
-    }
-
-    // Copy the default slot's files into the active slot when the active slot has no primary file
-    // yet. No-op for the default slot, when the slot already exists, or when the default is absent
-    // (brand-new user); the slot then loads empty.
-    public void seedFromDefault()
-    {
-        if (activeProfileKey == null) return;
-        Path slot = libraryFile();
-        if (Files.exists(slot)) return;
-        Path defaultPrimary = dir.resolve(LIBRARY_FILENAME);
-        if (!Files.exists(defaultPrimary)) return;
+        String json = configManager.getRSProfileConfiguration(GROUP, KEY);
+        if (json == null || json.isEmpty()) return new Library();
         try
         {
-            Files.copy(defaultPrimary, slot, StandardCopyOption.REPLACE_EXISTING);
-            Path defaultBackup = dir.resolve(BACKUP_FILENAME);
-            if (Files.exists(defaultBackup))
-            {
-                Files.copy(defaultBackup, backupFile(), StandardCopyOption.REPLACE_EXISTING);
-            }
+            return codec.decode(json);
         }
-        catch (IOException e)
+        catch (RuntimeException e)
         {
-            log.warn("Could not seed profile library from default slot", e);
+            log.error("Library config value unreadable; refusing saves until reset", e);
+            refuseSavesUntilReset = true;
+            return new Library();
         }
+    }
+
+    /** Write-through save of the live library to the logged-in account's RSProfile config. */
+    public void save(Library lib)
+    {
+        if (refuseSavesUntilReset)
+        {
+            log.warn("Save refused: library config is in a corrupt state pending user reset");
+            return;
+        }
+        configManager.setRSProfileConfiguration(GROUP, KEY, codec.encode(lib));
+    }
+
+    /** Clears the current account's stored library and lifts the corrupt-state freeze. */
+    public void clear()
+    {
+        configManager.unsetRSProfileConfiguration(GROUP, KEY);
+        refuseSavesUntilReset = false;
     }
 
     public boolean isRefusingSaves() { return refuseSavesUntilReset; }
 
-    public void allowSavesAfterReset()
-    {
-        refuseSavesUntilReset = false;
-    }
-
-    // Loads primary; on parse failure tries backup; on both failing returns empty and flags
-    // refuseSavesUntilReset so we don't clobber the bad files. Transient IO errors do not
-    // trigger refuse-saves; only confirmed parse corruption does.
-    public Library loadOrEmpty()
-    {
-        LoadAttempt primary = tryLoad(libraryFile());
-        if (primary.lib != null) return primary.lib;
-
-        log.warn("Primary library file unreadable; trying backup at {}", backupFile());
-        LoadAttempt backup = tryLoad(backupFile());
-        if (backup.lib != null)
-        {
-            log.warn("Loaded library from backup; will overwrite primary on next save");
-            return backup.lib;
-        }
-
-        // Only freeze saves on parse corruption. Transient IO errors get a clean empty
-        // library and a normal save path on the next mutation.
-        if (primary.outcome == Outcome.CORRUPT || backup.outcome == Outcome.CORRUPT)
-        {
-            log.error("Library files have parse corruption; refusing further saves until reset");
-            refuseSavesUntilReset = true;
-        }
-        return new Library();
-    }
-
-    private LoadAttempt tryLoad(Path f)
-    {
-        // A missing or IO-unreadable file is non-corrupt: AtomicJsonFile.tryRead collapses both
-        // to null (it logs the IO case). Only a decode failure on present bytes is corruption.
-        String json = AtomicJsonFile.tryRead(f);
-        if (json == null) return LoadAttempt.unreadable();
-        try
-        {
-            return LoadAttempt.ok(codec.decode(json));
-        }
-        catch (RuntimeException e)
-        {
-            log.warn("Parse failure reading {}: {}", f, e.getMessage());
-            return LoadAttempt.corrupt();
-        }
-    }
-
-    private enum Outcome { OK, UNREADABLE, CORRUPT }
-
-    private static final class LoadAttempt
-    {
-        final Library lib;
-        final Outcome outcome;
-        private LoadAttempt(Library lib, Outcome outcome) { this.lib = lib; this.outcome = outcome; }
-        static LoadAttempt ok(Library l) { return new LoadAttempt(l, Outcome.OK); }
-        static LoadAttempt unreadable() { return new LoadAttempt(null, Outcome.UNREADABLE); }
-        static LoadAttempt corrupt() { return new LoadAttempt(null, Outcome.CORRUPT); }
-    }
-
-    // Pure transform, no I/O. Caller must be on the thread that owns the library (typically
-    // the EDT) so iteration sees a consistent view.
-    public String serialize(Library lib)
-    {
-        return codec.encode(lib);
-    }
-
-    // Synchronous write of an already-serialized JSON payload. Atomic where possible. Refuses
-    // to write if corruption was detected on load and not yet acknowledged via reset.
-    public boolean writeBlocking(String json)
-    {
-        if (refuseSavesUntilReset)
-        {
-            log.warn("Save refused: library files are in a corrupt state pending user reset");
-            return false;
-        }
-        // Snapshot the active slot once so a concurrent switchProfile cannot move this save's
-        // temp file into a different slot's primary or backup mid-write.
-        final String slotKey = activeProfileKey;
-        Path tmp = dir.resolve(fileNameFor(slotKey) + ".tmp");
-        Path primary = dir.resolve(fileNameFor(slotKey));
-        Path backup = dir.resolve(fileNameFor(slotKey) + ".bak");
-        return AtomicJsonFile.write(tmp, primary, backup, json);
-    }
-
-    // Serialize + writeBlocking back-to-back. Only safe on the thread that owns the library.
-    // Used by tests and the shutdown flush path.
-    public boolean saveBlocking(Library lib)
-    {
-        return writeBlocking(serialize(lib));
-    }
+    public void allowSavesAfterReset() { refuseSavesUntilReset = false; }
 }
