@@ -6,7 +6,6 @@ import com.waypointer.service.LandmarkOverrides;
 import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.WaypointMenuHandler;
 import com.waypointer.service.WaypointPathfinder;
-import com.waypointer.service.ProfileLibrarySwitcher;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
 import com.waypointer.ui.AreaPreviewOverlay;
@@ -15,8 +14,6 @@ import com.waypointer.ui.NpcHighlightOverlay;
 import com.waypointer.ui.TabHost;
 import com.waypointer.ui.WaypointerPanel;
 import java.awt.image.BufferedImage;
-import java.time.Duration;
-import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
@@ -42,9 +39,6 @@ public class WaypointerPlugin extends Plugin
     @Inject private WaypointerPanel panel;
     @Inject private WaypointStore store;
     @Inject private WaypointStorePersistence persistence;
-    @Inject private ConfigManager configManager;
-    @Inject private ProfileLibrarySwitcher profileLibrarySwitcher;
-    @Inject private ScheduledExecutorService scheduler;
     @Inject private EventBus eventBus;
     @Inject private WaypointMenuHandler menuHandler;
     @Inject private WaypointPathfinder pathfinderService;
@@ -63,15 +57,17 @@ public class WaypointerPlugin extends Plugin
     @Inject private net.runelite.client.input.KeyManager keyManager;
 
     private NavigationButton navButton;
-    private Thread shutdownHook;
     private net.runelite.client.input.KeyListener routeHotkeyListener;
 
     @Override
     protected void startUp() throws Exception
     {
-        store.enableDebouncedPersistence(persistence, scheduler, Duration.ofMillis(500));
-        routeStore.enableDebouncedPersistence(routePersistence, scheduler, Duration.ofMillis(500));
-        routeStore.bootstrap(routePersistence.loadOrEmpty());
+        // Load from config first so the panel (subscribed at construction) renders the saved data,
+        // then attach the write-through saver so the bootstrap itself does not re-save.
+        store.bootstrap(persistence.load());
+        store.enablePersistence(() -> persistence.save(store.getLibrary()));
+        routeStore.bootstrap(routePersistence.load());
+        routeStore.enablePersistence(() -> routePersistence.save(routeStore.getLibrary()));
         routePlaybackEngine.attach(client);
         eventBus.register(routePlaybackEngine);
         overlayManager.add(routeOverlay);
@@ -91,18 +87,6 @@ public class WaypointerPlugin extends Plugin
             }
         };
         keyManager.registerKeyListener(routeHotkeyListener);
-
-        profileLibrarySwitcher.initialize(
-            profileLibrarySwitcher.resolveStartupKey(configManager.getRSProfileKey()));
-
-        // Flush any pending debounced save if the JVM terminates before shutDown() runs (e.g.
-        // a hard client crash or user closing the RuneLite window). Removed in shutDown() so
-        // we don't leak a hook reference across plugin enable/disable cycles.
-        shutdownHook = new Thread(() -> {
-            try { store.flushPendingSave(); routeStore.flushPendingSave(); }
-            catch (Exception e) { log.warn("Shutdown-hook save failed", e); }
-        }, "waypointer-shutdown-flush");
-        Runtime.getRuntime().addShutdownHook(shutdownHook);
 
         BufferedImage icon = Icon.getSize32();
         navButton = NavigationButton.builder()
@@ -141,16 +125,8 @@ public class WaypointerPlugin extends Plugin
         eventBus.unregister(routePlaybackEngine);
         routePlaybackEngine.detach();
         overlayManager.remove(routeOverlay);
-        routeStore.disableDebouncedPersistence();
-        routeStore.flushPendingSave();
-
-        store.disableDebouncedPersistence();
-        if (shutdownHook != null)
-        {
-            try { Runtime.getRuntime().removeShutdownHook(shutdownHook); }
-            catch (Exception ignored) {}
-            shutdownHook = null;
-        }
+        routeStore.disablePersistence();
+        store.disablePersistence();
 
         eventBus.unregister(menuHandler);
         eventBus.unregister(pathfinderService);
@@ -160,7 +136,6 @@ public class WaypointerPlugin extends Plugin
 
         clientToolbar.removeNavigation(navButton);
         tabHost.dispose();
-        store.flushPendingSave();
         overlayManager.remove(areaPreviewOverlay);
         overlayManager.remove(npcHighlightOverlay);
         landmarkOverrides.flushBlocking();
@@ -185,11 +160,10 @@ public class WaypointerPlugin extends Plugin
     @Subscribe
     public void onRuneScapeProfileChanged(net.runelite.client.events.RuneScapeProfileChanged e)
     {
-        // getRSProfileKey() is updated before this event is posted and is the same source startUp
-        // uses, so reading it here keeps the key format consistent. Marshal the swap (file I/O +
-        // panel rebuild) to the EDT.
-        final String key = configManager.getRSProfileKey();
-        javax.swing.SwingUtilities.invokeLater(() -> profileLibrarySwitcher.switchToProfile(key));
+        // ConfigManager has already switched the active RS profile by the time this fires, so a
+        // fresh load() reads the newly-logged-in account's library. The write-through saver stays
+        // attached and targets the now-current profile. Marshal the swap to the EDT.
+        javax.swing.SwingUtilities.invokeLater(() -> store.bootstrap(persistence.load()));
     }
 
     @Provides
