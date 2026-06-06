@@ -5,7 +5,6 @@ import com.waypointer.model.route.RouteLibrary;
 import com.waypointer.model.route.RouteStep;
 import com.waypointer.model.route.StepType;
 import com.waypointer.util.Listeners;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,20 +13,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * In-memory CRUD over a {@link RouteLibrary}. Mutations notify listeners synchronously.
- * Debounced persistence is layered on via {@link #enableDebouncedPersistence}.
+ * Write-through persistence is layered on via {@link #enablePersistence}.
  */
 @Slf4j
 @Singleton
 public class RouteStore
 {
-    // volatile: read off-EDT by the debounced-save supplier (the shutdown-hook flush thread).
+    // volatile: safe publication of the reference; mutations remain EDT-confined.
     private volatile RouteLibrary library = new RouteLibrary();
     private final Listeners listeners = new Listeners();
 
@@ -199,24 +197,22 @@ public class RouteStore
         listeners.fire();
     }
 
-    // ---- Debounced persistence wiring ----
+    // ---- Persistence wiring (write-through) ----
 
-    // Must be initialized after `listeners` above -- it captures that reference at construction.
-    private final PersistenceBinding<RouteLibrary> persistenceBinding = new PersistenceBinding<>(listeners);
+    private Listeners.Subscription saveSub;
 
-    public void enableDebouncedPersistence(
-        RouteStorePersistence p, ScheduledExecutorService exec, Duration debounceWindow)
+    public void enablePersistence(Runnable saver)
     {
-        persistenceBinding.enable(p, exec, debounceWindow, () -> library);
+        if (saveSub != null) return;
+        saveSub = listeners.subscribe(saver);
     }
 
-    public void disableDebouncedPersistence()
+    public void disablePersistence()
     {
-        persistenceBinding.disable();
-    }
-
-    public void flushPendingSave()
-    {
-        persistenceBinding.flush();
+        if (saveSub != null)
+        {
+            saveSub.close();
+            saveSub = null;
+        }
     }
 }
