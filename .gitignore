@@ -8,3 +8,4 @@ out/
 .DS_Store
 test-output.txt
 *.mp4
+.vscode
