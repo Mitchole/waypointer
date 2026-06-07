@@ -55,8 +55,9 @@ waypoints into guided **Routes** for farm runs and agility laps.
    it yourself; see [DEVELOPER.md](DEVELOPER.md).)*
 3. Open the Waypointer panel from the RuneLite sidebar (the pin icon). The tabs across the top
    are **My Waypoints**, **Presets**, and **Routes**.
-4. Your library starts empty. Add your own waypoints, or open the **Presets** tab to start
-   from a curated set.
+4. Your library starts empty. It is saved per RuneScape account, so the panel stays empty
+   until you log in. Add your own waypoints, or open the **Presets** tab to start from a
+   curated set.
 
 A 20-second tour: open the panel, mark a tile, name it, click Play, watch the route appear.
 
