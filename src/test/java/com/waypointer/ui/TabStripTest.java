@@ -63,8 +63,8 @@ public class TabStripTest
     {
         TabStrip strip = new TabStrip(t -> {},
             java.util.Arrays.asList(TabStrip.Tab.MY_WAYPOINTS,
-                TabStrip.Tab.PRESETS, TabStrip.Tab.DEV));
-        assertNotNull(strip.labelFor(TabStrip.Tab.DEV));
+                TabStrip.Tab.PRESETS, TabStrip.Tab.ROUTES));
+        assertNotNull(strip.labelFor(TabStrip.Tab.ROUTES));
     }
 
     private static void assertActiveBorderIsBrandOrange(TabStrip strip, TabStrip.Tab tab)

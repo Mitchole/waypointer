@@ -30,11 +30,9 @@ public class TabHost extends PluginPanel
     private static final String CARD_MY_WAYPOINTS = "my";
     private static final String CARD_PRESETS = "presets";
     private static final String CARD_ROUTES = "routes";
-    private static final String CARD_DEV = "dev";
 
     private final WaypointerPanel waypointerPanel;
     private final PresetBrowserPanel presetBrowserPanel;
-    private final DevPanel devPanel;
     private final RoutesPanel routesPanel;
     private final WaypointerConfig config;
     private final ClientToolbar clientToolbar;
@@ -53,13 +51,12 @@ public class TabHost extends PluginPanel
 
     @Inject
     public TabHost(WaypointerPanel waypointerPanel, PresetBrowserPanel presetBrowserPanel,
-        DevPanel devPanel, RoutesPanel routesPanel, WaypointPathfinder pathfinder,
+        RoutesPanel routesPanel, WaypointPathfinder pathfinder,
         WaypointerConfig config, ClientToolbar clientToolbar, WaypointStore store)
     {
         super(false);
         this.waypointerPanel = waypointerPanel;
         this.presetBrowserPanel = presetBrowserPanel;
-        this.devPanel = devPanel;
         this.routesPanel = routesPanel;
         this.config = config;
         this.clientToolbar = clientToolbar;
@@ -79,7 +76,6 @@ public class TabHost extends PluginPanel
         cards.add(waypointerPanel, CARD_MY_WAYPOINTS);
         cards.add(presetBrowserPanel, CARD_PRESETS);
         cards.add(routesPanel, CARD_ROUTES);
-        cards.add(devPanel.getRoot(), CARD_DEV);
         add(sharedToasts, BorderLayout.CENTER);
         routesPanel.setToasts(sharedToasts);
 
@@ -111,16 +107,6 @@ public class TabHost extends PluginPanel
         visibleCard = CARD_PRESETS;
         tabStrip.setActive(active);
         cardLayout.show(cards, CARD_PRESETS);
-        revalidate();
-    }
-
-    public void selectDev()
-    {
-        if (active == TabStrip.Tab.DEV) return;
-        active = TabStrip.Tab.DEV;
-        visibleCard = CARD_DEV;
-        tabStrip.setActive(active);
-        cardLayout.show(cards, CARD_DEV);
         revalidate();
     }
 
@@ -170,10 +156,6 @@ public class TabHost extends PluginPanel
         {
             SwingUtilities.invokeLater(banner::refresh);
         }
-        if ("devModeEnabled".equals(e.getKey()))
-        {
-            SwingUtilities.invokeLater(this::rebuildStrip);
-        }
         if ("routesEnabled".equals(e.getKey()))
         {
             SwingUtilities.invokeLater(this::rebuildStrip);
@@ -186,7 +168,6 @@ public class TabHost extends PluginPanel
         waypointerPanel.dispose();
         presetBrowserPanel.dispose();
         routesPanel.dispose();
-        devPanel.dispose();
     }
 
     private void rebuildStrip()
@@ -196,7 +177,6 @@ public class TabHost extends PluginPanel
         tabs.add(TabStrip.Tab.MY_WAYPOINTS);
         tabs.add(TabStrip.Tab.PRESETS);
         if (config.routesEnabled()) tabs.add(TabStrip.Tab.ROUTES);
-        if (config.devModeEnabled()) tabs.add(TabStrip.Tab.DEV);
         visibleTabs = tabs;
         tabStrip = new TabStrip(this::onTabSelected, visibleTabs);
         tabStrip.setAlignmentX(LEFT_ALIGNMENT);
@@ -219,7 +199,6 @@ public class TabHost extends PluginPanel
             case MY_WAYPOINTS: selectMyWaypoints(); break;
             case PRESETS:      selectPresets();     break;
             case ROUTES:       selectRoutes();      break;
-            case DEV:          selectDev();         break;
         }
     }
 
@@ -227,5 +206,4 @@ public class TabHost extends PluginPanel
     TabStrip.Tab getActiveTabForTest() { return active; }
     String getVisibleCardNameForTest() { return visibleCard; }
     int visibleTabCountForTest() { return visibleTabs.size(); }
-    void onDevModeChangedForTest() { rebuildStrip(); }
 }

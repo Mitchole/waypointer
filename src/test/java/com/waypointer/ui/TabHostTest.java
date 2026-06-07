@@ -145,7 +145,7 @@ public class TabHostTest
     public void routesTabHiddenWhenDisabled()
     {
         TabHost host = buildHost();
-        // buildHost stubs routesEnabled=false, devModeEnabled=false -> 2 tabs
+        // buildHost stubs routesEnabled=false -> 2 tabs
         assertEquals(2, host.visibleTabCountForTest());
     }
 
@@ -167,7 +167,6 @@ public class TabHostTest
         when(config.shortestPathBannerDismissed()).thenReturn(true);
         when(config.landmarkSelectionJson()).thenReturn("");
         when(config.routesEnabled()).thenReturn(true);
-        when(config.devModeEnabled()).thenReturn(false);
 
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
@@ -199,9 +198,6 @@ public class TabHostTest
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 
-        DevPanel devPanel = mock(DevPanel.class);
-        when(devPanel.getRoot()).thenReturn(new javax.swing.JPanel());
-
         RouteStore routeStore = mock(RouteStore.class);
         when(routeStore.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
         when(routeStore.getRoutesOrdered()).thenReturn(Collections.emptyList());
@@ -212,7 +208,7 @@ public class TabHostTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        TabHost host = new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class), store);
+        TabHost host = new TabHost(waypointerPanel, presetPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class), store);
         assertEquals(3, host.visibleTabCountForTest());
     }
 
@@ -234,7 +230,6 @@ public class TabHostTest
         when(config.shortestPathBannerDismissed()).thenReturn(true);
         when(config.landmarkSelectionJson()).thenReturn("");
         when(config.routesEnabled()).thenReturn(true);
-        when(config.devModeEnabled()).thenReturn(false);
 
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
@@ -251,9 +246,6 @@ public class TabHostTest
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 
-        DevPanel devPanel = mock(DevPanel.class);
-        when(devPanel.getRoot()).thenReturn(new javax.swing.JPanel());
-
         RouteStore routeStore = mock(RouteStore.class);
         when(routeStore.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
         when(routeStore.getRoutesOrdered()).thenReturn(Collections.emptyList());
@@ -266,7 +258,7 @@ public class TabHostTest
             mock(com.waypointer.codec.RouteShareCodec.class),
             mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config,
+        new TabHost(waypointerPanel, presetPanel, routesPanel, pathfinder, config,
             mock(ClientToolbar.class), store);
 
         assertEquals(false, routesPanel.getToastsForTest() == Toasts.NO_OP);
@@ -300,7 +292,6 @@ public class TabHostTest
         when(config.shortestPathBannerDismissed()).thenReturn(true);
         when(config.landmarkSelectionJson()).thenReturn("");
         when(config.routesEnabled()).thenReturn(false);
-        when(config.devModeEnabled()).thenReturn(false);
 
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
@@ -332,9 +323,6 @@ public class TabHostTest
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 
-        DevPanel devPanel = mock(DevPanel.class);
-        when(devPanel.getRoot()).thenReturn(new javax.swing.JPanel());
-
         RouteStore routeStore = mock(RouteStore.class);
         when(routeStore.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
         when(routeStore.getRoutesOrdered()).thenReturn(Collections.emptyList());
@@ -345,6 +333,6 @@ public class TabHostTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        return new TabHost(waypointerPanel, presetPanel, devPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class), store);
+        return new TabHost(waypointerPanel, presetPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class), store);
     }
 }

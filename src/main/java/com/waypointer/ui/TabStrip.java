@@ -7,13 +7,13 @@ import java.util.function.Consumer;
 import net.runelite.client.ui.FontManager;
 
 // Top-of-TabHost strip. Bold font, 2-px underline. The variable-tab constructor lets the
-// host include the Dev tab only when dev mode is on.
+// host include the Routes tab only when routes are enabled.
 final class TabStrip extends EnumTabStrip<TabStrip.Tab>
 {
-    enum Tab { MY_WAYPOINTS, PRESETS, ROUTES, DEV }
+    enum Tab { MY_WAYPOINTS, PRESETS, ROUTES }
 
     // Test seam: defaults to the two always-present tabs. Production uses the (Consumer, List)
-    // ctor via TabHost so it can include Dev only when dev mode is on.
+    // ctor via TabHost so it can include Routes only when routes are enabled.
     TabStrip(Consumer<Tab> onSelect)
     {
         this(onSelect, Arrays.asList(Tab.MY_WAYPOINTS, Tab.PRESETS));
@@ -32,7 +32,6 @@ final class TabStrip extends EnumTabStrip<TabStrip.Tab>
             case MY_WAYPOINTS: return "Waypoints";
             case PRESETS:      return "Presets";
             case ROUTES:       return "Routes";
-            case DEV:          return "Dev";
         }
         return t.name();
     }
