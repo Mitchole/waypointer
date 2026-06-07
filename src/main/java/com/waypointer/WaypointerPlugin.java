@@ -2,13 +2,10 @@ package com.waypointer;
 
 import com.google.inject.Provides;
 import com.waypointer.service.DeathAutoPathfinder;
-import com.waypointer.service.LandmarkOverrides;
-import com.waypointer.service.PresetOverrides;
 import com.waypointer.service.WaypointMenuHandler;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
 import com.waypointer.service.WaypointStorePersistence;
-import com.waypointer.ui.AreaPreviewOverlay;
 import com.waypointer.ui.Icon;
 import com.waypointer.ui.NpcHighlightOverlay;
 import com.waypointer.ui.TabHost;
@@ -19,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -44,9 +40,6 @@ public class WaypointerPlugin extends Plugin
     @Inject private WaypointPathfinder pathfinderService;
     @Inject private DeathAutoPathfinder deathAutoPathfinder;
     @Inject private TabHost tabHost;
-    @Inject private LandmarkOverrides landmarkOverrides;
-    @Inject private PresetOverrides presetOverrides;
-    @Inject private AreaPreviewOverlay areaPreviewOverlay;
     @Inject private NpcHighlightOverlay npcHighlightOverlay;
     @Inject private OverlayManager overlayManager;
     @Inject private com.waypointer.service.RouteStore routeStore;
@@ -107,7 +100,6 @@ public class WaypointerPlugin extends Plugin
         // was constructed earlier, against Metal's UIDefaults).
         tabHost.refreshScrollbarStyling();
 
-        if (config.devModeEnabled()) overlayManager.add(areaPreviewOverlay);
         overlayManager.add(npcHighlightOverlay);
 
         log.info("Waypointer started: {} waypoints loaded",
@@ -136,25 +128,8 @@ public class WaypointerPlugin extends Plugin
 
         clientToolbar.removeNavigation(navButton);
         tabHost.dispose();
-        overlayManager.remove(areaPreviewOverlay);
         overlayManager.remove(npcHighlightOverlay);
-        landmarkOverrides.flushBlocking();
-        presetOverrides.flushBlocking();
         log.info("Waypointer stopped");
-    }
-
-    @Subscribe
-    public void onConfigChanged(ConfigChanged e)
-    {
-        if (!"waypointer".equals(e.getGroup())) return;
-        if ("devModeEnabled".equals(e.getKey()))
-        {
-            // remove() first so the toggle path is symmetric and self-evidently single-copy,
-            // regardless of whether startUp() already added it. (OverlayManager.add is itself
-            // idempotent -- it ignores an overlay it already holds -- so this is belt-and-braces.)
-            overlayManager.remove(areaPreviewOverlay);
-            if (config.devModeEnabled()) overlayManager.add(areaPreviewOverlay);
-        }
     }
 
     @Subscribe
