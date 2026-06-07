@@ -58,11 +58,9 @@ optional and becomes the waypoint's notes once a player adds it.
 To add a waypoint, drop another object into the right set's `waypoints` list. To add a whole
 new set, add another object to `presets`. To correct a tile, edit its `x` / `y` / `plane`.
 
-The easiest way to read a tile's coordinates off the live game is the dev tools described in
-the next section, even though presets do not bake automatically yet. Hover the tile in the
-landmark editor, or read the coordinate from the RuneLite developer tools, and type the
-numbers into the JSON by hand. (Baking preset edits straight back into this file is tracked in
-issue #84.)
+To read a tile's coordinates off the live game, run the client with RuneLite's developer
+tools on (`./gradlew run` sets `--developer-mode`) and read the coordinate under your
+character, or look the spot up on the OSRS Wiki. Type the numbers into the JSON by hand.
 
 When you are done, run the tests:
 
@@ -97,40 +95,12 @@ floor. Any tile inside the box counts as "at" that landmark. Keep boxes tight: w
 overlap, the smaller one wins, so an over-wide box can swallow a neighbour. Lines starting with
 `#` are comments and are left alone.
 
-There are two ways to edit this data.
-
-### The dev tools (recommended)
-
-The plugin can edit its own bundled landmark data from inside the client, which spares you
-hand-counting tiles.
-
-1. Turn on **Dev mode** in the Waypointer config (RuneLite settings, Waypointer section). A
-   **Dev** tab appears at the top of the panel.
-2. Run the client in dev mode so the tab is available:
-   ```bash
-   ./gradlew run
-   ```
-3. Open the Dev tab and pick the landmark type from the dropdown. Add, edit, or delete entries
-   against the live map. Your changes are held in a local override file
-   (`~/.runelite/waypointer/landmark-overrides.json`) and show up immediately in the panel, so
-   you can sanity-check them before committing anything.
-4. Click **Export** in the landmark editor. The override snapshot is copied to your clipboard.
-5. Bake the snapshot into the bundled files:
-   ```bash
-   ./gradlew bakeLandmarks                  # reads the snapshot from the clipboard
-   ./gradlew bakeLandmarks -Pexport=x.json  # or from a file you saved it to
-   ```
-   Adds and edits are appended to the type's main file; deletions drop the matching rows.
-6. Clear `~/.runelite/waypointer/landmark-overrides.json` afterwards. Otherwise the runtime
-   override re-applies on top of the data you just baked and masks it.
-7. Review the `.tsv` diff and commit it.
-
-### By hand
-
-For a one-line fix you can edit the `.tsv` directly. Find the right file by type (banks in
-`banks-bboxes.tsv`, slayer masters in `slayer-masters-bboxes.tsv`, and so on), add or change a
-row, and keep the `space-separated numbers` + `tab` + `name` shape. `BboxIndexTest` and
-`LandmarkLookupTest` cover the loader, and a malformed row will not parse.
+Edit the `.tsv` directly. Find the right file by type (banks in `banks-bboxes.tsv`, slayer
+masters in `slayer-masters-bboxes.tsv`, and so on), add or change a row, and keep the
+`space-separated numbers` + `tab` + `name` shape. To read coordinates off the live game, run
+the client with RuneLite's developer tools on (`./gradlew run` sets `--developer-mode`) and
+read the tile under your character, or use the OSRS Wiki. `BboxIndexTest` and
+`LandmarkLookupTest` cover the loader, so a malformed row will not parse.
 
 ## Add a new landmark type
 
@@ -142,11 +112,7 @@ fold into an existing one. Three places line up, and they have to stay in sync:
 2. **The loader.** Register the file in `service/BboxIndex.java` by adding a `ResourceEntry`
    to the `RESOURCES` array, paired with its type.
 3. **The enum.** Add a value to `service/LandmarkType.java` with a display name. This is what
-   the nearest-landmark bar and the type dropdown show.
-
-If the type should also bake from the dev tools, add it to the `TYPE_FILES` map in
-`tools/LandmarkOverrideBaker.java` (test source set) so the baker knows which file its rows
-belong to. That map mirrors `BboxIndex.RESOURCES`; keep them aligned.
+   the nearest-landmark bar shows.
 
 Run `./gradlew test` and the bbox tests will confirm the new file loads.
 
