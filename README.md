@@ -59,14 +59,6 @@ waypoints into guided **Routes** for farm runs and agility laps.
    until you log in. Add your own waypoints, or open the **Presets** tab to start from a
    curated set.
 
-A 20-second tour: open the panel, mark a tile, name it, click Play, watch the route appear.
-
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=Ve28nR237fc">
-    <img src="https://img.youtube.com/vi/Ve28nR237fc/hqdefault.jpg" alt="Watch the Waypointer tour on YouTube" width="480">
-  </a>
-</p>
-
 ## Saving a waypoint
 
 Four ways to capture a tile:
