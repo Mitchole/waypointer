@@ -10,12 +10,10 @@ import static org.junit.Assert.assertTrue;
 
 public class BboxIndexTest
 {
-    private static final com.google.gson.Gson GSON = new com.google.gson.Gson();
-
     @Test
     public void loadsBundledTsvs()
     {
-        BboxIndex idx = new BboxIndex(LandmarkOverrides.forTesting(GSON));
+        BboxIndex idx = new BboxIndex();
         // (0, 0, 0) is outside every known bbox so the bundled-resource ctor must return null
         // rather than throwing — proves loadResource walked every TSV without error.
         assertNull(idx.lookup(WorldPointPacker.pack(0, 0, 0)));
@@ -87,7 +85,7 @@ public class BboxIndexTest
     @Test
     public void bundledTsvsCoverEdgevilleBank()
     {
-        BboxIndex idx = new BboxIndex(LandmarkOverrides.forTesting(GSON));
+        BboxIndex idx = new BboxIndex();
         String name = idx.lookup(WorldPointPacker.pack(3094, 3493, 0));
         assertEquals("Edgeville Bank", name);
     }
@@ -95,7 +93,7 @@ public class BboxIndexTest
     @Test
     public void bundledTsvsCoverGrandExchangePlaza()
     {
-        BboxIndex idx = new BboxIndex(LandmarkOverrides.forTesting(GSON));
+        BboxIndex idx = new BboxIndex();
         String name = idx.lookup(WorldPointPacker.pack(3163, 3490, 0));
         assertNotNull(name);
         assertTrue("expected GE-area bbox, got " + name, name.toLowerCase().contains("grand exchange"));
@@ -181,7 +179,7 @@ public class BboxIndexTest
         // exercised. The Lunar Isle bank chest lives around (2099, 3919). Asking for the
         // nearest BANK from that tile must return a hit (could be the chest or a Piscarilius
         // bank further away -- both are LandmarkType.BANK).
-        BboxIndex idx = new BboxIndex(LandmarkOverrides.forTesting(GSON));
+        BboxIndex idx = new BboxIndex();
         BboxIndex.Hit hit = idx.nearest(LandmarkType.BANK, WorldPointPacker.pack(2099, 3919, 0));
 
         assertNotNull(hit);

@@ -1,7 +1,6 @@
 package com.waypointer.preset;
 
 import com.google.gson.Gson;
-import com.waypointer.service.PresetOverrides;
 import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -11,7 +10,7 @@ import static org.junit.Assert.assertTrue;
 public class PresetCatalogTest
 {
     private final Gson gson = new Gson();
-    private final PresetCatalog catalog = new PresetCatalog(gson, PresetOverrides.forTesting(gson));
+    private final PresetCatalog catalog = new PresetCatalog(gson);
 
     @Test
     public void parsesValidJson()

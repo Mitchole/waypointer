@@ -28,7 +28,7 @@ public class WaypointCaptureTest
         store.bootstrap(new Library());
         ClientThread clientThread = mock(ClientThread.class);
         LandmarkLookup lookup = new LandmarkLookup(
-            new BboxIndex(LandmarkOverrides.forTesting(new com.google.gson.Gson())), new CacheLabelIndex());
+            new BboxIndex(), new CacheLabelIndex());
         capture = new WaypointCapture(client, store, clientThread, lookup);
     }
 

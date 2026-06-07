@@ -1,7 +1,6 @@
 package com.waypointer.preset;
 
 import com.google.gson.Gson;
-import com.waypointer.service.PresetOverrides;
 import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.assertFalse;
@@ -14,7 +13,7 @@ public class PresetFileValidityTest
     public void bundledPresetsAreInternallyConsistent()
     {
         Gson gson = new Gson();
-        List<Preset> presets = new PresetCatalog(gson, PresetOverrides.forTesting(gson)).getPresets();
+        List<Preset> presets = new PresetCatalog(gson).getPresets();
         assertFalse("preset catalog must not be empty", presets.isEmpty());
         for (Preset p : presets)
         {

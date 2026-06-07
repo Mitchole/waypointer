@@ -9,11 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -80,65 +77,23 @@ public class BboxIndex
 
     private final Map<Integer, List<Entry>> byPlane = new HashMap<>();
     private final Listeners listeners = new Listeners();
-    private final List<Entry> bundled = new ArrayList<>();
     private int total;
-    // Held to honour the "always hold the subscription token" rule. BboxIndex and
-    // LandmarkOverrides are equal-lifetime @Singletons, so there is no shutDown to close
-    // it from -- the subscription lives as long as the injector. Kept in a field rather
-    // than discarded so the one place that ignored its token no longer does.
-    @SuppressWarnings("unused")
-    private final Listeners.Subscription overridesSub;
 
     @Inject
-    public BboxIndex(LandmarkOverrides overrides)
+    public BboxIndex()
     {
         for (ResourceEntry res : RESOURCES) loadResource(res);
         log.info("BboxIndex loaded {} bbox entries across {} planes", total, byPlane.size());
-        applyOverrides(overrides.getSnapshot());
-        overridesSub = overrides.subscribe(() -> reload(overrides.getSnapshot()));
     }
 
     private BboxIndex(boolean skipResourceLoad)
     {
-        // Test seam: only forTesting() calls this -- no overrides to subscribe to.
-        this.overridesSub = null;
+        // Test seam: forTesting() builds an index from explicit entries.
     }
 
     public Listeners.Subscription subscribe(Runnable r)
     {
         return listeners.subscribe(r);
-    }
-
-    /**
-     * Per-entry editor view of a type: every bundled entry of the type that has not been deleted,
-     * followed by any override-added entries of the type. Unlike the live index (see
-     * {@link #applyOverrides}) this does NOT apply the wholesale "a type override replaces the
-     * whole bundled type" rule, so the dev editor can list and curate individual bundled entries
-     * even once overrides exist for that type. Reflects deletions, additions, and edits (an edit
-     * is recorded as a deletion of the original plus an added entry).
-     */
-    public List<Entry> editableOfType(LandmarkType t, LandmarkOverridesSnapshot s)
-    {
-        List<Entry> out = new ArrayList<>();
-        for (Entry b : bundled)
-        {
-            if (b.type == t && !isDeleted(b, s)) out.add(b);
-        }
-        LandmarkOverridesSnapshot.TypeOverride ov = s.getByType().get(t.name());
-        if (ov != null)
-        {
-            for (LandmarkOverridesSnapshot.Entry e : ov.getEntries())
-            {
-                out.add(new Entry(e.getX1(), e.getY1(), e.getX2(), e.getY2(), e.getPlane(), e.getName(), t));
-            }
-        }
-        return out;
-    }
-
-    public void reload(LandmarkOverridesSnapshot s)
-    {
-        applyOverrides(s);
-        listeners.fire();
     }
 
     static BboxIndex forTesting(Collection<Entry> entries)
@@ -222,52 +177,12 @@ public class BboxIndex
     private void addEntry(Entry e)
     {
         addEntryInternal(e);
-        bundled.add(e);
     }
 
     private void addEntryInternal(Entry e)
     {
         byPlane.computeIfAbsent(e.plane, k -> new ArrayList<>()).add(e);
         total++;
-    }
-
-    public void applyOverrides(LandmarkOverridesSnapshot s)
-    {
-        byPlane.clear();
-        total = 0;
-
-        Set<String> replacedTypes = new HashSet<>(s.getByType().keySet());
-
-        for (Entry b : bundled)
-        {
-            if (b.type != null && replacedTypes.contains(b.type.name())) continue;
-            if (isDeleted(b, s)) continue;
-            addEntryInternal(b);
-        }
-        for (Map.Entry<String, LandmarkOverridesSnapshot.TypeOverride> ent : s.getByType().entrySet())
-        {
-            LandmarkType t;
-            try { t = LandmarkType.valueOf(ent.getKey()); }
-            catch (IllegalArgumentException e) { log.warn("Unknown landmark type in override: {}", ent.getKey()); continue; }
-            for (LandmarkOverridesSnapshot.Entry e : ent.getValue().getEntries())
-            {
-                addEntryInternal(new Entry(e.getX1(), e.getY1(), e.getX2(), e.getY2(), e.getPlane(), e.getName(), t));
-            }
-        }
-    }
-
-    private boolean isDeleted(Entry b, LandmarkOverridesSnapshot s)
-    {
-        if (b.type == null) return false;
-        for (LandmarkOverridesSnapshot.DeletedEntry d : s.getDeletions())
-        {
-            if (!d.getType().equals(b.type.name())) continue;
-            if (d.getX1() == b.x1 && d.getY1() == b.y1
-                && d.getX2() == b.x2 && d.getY2() == b.y2
-                && d.getPlane() == b.plane
-                && Objects.equals(d.getName(), b.name)) return true;
-        }
-        return false;
     }
 
     private void loadResource(ResourceEntry res)
