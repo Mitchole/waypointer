@@ -185,4 +185,55 @@ public class LibraryJsonCodecTest
         assertNull("legacy category must decode with null sortMode",
             back.getCategories().get(0).getSortMode());
     }
+
+    @Test
+    public void dropsInvalidWaypointsKeepsValid()
+    {
+        UUID catId = UUID.randomUUID();
+        String json = "{\"schemaVersion\":2,"
+            + "\"categories\":[{\"id\":\"" + catId + "\",\"name\":\"Bossing\","
+            + "\"sortOrder\":0,\"uncategorized\":false,\"bundled\":false}],"
+            + "\"waypoints\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Good\",\"packedWorldPoint\":42,"
+            + "\"categoryId\":\"" + catId + "\",\"notes\":\"\"},"
+            + "{\"name\":\"NoId\",\"packedWorldPoint\":42},"
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"packedWorldPoint\":42},"
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"ZeroCoord\",\"packedWorldPoint\":0}"
+            + "]}";
+
+        Library back = codec.decode(json);
+
+        assertEquals(1, back.getWaypoints().size());
+        assertEquals("Good", back.getWaypoints().get(0).getName());
+    }
+
+    @Test
+    public void dropsCategoryWithNullName()
+    {
+        String json = "{\"schemaVersion\":2,"
+            + "\"categories\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Keep\",\"sortOrder\":0,"
+            + "\"uncategorized\":false,\"bundled\":false},"
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"sortOrder\":1,"
+            + "\"uncategorized\":false,\"bundled\":false}"
+            + "],\"waypoints\":[]}";
+
+        Library back = codec.decode(json);
+
+        assertEquals(1, back.getCategories().size());
+        assertEquals("Keep", back.getCategories().get(0).getName());
+    }
+
+    @Test
+    public void keepsUncategorizedSentinelWithMissingFields()
+    {
+        String json = "{\"schemaVersion\":2,"
+            + "\"categories\":[{\"uncategorized\":true,\"sortOrder\":0,\"bundled\":false}],"
+            + "\"waypoints\":[]}";
+
+        Library back = codec.decode(json);
+
+        assertEquals(1, back.getCategories().size());
+        assertTrue(back.getCategories().get(0).isUncategorized());
+    }
 }

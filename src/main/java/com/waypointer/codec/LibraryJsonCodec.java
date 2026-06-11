@@ -32,6 +32,9 @@ public class LibraryJsonCodec
         if (lib.getCategories() == null) lib.setCategories(new java.util.ArrayList<>());
         if (lib.getWaypoints() == null) lib.setWaypoints(new java.util.ArrayList<>());
         if (lib.getSchemaVersion() == 0) lib.setSchemaVersion(Library.CURRENT_SCHEMA_VERSION);
+        // Drop entries missing required fields so partial/hostile JSON cannot reach the panel.
+        lib.setCategories(ModelSanitizer.sanitizeCategories(lib.getCategories()));
+        lib.setWaypoints(ModelSanitizer.sanitizeWaypoints(lib.getWaypoints()));
         return lib;
     }
 
