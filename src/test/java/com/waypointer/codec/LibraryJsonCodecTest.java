@@ -236,4 +236,21 @@ public class LibraryJsonCodecTest
         assertEquals(1, back.getCategories().size());
         assertTrue(back.getCategories().get(0).isUncategorized());
     }
+
+    @Test
+    public void keepsFullyValidLibraryUnchanged()
+    {
+        UUID c = UUID.randomUUID();
+        String json = "{\"schemaVersion\":2,"
+            + "\"categories\":[{\"id\":\"" + c + "\",\"name\":\"Bossing\",\"sortOrder\":0,"
+            + "\"uncategorized\":false,\"bundled\":false}],"
+            + "\"waypoints\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"A\",\"packedWorldPoint\":42,\"categoryId\":\"" + c + "\"},"
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"B\",\"packedWorldPoint\":99,\"categoryId\":\"" + c + "\"}]}";
+
+        Library back = codec.decode(json);
+
+        assertEquals(1, back.getCategories().size());
+        assertEquals(2, back.getWaypoints().size());
+    }
 }
