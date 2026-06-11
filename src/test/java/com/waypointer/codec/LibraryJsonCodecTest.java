@@ -253,4 +253,36 @@ public class LibraryJsonCodecTest
         assertEquals(1, back.getCategories().size());
         assertEquals(2, back.getWaypoints().size());
     }
+
+    @Test
+    public void decodeWithReportCountsDroppedEntries()
+    {
+        UUID catId = UUID.randomUUID();
+        String json = "{\"schemaVersion\":2,"
+            + "\"categories\":["
+            + "{\"id\":\"" + catId + "\",\"name\":\"Keep\",\"sortOrder\":0,\"uncategorized\":false,\"bundled\":false},"
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"sortOrder\":1,\"uncategorized\":false,\"bundled\":false}"
+            + "],\"waypoints\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Good\",\"packedWorldPoint\":42,\"categoryId\":\"" + catId + "\"},"
+            + "{\"name\":\"NoId\",\"packedWorldPoint\":42},"
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Zero\",\"packedWorldPoint\":0}"
+            + "]}";
+
+        DecodeReport report = codec.decodeWithReport(json);
+
+        assertEquals(1, report.library.getCategories().size());
+        assertEquals(1, report.library.getWaypoints().size());
+        assertEquals(2, report.droppedWaypoints);
+        assertEquals(1, report.droppedCategories);
+        assertEquals(3, report.totalDropped());
+    }
+
+    @Test
+    public void decodeStillReturnsCleanLibrary()
+    {
+        String json = "{\"schemaVersion\":2,\"categories\":[],\"waypoints\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Good\",\"packedWorldPoint\":42}]}";
+        Library lib = codec.decode(json);
+        assertEquals(1, lib.getWaypoints().size());
+    }
 }

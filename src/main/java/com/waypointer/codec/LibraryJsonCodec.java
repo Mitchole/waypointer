@@ -22,6 +22,11 @@ public class LibraryJsonCodec
 
     public Library decode(String json)
     {
+        return decodeWithReport(json).library;
+    }
+
+    public DecodeReport decodeWithReport(String json)
+    {
         Library lib = JsonDecodeSupport.decode(
             gson, json, Library.CURRENT_SCHEMA_VERSION, LibraryMigrator::migrate, Library.class,
             e -> new MalformedLibraryException("Failed to parse library JSON", e),
@@ -32,10 +37,14 @@ public class LibraryJsonCodec
         if (lib.getCategories() == null) lib.setCategories(new java.util.ArrayList<>());
         if (lib.getWaypoints() == null) lib.setWaypoints(new java.util.ArrayList<>());
         if (lib.getSchemaVersion() == 0) lib.setSchemaVersion(Library.CURRENT_SCHEMA_VERSION);
-        // Drop entries missing required fields so partial/hostile JSON cannot reach the panel.
+        // Drop entries missing required fields; count drops so the import UI can report them.
+        int beforeCategories = lib.getCategories().size();
+        int beforeWaypoints = lib.getWaypoints().size();
         lib.setCategories(ModelSanitizer.sanitizeCategories(lib.getCategories()));
         lib.setWaypoints(ModelSanitizer.sanitizeWaypoints(lib.getWaypoints()));
-        return lib;
+        int droppedCategories = beforeCategories - lib.getCategories().size();
+        int droppedWaypoints = beforeWaypoints - lib.getWaypoints().size();
+        return new DecodeReport(lib, droppedWaypoints, droppedCategories);
     }
 
     public static class MalformedLibraryException extends RuntimeException
