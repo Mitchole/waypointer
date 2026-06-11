@@ -3,6 +3,9 @@ package com.waypointer.codec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
+import com.waypointer.model.route.Route;
+import com.waypointer.model.route.RouteStep;
+import com.waypointer.model.route.StepType;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,5 +91,71 @@ public class ModelSanitizerTest
         List<Category> out = ModelSanitizer.sanitizeCategories(in);
         assertEquals(1, out.size());
         assertEquals("Bossing", out.get(0).getName());
+    }
+
+    @Test
+    public void keepsValidStep()
+    {
+        RouteStep s = RouteStep.waypoint(WorldPointPacker.pack(3200, 3200, 0), "Bank");
+        assertTrue(ModelSanitizer.isValidStep(s));
+    }
+
+    @Test
+    public void dropsStepWithNullIdOrType()
+    {
+        RouteStep noId = RouteStep.manual("Go");
+        noId.setId(null);
+        assertFalse(ModelSanitizer.isValidStep(noId));
+
+        RouteStep noType = RouteStep.manual("Go");
+        noType.setType(null);
+        assertFalse(ModelSanitizer.isValidStep(noType));
+    }
+
+    @Test
+    public void dropsStepWithNoTextAtAll()
+    {
+        RouteStep blank = new RouteStep(UUID.randomUUID(), StepType.MANUAL, null,
+            WorldPointPacker.UNDEFINED, null, null);
+        assertFalse("boxTextOrLabel() would be null", ModelSanitizer.isValidStep(blank));
+    }
+
+    @Test
+    public void dropsWaypointStepWithUnusableCoordinate()
+    {
+        RouteStep s = new RouteStep(UUID.randomUUID(), StepType.WAYPOINT, "Bank",
+            WorldPointPacker.UNDEFINED, null, null);
+        assertFalse(ModelSanitizer.isValidStep(s));
+    }
+
+    @Test
+    public void manualStepNeedsNoCoordinate()
+    {
+        RouteStep s = RouteStep.manual("Withdraw seeds"); // packed = UNDEFINED by construction
+        assertTrue(ModelSanitizer.isValidStep(s));
+    }
+
+    @Test
+    public void dropsRouteWithNullIdOrName()
+    {
+        assertFalse(ModelSanitizer.isValidRoute(new Route(null, "R", new ArrayList<>(), false, null, 0)));
+        assertFalse(ModelSanitizer.isValidRoute(new Route(UUID.randomUUID(), null, new ArrayList<>(), false, null, 0)));
+    }
+
+    @Test
+    public void sanitizeRoutesDropsInvalidRoutesAndStripsBadSteps()
+    {
+        RouteStep good = RouteStep.manual("Withdraw seeds");
+        RouteStep bad = new RouteStep(UUID.randomUUID(), StepType.MANUAL, null,
+            WorldPointPacker.UNDEFINED, null, null);
+        Route keep = new Route(UUID.randomUUID(), "Herb run",
+            new ArrayList<>(Arrays.asList(good, bad)), false, null, 0);
+        Route dropById = new Route(null, "Nameless route", new ArrayList<>(), false, null, 0);
+
+        List<Route> out = ModelSanitizer.sanitizeRoutes(new ArrayList<>(Arrays.asList(keep, dropById)));
+
+        assertEquals(1, out.size());
+        assertEquals("Herb run", out.get(0).getName());
+        assertEquals("bad step must be stripped from surviving route", 1, out.get(0).getSteps().size());
     }
 }

@@ -3,6 +3,9 @@ package com.waypointer.codec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
+import com.waypointer.model.route.Route;
+import com.waypointer.model.route.RouteStep;
+import com.waypointer.model.route.StepType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +54,44 @@ final class ModelSanitizer
         if (c == null) return false;
         if (c.isUncategorized()) return true; // the sentinel is never dropped, whatever its fields
         return c.getId() != null && c.getName() != null;
+    }
+
+    static List<RouteStep> sanitizeSteps(List<RouteStep> in)
+    {
+        List<RouteStep> out = new ArrayList<>();
+        if (in == null) return out;
+        for (RouteStep s : in)
+        {
+            if (isValidStep(s)) out.add(s);
+        }
+        return out;
+    }
+
+    /** Drops invalid routes and replaces each survivor's step list with its sanitized form. */
+    static List<Route> sanitizeRoutes(List<Route> in)
+    {
+        List<Route> out = new ArrayList<>();
+        if (in == null) return out;
+        for (Route r : in)
+        {
+            if (!isValidRoute(r)) continue;
+            r.setSteps(sanitizeSteps(r.getSteps()));
+            out.add(r);
+        }
+        return out;
+    }
+
+    static boolean isValidStep(RouteStep s)
+    {
+        if (s == null || s.getId() == null || s.getType() == null) return false;
+        if (s.boxTextOrLabel() == null) return false;
+        if (s.getType() == StepType.WAYPOINT && !isCoordinateUsable(s.getPackedWorldPoint())) return false;
+        return true;
+    }
+
+    static boolean isValidRoute(Route r)
+    {
+        return r != null && r.getId() != null && r.getName() != null;
     }
 
     /** Shared coordinate check: not the UNDEFINED sentinel and not the (0,0) null-island. */
