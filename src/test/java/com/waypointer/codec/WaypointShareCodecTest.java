@@ -263,4 +263,38 @@ public class WaypointShareCodecTest
             + "\"uncategorized\":false,\"bundled\":false}}";
         codec.decodeSingle(wp1(json));
     }
+
+    @Test
+    public void decodeLibraryWithReportCountsDrops() throws Exception
+    {
+        UUID catId = UUID.randomUUID();
+        String json = "{\"schemaVersion\":2,"
+            + "\"categories\":[{\"id\":\"" + catId + "\",\"name\":\"Keep\",\"sortOrder\":0,"
+            + "\"uncategorized\":false,\"bundled\":false}],"
+            + "\"waypoints\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Good\",\"packedWorldPoint\":42,\"categoryId\":\"" + catId + "\"},"
+            + "{\"name\":\"NoId\",\"packedWorldPoint\":42}"
+            + "]}";
+
+        DecodeReport r = codec.decodeLibraryWithReport(wpl1(json));
+
+        assertEquals(1, r.library.getWaypoints().size());
+        assertEquals(1, r.droppedWaypoints);
+        assertEquals(0, r.droppedCategories);
+    }
+
+    @Test
+    public void decodeLibraryWithReportForSingleHasZeroDrops() throws Exception
+    {
+        UUID catId = UUID.randomUUID();
+        Category c = new Category(catId, "Bossing", 0, false, null, false);
+        Waypoint w = new Waypoint(UUID.randomUUID(), "Vorkath", 42, catId, null, "",
+            Instant.parse("2026-05-02T00:00:00Z"), 0, false, null, false);
+
+        DecodeReport r = codec.decodeLibraryWithReport(legacyWp1(w, c));
+
+        assertEquals(1, r.library.getWaypoints().size());
+        assertEquals(0, r.droppedWaypoints);
+        assertEquals(0, r.droppedCategories);
+    }
 }

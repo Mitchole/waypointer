@@ -53,22 +53,28 @@ public class WaypointShareCodec
 
     public Library decodeLibrary(String input)
     {
+        return decodeLibraryWithReport(input).library;
+    }
+
+    public DecodeReport decodeLibraryWithReport(String input)
+    {
         String trimmed = input.trim();
         if (trimmed.startsWith(SINGLE_MAGIC))
         {
-            // Caller used the wrong method - wrap a single result as a library.
+            // Caller used the wrong method - wrap a single result as a library. A single decode is
+            // reject-whole, so there are no partial drops to report.
             SingleResult sr = decodeSingle(trimmed);
             Library lib = new Library();
             lib.getCategories().add(sr.category);
             lib.getWaypoints().add(sr.waypoint);
-            return lib;
+            return new DecodeReport(lib, 0, 0);
         }
         String body = ShareCodecSupport.stripMagic(input, LIBRARY_MAGIC, MalformedCodeException::new);
         String json = ShareCodecSupport.ungzipBase64(body, MalformedCodeException::new);
-        // Share the file-load decode contract: schema-version guard, migrator, and field defaults.
+        // Share the file-load decode contract: schema-version guard, migrator, field defaults, sanitize.
         try
         {
-            return libraryJsonCodec.decode(json);
+            return libraryJsonCodec.decodeWithReport(json);
         }
         catch (LibraryJsonCodec.UnsupportedSchemaException e)
         {
