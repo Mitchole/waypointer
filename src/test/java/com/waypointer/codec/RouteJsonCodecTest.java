@@ -91,4 +91,34 @@ public class RouteJsonCodecTest
     {
         codec.decode("not json");
     }
+
+    @Test
+    public void dropsRouteWithNullName()
+    {
+        String json = "{\"schemaVersion\":2,\"routes\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Keep\",\"steps\":[]},"
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"steps\":[]}"
+            + "]}";
+
+        RouteLibrary lib = codec.decode(json);
+
+        assertEquals(1, lib.getRoutes().size());
+        assertEquals("Keep", lib.getRoutes().get(0).getName());
+    }
+
+    @Test
+    public void dropsStepsMissingBothLabelAndBoxText()
+    {
+        String json = "{\"schemaVersion\":2,\"routes\":[{"
+            + "\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"R\",\"steps\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"type\":\"MANUAL\",\"label\":\"Good\"},"
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"type\":\"MANUAL\"}"
+            + "]}]}";
+
+        RouteLibrary lib = codec.decode(json);
+
+        assertEquals(1, lib.getRoutes().size());
+        assertEquals(1, lib.getRoutes().get(0).getSteps().size());
+        assertEquals("Good", lib.getRoutes().get(0).getSteps().get(0).getLabel());
+    }
 }

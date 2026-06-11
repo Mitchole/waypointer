@@ -31,6 +31,8 @@ public class RouteJsonCodec
         // Defensive: Gson may leave nulls if fields were absent.
         if (lib.getRoutes() == null) lib.setRoutes(new java.util.ArrayList<>());
         if (lib.getSchemaVersion() == 0) lib.setSchemaVersion(RouteLibrary.CURRENT_SCHEMA_VERSION);
+        // Drop routes missing required fields and strip invalid steps from survivors.
+        lib.setRoutes(ModelSanitizer.sanitizeRoutes(lib.getRoutes()));
         return lib;
     }
 
