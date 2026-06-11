@@ -12,8 +12,10 @@ import java.util.List;
 /**
  * Drops decoded entries missing required fields so partial or hostile JSON -- pasted share
  * codes or a corrupted config blob -- cannot push null-field model objects into the panel or
- * the route overlay. Pure filtering: surviving entries are returned unchanged, invalid ones are
- * removed. Never throws; callers decide whether a drop becomes a whole-code rejection.
+ * the route overlay. Filtering: invalid entries are removed; surviving entries are returned as-is,
+ * except a surviving route has its own step list replaced with the sanitized one (see
+ * {@link #sanitizeRoutes}). Never throws; callers decide whether a drop becomes a whole-code
+ * rejection.
  */
 final class ModelSanitizer
 {
