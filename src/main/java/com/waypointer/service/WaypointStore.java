@@ -51,11 +51,9 @@ public class WaypointStore
      * ({@link #deleteWaypoint(UUID)}, {@link #deleteWaypoints(Collection)},
      * {@link #updateWaypointPoint(UUID, int)}, {@link #deleteCategory(UUID, boolean)}), each of
      * which arms it via {@link #armUndoAndNotify(Runnable)}. Every other successful mutation goes
-     * through {@link #notifyChanged()}, which clears the slot. A mutation that no-ops or is
-     * rejected before firing leaves the slot untouched. Survives toast hide; does not survive
-     * plugin disable/enable.
+     * through {@link #notifyChanged()}, which clears it.
      */
-    private Runnable lastUndo;
+    private final UndoBuffer undo = new UndoBuffer();
 
     /**
      * Default notify path for every mutation: clears the undo slot, then fires. Clearing here
@@ -64,14 +62,14 @@ public class WaypointStore
      */
     private void notifyChanged()
     {
-        lastUndo = null;
+        undo.clear();
         fireChanged();
     }
 
     /** Arms the single-slot undo buffer with {@code inverse}, then fires without clearing it. */
     private void armUndoAndNotify(Runnable inverse)
     {
-        lastUndo = inverse;
+        undo.arm(inverse);
         fireChanged();
     }
 
@@ -486,7 +484,7 @@ public class WaypointStore
 
     public Listeners.Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
 
-    public boolean hasUndoable() { return lastUndo != null; }
+    public boolean hasUndoable() { return undo.hasUndoable(); }
 
     /**
      * Run the inverse of the most recent destructive op, if any. Clears the slot before
@@ -494,14 +492,12 @@ public class WaypointStore
      */
     public void undoLast()
     {
-        Runnable u = lastUndo;
-        lastUndo = null;
-        if (u != null) u.run();
+        undo.runAndClear();
     }
 
     // Package-private test seam: arm the slot with an arbitrary runnable so tests can
     // verify that non-undoable mutations clear it. Production code never calls this.
-    void testArmUndoSlot(Runnable r) { this.lastUndo = r; }
+    void testArmUndoSlot(Runnable r) { undo.arm(r); }
 
     /** Test seam: number of currently-subscribed listeners. */
     public int listenerCountForTest()
