@@ -129,19 +129,14 @@ public class WaypointStore
 
     public Category getUncategorized()
     {
-        return library.getCategories().stream()
-            .filter(Category::isUncategorized)
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException("Uncategorized sentinel missing"));
+        return views.getUncategorized();
     }
 
     public Category getCategoryById(UUID id) { return views.getCategoryById(id); }
 
     public Category getCategoryByName(String name)
     {
-        return library.getCategories().stream()
-            .filter(c -> c.getName().equalsIgnoreCase(name))
-            .findFirst().orElse(null);
+        return views.getCategoryByName(name);
     }
 
     public Waypoint getWaypointById(UUID id) { return views.getWaypointById(id); }
@@ -210,7 +205,7 @@ public class WaypointStore
             for (Waypoint w : affected) prevSort.put(w.getId(), w.getSortOrder());
 
             UUID uId = getUncategorized().getId();
-            int nextOrder = nextWaypointSortOrder(uId);
+            int nextOrder = views.nextWaypointSortOrder(uId);
             for (Waypoint w : affected)
             {
                 w.setCategoryId(uId);
@@ -300,7 +295,7 @@ public class WaypointStore
             null,
             "",
             Instant.now(),
-            nextWaypointSortOrder(categoryId),
+            views.nextWaypointSortOrder(categoryId),
             false,
             null,
             false);
@@ -438,7 +433,7 @@ public class WaypointStore
         if (w == null) return;
         if (getCategoryById(newCategoryId) == null) return;
         w.setCategoryId(newCategoryId);
-        w.setSortOrder(nextWaypointSortOrder(newCategoryId));
+        w.setSortOrder(views.nextWaypointSortOrder(newCategoryId));
         notifyChanged();
     }
 
@@ -450,7 +445,7 @@ public class WaypointStore
     public void moveWaypointsToCategory(Collection<UUID> ids, UUID targetId)
     {
         if (getCategoryById(targetId) == null) return;
-        int order = nextWaypointSortOrder(targetId);
+        int order = views.nextWaypointSortOrder(targetId);
         boolean any = false;
         for (UUID id : ids)
         {
@@ -531,7 +526,7 @@ public class WaypointStore
             {
                 resolvedCat = getUncategorized().getId();
             }
-            int sortOrder = nextWaypointSortOrder(resolvedCat);
+            int sortOrder = views.nextWaypointSortOrder(resolvedCat);
             library.getWaypoints().add(new Waypoint(
                 w.getId(), w.getName(), w.getPackedWorldPoint(),
                 resolvedCat, w.getIconId(), w.getNotes() == null ? "" : w.getNotes(),
@@ -604,13 +599,6 @@ public class WaypointStore
             saveSub.close();
             saveSub = null;
         }
-    }
-
-    private int nextWaypointSortOrder(UUID categoryId)
-    {
-        return library.getWaypoints().stream()
-            .filter(w -> w.getCategoryId().equals(categoryId))
-            .mapToInt(Waypoint::getSortOrder).max().orElse(-1) + 1;
     }
 
     private void ensureUncategorized()
