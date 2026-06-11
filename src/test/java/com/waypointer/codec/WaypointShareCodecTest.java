@@ -224,4 +224,43 @@ public class WaypointShareCodecTest
         assertNotNull(back);
         assertEquals(Library.CURRENT_SCHEMA_VERSION, back.getSchemaVersion());
     }
+
+    private static String wp1(String innerJson) throws java.io.IOException
+    {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.GZIPOutputStream gz = new java.util.zip.GZIPOutputStream(baos))
+        {
+            gz.write(innerJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+        return "WP1:" + java.util.Base64.getEncoder().withoutPadding()
+            .encodeToString(baos.toByteArray());
+    }
+
+    @Test(expected = WaypointShareCodec.MalformedCodeException.class)
+    public void rejectsSingleWithEmptyWaypointAndCategory() throws Exception
+    {
+        codec.decodeSingle(wp1("{\"waypoint\":{},\"category\":{}}"));
+    }
+
+    @Test(expected = WaypointShareCodec.MalformedCodeException.class)
+    public void rejectsSingleWithZeroCoordinate() throws Exception
+    {
+        UUID catId = UUID.randomUUID();
+        String json = "{\"waypoint\":{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"X\","
+            + "\"packedWorldPoint\":0,\"categoryId\":\"" + catId + "\"},"
+            + "\"category\":{\"id\":\"" + catId + "\",\"name\":\"Bossing\","
+            + "\"sortOrder\":0,\"uncategorized\":false,\"bundled\":false}}";
+        codec.decodeSingle(wp1(json));
+    }
+
+    @Test(expected = WaypointShareCodec.MalformedCodeException.class)
+    public void rejectsSingleWithNamelessCategory() throws Exception
+    {
+        UUID catId = UUID.randomUUID();
+        String json = "{\"waypoint\":{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Vorkath\","
+            + "\"packedWorldPoint\":42,\"categoryId\":\"" + catId + "\"},"
+            + "\"category\":{\"id\":\"" + catId + "\",\"sortOrder\":0,"
+            + "\"uncategorized\":false,\"bundled\":false}}";
+        codec.decodeSingle(wp1(json));
+    }
 }

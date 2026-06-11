@@ -36,7 +36,12 @@ public class WaypointShareCodec
         JsonObject obj = parseObject(json);
         Waypoint w = gson.fromJson(obj.get("waypoint"), Waypoint.class);
         Category c = gson.fromJson(obj.get("category"), Category.class);
-        if (w == null || c == null) throw new MalformedCodeException("Missing waypoint or category");
+        // Single-entity code: reject the whole code if its one waypoint or category is missing
+        // required fields, rather than importing a null-field entity.
+        if (!ModelSanitizer.isValidWaypoint(w) || !ModelSanitizer.isValidCategory(c))
+        {
+            throw new MalformedCodeException("Missing or invalid waypoint or category");
+        }
         return new SingleResult(w, c);
     }
 
