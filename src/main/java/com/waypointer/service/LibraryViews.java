@@ -113,6 +113,28 @@ final class LibraryViews
         return bucket == null ? Collections.emptyList() : Collections.unmodifiableList(bucket);
     }
 
+    Category getCategoryByName(String name)
+    {
+        return library.get().getCategories().stream()
+            .filter(c -> c.getName().equalsIgnoreCase(name))
+            .findFirst().orElse(null);
+    }
+
+    Category getUncategorized()
+    {
+        return library.get().getCategories().stream()
+            .filter(Category::isUncategorized)
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("Uncategorized sentinel missing"));
+    }
+
+    int nextWaypointSortOrder(UUID categoryId)
+    {
+        return library.get().getWaypoints().stream()
+            .filter(w -> w.getCategoryId().equals(categoryId))
+            .mapToInt(Waypoint::getSortOrder).max().orElse(-1) + 1;
+    }
+
     private static Comparator<Waypoint> comparatorFor(CategorySortMode mode)
     {
         if (mode == null || mode == CategorySortMode.MANUAL)
