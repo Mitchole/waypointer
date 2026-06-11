@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +38,7 @@ public class WaypointStore
     private volatile Library library = new Library();
     private final Listeners listeners = new Listeners();
     private final LibraryViews views = new LibraryViews(() -> library);
+    private final LibraryMerger merger = new LibraryMerger();
 
     // Packed-point -> NPC name for waypoints that target an NPC. Read from the client thread by
     // NpcHighlightOverlay.render() (~50fps); rebuilt eagerly on every mutation in fireChanged().
@@ -474,74 +474,10 @@ public class WaypointStore
     /** Merge another library into this one. Dedupe by id; rebind incoming categoryIds by name. */
     public ImportResult importMerge(Library incoming)
     {
-        ImportResult result = new ImportResult();
-        Map<UUID, UUID> categoryIdRemap = new HashMap<>();
-
-        // Phase 1: categories
-        for (Category c : incoming.getCategories())
-        {
-            if (c.isUncategorized()) continue; // never duplicate the sentinel
-            Category existingById = getCategoryById(c.getId());
-            if (existingById != null) continue;
-            Category existingByName = getCategoryByName(c.getName());
-            if (existingByName != null)
-            {
-                categoryIdRemap.put(c.getId(), existingByName.getId());
-            }
-            else
-            {
-                int nextOrder = library.getCategories().stream()
-                    .mapToInt(Category::getSortOrder).max().orElse(-1) + 1;
-                library.getCategories().add(new Category(
-                    c.getId(), c.getName(), nextOrder, false, c.getIconId(), c.isBundled()));
-                result.categoriesAdded++;
-            }
-        }
-
-        // Phase 1 mutated library.getCategories() directly, so the categoryIndex cache
-        // populated by the getCategoryById call above is now stale. Without this, Phase 2's
-        // category-exists check below returns null for every freshly-added category and the
-        // waypoint falls through to Uncategorized.
-        views.invalidateIndexes();
-
-        // Phase 2: waypoints
-        Set<UUID> existingWpIds = library.getWaypoints().stream()
-            .map(Waypoint::getId).collect(Collectors.toCollection(HashSet::new));
-        for (Waypoint w : incoming.getWaypoints())
-        {
-            if (existingWpIds.contains(w.getId()))
-            {
-                result.waypointsSkipped++;
-                continue;
-            }
-            UUID resolvedCat = categoryIdRemap.getOrDefault(w.getCategoryId(), w.getCategoryId());
-            // If incoming categoryId is the Uncategorized sentinel id from the source side, map
-            // it to OUR uncategorized id.
-            Category srcCat = findInList(incoming.getCategories(), w.getCategoryId());
-            if (srcCat != null && srcCat.isUncategorized())
-            {
-                resolvedCat = getUncategorized().getId();
-            }
-            if (getCategoryById(resolvedCat) == null)
-            {
-                resolvedCat = getUncategorized().getId();
-            }
-            int sortOrder = views.nextWaypointSortOrder(resolvedCat);
-            library.getWaypoints().add(new Waypoint(
-                w.getId(), w.getName(), w.getPackedWorldPoint(),
-                resolvedCat, w.getIconId(), w.getNotes() == null ? "" : w.getNotes(),
-                w.getCreatedAt() == null ? Instant.now() : w.getCreatedAt(),
-                sortOrder,
-                false,
-                null,
-                false));
-            result.waypointsAdded++;
-        }
-
-        // Also fire when only categories were added: a categories-only import (e.g. defaults
-        // with an empty waypoints list) would otherwise skip the rebuild + save and the new
-        // categories would vanish on the next plugin reload.
-        if (result.waypointsAdded > 0 || result.categoriesAdded > 0 || !categoryIdRemap.isEmpty())
+        ImportResult result = merger.merge(library, views, incoming);
+        // Also fire when only categories were added or matched by name: a categories-only import
+        // would otherwise skip the rebuild + save and the new categories would vanish on reload.
+        if (result.waypointsAdded > 0 || result.categoriesAdded > 0 || result.categoriesMerged > 0)
         {
             notifyChanged();
         }
@@ -613,17 +549,12 @@ public class WaypointStore
         }
     }
 
-    private static Category findInList(List<Category> list, UUID id)
-    {
-        for (Category c : list) if (c.getId().equals(id)) return c;
-        return null;
-    }
-
     public static class ImportResult
     {
         public int waypointsAdded;
         public int waypointsSkipped;
         public int categoriesAdded;
+        public int categoriesMerged;
     }
 
 }
