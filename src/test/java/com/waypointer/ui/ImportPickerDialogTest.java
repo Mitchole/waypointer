@@ -2,6 +2,7 @@ package com.waypointer.ui;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.waypointer.codec.DecodeReport;
 import com.waypointer.codec.LibraryJsonCodec;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
@@ -110,5 +111,31 @@ public class ImportPickerDialogTest
         assertEquals("Banks", captured.getCategories().get(0).getName());
         assertEquals(captured.getCategories().get(0).getId(),
             captured.getWaypoints().get(0).getCategoryId());
+    }
+
+    @Test
+    public void loadNoticeOnlyWhenEntriesDropped()
+    {
+        DecodeReport noDrops = new DecodeReport(new Library(), 0, 0);
+        assertNull(ImportPickerDialog.loadNoticeOrNull(noDrops));
+
+        DecodeReport withDrops = new DecodeReport(oneWaypointLibrary(), 2, 1);
+        String notice = ImportPickerDialog.loadNoticeOrNull(withDrops);
+        assertNotNull(notice);
+        assertTrue(notice.contains("3 invalid"));
+    }
+
+    @Test
+    public void importSummaryOmitsSkippedWhenZero()
+    {
+        WaypointStore.ImportResult none = new WaypointStore.ImportResult();
+        none.waypointsAdded = 2;
+        none.categoriesAdded = 1;
+        assertEquals("Imported 2 waypoints, 1 categories.", ImportPickerDialog.importSummary(none));
+
+        WaypointStore.ImportResult some = new WaypointStore.ImportResult();
+        some.waypointsAdded = 1;
+        some.waypointsSkipped = 3;
+        assertTrue(ImportPickerDialog.importSummary(some).contains("Skipped 3 already in your library"));
     }
 }

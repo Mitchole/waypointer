@@ -1,5 +1,6 @@
 package com.waypointer.ui;
 
+import com.waypointer.codec.DecodeReport;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.LibrarySubsetBuilder;
@@ -106,8 +107,35 @@ final class ImportPickerDialog extends JDialog
 
     Library decodeCodeOrNull(String text)
     {
-        try { return shareCodec.decodeLibrary(text); }
+        DecodeReport r = decodeReportOrNull(text);
+        return r == null ? null : r.library;
+    }
+
+    DecodeReport decodeReportOrNull(String text)
+    {
+        try { return shareCodec.decodeLibraryWithReport(text); }
         catch (RuntimeException ex) { return null; }
+    }
+
+    /** Load-time notice when a pasted code had unreadable entries; null when nothing was dropped. */
+    static String loadNoticeOrNull(DecodeReport report)
+    {
+        if (report == null || report.totalDropped() == 0) return null;
+        return String.format("Loaded %d waypoints, %d categories; %d invalid entries skipped.",
+            report.library.getWaypoints().size(), report.library.getCategories().size(),
+            report.totalDropped());
+    }
+
+    /** Import summary: base counts, plus a duplicates clause only when some were skipped. */
+    static String importSummary(WaypointStore.ImportResult r)
+    {
+        String summary = String.format("Imported %d waypoints, %d categories.",
+            r.waypointsAdded, r.categoriesAdded);
+        if (r.waypointsSkipped > 0)
+        {
+            summary += String.format(" Skipped %d already in your library.", r.waypointsSkipped);
+        }
+        return summary;
     }
 
     void populate(Library loaded)
@@ -139,13 +167,15 @@ final class ImportPickerDialog extends JDialog
 
     private void onLoadCode()
     {
-        Library lib = decodeCodeOrNull(codeArea.getText());
-        if (lib == null)
+        DecodeReport report = decodeReportOrNull(codeArea.getText());
+        if (report == null)
         {
             warn("Not a readable share code (expected WP1: or WPL1:).");
             return;
         }
-        populate(lib);
+        populate(report.library);
+        String notice = loadNoticeOrNull(report);
+        if (notice != null) toasts.show(notice);
     }
 
     private void onImport()
@@ -153,8 +183,7 @@ final class ImportPickerDialog extends JDialog
         WaypointStore.ImportResult r = importSelected();
         if (r != null)
         {
-            toasts.show(String.format("Imported %d waypoints, %d categories. Skipped %d.",
-                r.waypointsAdded, r.categoriesAdded, r.waypointsSkipped));
+            toasts.show(importSummary(r));
         }
         dispose();
     }
