@@ -38,11 +38,13 @@ public class RouteShareCodec
         {
             throw new MalformedCodeException("Bad JSON inside route code");
         }
-        if (route == null || route.getName() == null)
+        if (route == null || route.getId() == null || route.getName() == null)
         {
-            throw new MalformedCodeException("Route decoded as null or nameless");
+            throw new MalformedCodeException("Route decoded as null, idless, or nameless");
         }
-        if (route.getSteps() == null) route.setSteps(new java.util.ArrayList<>());
+        // Single-entity code: keep the route but strip any steps missing required fields, so a
+        // null-text step can never reach boxTextOrLabel() and the overlay.
+        route.setSteps(ModelSanitizer.sanitizeSteps(route.getSteps()));
         return route;
     }
 

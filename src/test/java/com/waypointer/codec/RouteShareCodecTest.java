@@ -1,6 +1,7 @@
 package com.waypointer.codec;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -75,5 +76,44 @@ public class RouteShareCodecTest
     public void garbageBase64Throws()
     {
         codec.decodeRoute("RT1:!!!notbase64!!!");
+    }
+
+    private static String rt1(String innerJson) throws java.io.IOException
+    {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.GZIPOutputStream gz = new java.util.zip.GZIPOutputStream(baos))
+        {
+            gz.write(innerJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+        return "RT1:" + java.util.Base64.getEncoder().withoutPadding()
+            .encodeToString(baos.toByteArray());
+    }
+
+    @Test(expected = RouteShareCodec.MalformedCodeException.class)
+    public void rejectsRouteWithNullId() throws Exception
+    {
+        codec.decodeRoute(rt1("{\"name\":\"Herb run\",\"steps\":[]}"));
+    }
+
+    @Test(expected = RouteShareCodec.MalformedCodeException.class)
+    public void rejectsWrongTopLevelType() throws Exception
+    {
+        codec.decodeRoute(rt1("[]"));
+    }
+
+    @Test
+    public void dropsInvalidStepsButKeepsRoute() throws Exception
+    {
+        String json = "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Herb run\",\"steps\":["
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"type\":\"MANUAL\",\"label\":\"Good\"},"
+            + "{\"id\":\"" + UUID.randomUUID() + "\",\"type\":\"MANUAL\"}"
+            + "]}";
+
+        Route decoded = codec.decodeRoute(rt1(json));
+
+        assertEquals(1, decoded.getSteps().size());
+        assertEquals("Good", decoded.getSteps().get(0).getLabel());
+        assertNotNull("survivor must have non-null overlay text",
+            decoded.getSteps().get(0).boxTextOrLabel());
     }
 }
