@@ -51,9 +51,8 @@ waypoints into guided **Routes** for farm runs and agility laps.
 
 1. Install the [Shortest Path](https://github.com/Skretzo/shortest-path) plugin from the
    RuneLite Plugin Hub. Waypointer relies on it for all pathfinding.
-2. Install Waypointer from the RuneLite Plugin Hub. *(Coming soon. Until then you can build
-   it yourself; see [DEVELOPER.md](DEVELOPER.md).)*
-3. Open the Waypointer panel from the RuneLite sidebar (the pin icon). The tabs across the top
+2. Install Waypointer from the RuneLite Plugin Hub.
+3. Open the Waypointer panel from the RuneLite sidebar. The tabs across the top
    are **My Waypoints**, **Presets**, and **Routes**.
 4. Your library starts empty. It is saved per RuneScape account, so the panel stays empty
    until you log in. Add your own waypoints, or open the **Presets** tab to start from a
