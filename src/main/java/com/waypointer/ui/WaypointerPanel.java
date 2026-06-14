@@ -245,6 +245,7 @@ public class WaypointerPanel extends PluginPanel
      */
     public void dispose()
     {
+        if (searchDebounceTimer != null) searchDebounceTimer.stop();
         if (storeSub != null) { storeSub.close(); storeSub = null; }
         if (pathSub != null) { pathSub.close(); pathSub = null; }
         nearestLandmarkBar.dispose();
