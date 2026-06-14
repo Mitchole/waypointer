@@ -27,7 +27,7 @@ public final class Route
     {
         this.id = id;
         this.name = name;
-        this.steps = steps;
+        this.steps = steps == null ? new ArrayList<>() : new ArrayList<>(steps);
         this.repeating = repeating;
         this.createdAt = createdAt;
         this.sortOrder = sortOrder;
