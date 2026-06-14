@@ -495,7 +495,7 @@ public class WaypointerPanel extends PluginPanel
         if (isFiltering && !pinnedRendered && !cat.rendered) addNoMatchLabel();
 
         bulkSelect.setVisibleOrderedIds(visibleIds);
-        addFooter(cat.totalWaypoints, cat.nonEmptyCategoryCount);
+        addFooter(isFiltering, visibleIds.size(), cat);
         body.revalidate();
         body.repaint();
     }
@@ -505,6 +505,7 @@ public class WaypointerPanel extends PluginPanel
         boolean rendered;
         int nonEmptyCategoryCount;
         int totalWaypoints;
+        int shownCategoryCount;
     }
 
     private void addBanners()
@@ -623,6 +624,7 @@ public class WaypointerPanel extends PluginPanel
                 if (prevWasSection) body.add(buildSectionDivider());
                 body.add(section);
                 result.rendered = true;
+                result.shownCategoryCount++;
                 prevWasSection = true;
             }
         }
@@ -638,14 +640,21 @@ public class WaypointerPanel extends PluginPanel
         body.add(none);
     }
 
-    private void addFooter(int totalWaypoints, int nonEmptyCategoryCount)
+    private void addFooter(boolean filtering, int shownWaypoints, CategoryRender cat)
     {
         // Push remaining vertical space to the bottom so sections stack tight at the top.
         body.add(Box.createVerticalGlue());
         // Footer (#23) sits below the glue: pinned to the viewport bottom on a short list,
         // scrolls in after the last section on a long one. Divider separates it from the list.
         body.add(buildSectionDivider());
-        footer.refresh(totalWaypoints, nonEmptyCategoryCount);
+        if (filtering)
+        {
+            footer.refreshFiltered(shownWaypoints, cat.totalWaypoints, cat.shownCategoryCount);
+        }
+        else
+        {
+            footer.refresh(cat.totalWaypoints, cat.nonEmptyCategoryCount);
+        }
         body.add(footer);
     }
 
