@@ -138,4 +138,36 @@ public class ImportPickerDialogTest
         some.waypointsSkipped = 3;
         assertTrue(ImportPickerDialog.importSummary(some).contains("Skipped 3 already in your library"));
     }
+
+    @Test
+    public void badCodeShowsInlineErrorNotModal()
+    {
+        Headless.assumeDisplay();
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+        ImportPickerDialog d = newDialog(store);
+
+        d.loadCode("not a real code");
+
+        assertTrue("error mentions the expected prefixes, got: " + d.getErrorText(),
+            d.getErrorText().contains("WP1:"));
+        assertTrue(d.isErrorVisible());
+        assertFalse(d.hasLoadedSource());
+    }
+
+    @Test
+    public void validCodeAfterBadOneClearsErrorAndPopulates()
+    {
+        Headless.assumeDisplay();
+        String code = shareCodec.encodeLibrary(oneWaypointLibrary());
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+        ImportPickerDialog d = newDialog(store);
+
+        d.loadCode("garbage");   // shows the inline error
+        d.loadCode(code);        // valid -> clears it and loads the tree
+
+        assertFalse(d.isErrorVisible());
+        assertTrue(d.hasLoadedSource());
+    }
 }

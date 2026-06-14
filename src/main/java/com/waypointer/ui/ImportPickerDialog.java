@@ -15,7 +15,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -37,6 +36,7 @@ final class ImportPickerDialog extends JDialog
     private final JTextArea codeArea = new JTextArea(3, 32);
     private final JPanel treeHolder = new JPanel(new BorderLayout());
     private final JButton importBtn = new JButton("Import selected");
+    private final JLabel errorLabel = Styles.errorLabel();
 
     private Library incoming;            // null until a source loads
     private WaypointPickerModel model;   // null until a source loads
@@ -85,6 +85,7 @@ final class ImportPickerDialog extends JDialog
         Styles.secondaryButton(loadCode);
         loadCode.addActionListener(e -> onLoadCode());
         buttons.add(loadCode);
+        buttons.add(errorLabel);
         wrap.add(buttons, BorderLayout.SOUTH);
         return wrap;
     }
@@ -167,16 +168,42 @@ final class ImportPickerDialog extends JDialog
 
     private void onLoadCode()
     {
-        DecodeReport report = decodeReportOrNull(codeArea.getText());
+        loadCode(codeArea.getText());
+    }
+
+    /** Package-private so a test can drive load without popping any dialog. */
+    void loadCode(String text)
+    {
+        DecodeReport report = decodeReportOrNull(text);
         if (report == null)
         {
-            warn("Not a readable share code (expected WP1: or WPL1:).");
+            showError("Not a readable share code (expected WP1: or WPL1:).");
             return;
         }
+        clearError();
         populate(report.library);
         String notice = loadNoticeOrNull(report);
         if (notice != null) toasts.show(notice);
     }
+
+    private void showError(String msg)
+    {
+        errorLabel.setText(msg);
+        errorLabel.setVisible(true);
+        errorLabel.getParent().revalidate();
+        errorLabel.getParent().repaint();
+        codeArea.requestFocusInWindow();
+    }
+
+    private void clearError()
+    {
+        errorLabel.setText(" ");
+        errorLabel.setVisible(false);
+    }
+
+    String getErrorText() { return errorLabel.getText(); }
+
+    boolean isErrorVisible() { return errorLabel.isVisible(); }
 
     private void onImport()
     {
@@ -191,10 +218,5 @@ final class ImportPickerDialog extends JDialog
     private void updateImportButton()
     {
         importBtn.setEnabled(model != null && !model.isEmptySelection());
-    }
-
-    private void warn(String msg)
-    {
-        JOptionPane.showMessageDialog(this, msg, "Waypointer", JOptionPane.WARNING_MESSAGE);
     }
 }
