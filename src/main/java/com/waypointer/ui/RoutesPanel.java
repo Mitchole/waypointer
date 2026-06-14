@@ -46,6 +46,7 @@ public class RoutesPanel extends JPanel
     private final JPanel listCard = new JPanel(new BorderLayout());
     private final JPanel routeList = new JPanel();
     private final JPanel editorHost = new JPanel(new BorderLayout());
+    private final InlineInputForm inlineForm = new InlineInputForm();
 
     private final javax.swing.JScrollBar routeListScrollBar;
     private Listeners.Subscription storeSub;
@@ -79,7 +80,17 @@ public class RoutesPanel extends JPanel
         routeList.setLayout(new BoxLayout(routeList, BoxLayout.Y_AXIS));
         routeList.setBackground(ColorScheme.DARK_GRAY_COLOR);
         listCard.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        listCard.add(buildListHeader(), BorderLayout.NORTH);
+
+        JPanel listNorth = new JPanel();
+        listNorth.setLayout(new BoxLayout(listNorth, BoxLayout.Y_AXIS));
+        listNorth.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        JPanel listHeader = buildListHeader();
+        listHeader.setAlignmentX(LEFT_ALIGNMENT);
+        listNorth.add(listHeader);
+        inlineForm.setAlignmentX(LEFT_ALIGNMENT);
+        listNorth.add(inlineForm);
+        listCard.add(listNorth, BorderLayout.NORTH);
+
         // The panel is built before RuneLiteLAF installs, so pin the dark scrollbar now and
         // re-derive it from startUp() via refreshScrollbarStyling() once the LAF is live.
         javax.swing.JScrollPane listScroll = Styles.pinnedScrollPane(routeList);
@@ -106,19 +117,12 @@ public class RoutesPanel extends JPanel
         header.setBackground(ColorScheme.DARK_GRAY_COLOR);
         JButton create = new JButton("New route");
         Styles.secondaryButton(create);
-        create.addActionListener(e -> {
-            String name = JOptionPane.showInputDialog(this, "Route name:");
-            if (name != null && !name.trim().isEmpty())
-            {
-                Route r = store.createRoute(name.trim());
-                openEditorFor(r.getId());
-            }
-        });
+        create.addActionListener(e -> openNewRouteForm());
         header.add(create);
 
         JButton importBtn = new JButton("Import");
         Styles.secondaryButton(importBtn);
-        importBtn.addActionListener(e -> importFromCode());
+        importBtn.addActionListener(e -> openImportForm());
         header.add(importBtn);
         return header;
     }
@@ -195,20 +199,32 @@ public class RoutesPanel extends JPanel
         toasts.show("Route code copied to clipboard.");
     }
 
-    private void importFromCode()
+    private void openNewRouteForm()
     {
-        String code = JOptionPane.showInputDialog(this, "Paste a route code (RT1:...):");
-        if (code == null || code.trim().isEmpty()) return;
+        inlineForm.openFor("New route", "Create", name ->
+        {
+            Route r = store.createRoute(name);
+            openEditorFor(r.getId());
+            return null;
+        });
+    }
+
+    private void openImportForm()
+    {
+        inlineForm.openFor("Import route", "Import", this::importRouteFromCode);
+    }
+
+    /** Submit handler for the import form: returns an inline error message, or null on success. */
+    private String importRouteFromCode(String code)
+    {
         final Route imported;
         try
         {
-            imported = shareCodec.decodeRoute(code.trim());
+            imported = shareCodec.decodeRoute(code);
         }
         catch (RouteShareCodec.MalformedCodeException ex)
         {
-            JOptionPane.showMessageDialog(this, "That is not a valid route code.",
-                "Import failed", JOptionPane.WARNING_MESSAGE);
-            return;
+            return "Not a readable route code (expected RT1:).";
         }
         // Re-create through the store so the imported route gets fresh ids and persists.
         Route created = store.createRoute(imported.getName());
@@ -225,6 +241,7 @@ public class RoutesPanel extends JPanel
             }
         }
         toasts.show("Imported route: " + imported.getName());
+        return null;
     }
 
     /**
@@ -287,6 +304,9 @@ public class RoutesPanel extends JPanel
     // Test seams.
     Toasts getToastsForTest() { return toasts; }
     void addFromLibraryForTest(UUID routeId) { addFromLibrary(routeId); }
+    void openNewRouteFormForTest() { openNewRouteForm(); }
+    void openImportFormForTest() { openImportForm(); }
+    InlineInputForm inlineFormForTest() { return inlineForm; }
 
     @Override public Dimension getPreferredSize() { return new Dimension(PluginPanel.PANEL_WIDTH, 0); }
     @Override public Dimension getMinimumSize() { return new Dimension(PluginPanel.PANEL_WIDTH, 0); }
