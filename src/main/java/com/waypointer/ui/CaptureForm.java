@@ -45,7 +45,7 @@ class CaptureForm extends JPanel
     private final JTextField newCategoryName = new JTextField();
     private final JButton newCategoryCreate = new JButton("Create");
     private final JButton newCategoryCancel = new JButton("Cancel");
-    private final JLabel errorLabel = new JLabel(" ");
+    private final JLabel errorLabel = Styles.errorLabel();
     private CategoryComboController categoryController;
 
     private int packedPoint;
@@ -111,9 +111,7 @@ class CaptureForm extends JPanel
         newCategoryRow.add(newCategoryCancel, gn);
         stack.add(newCategoryRow);
 
-        errorLabel.setForeground(Styles.ERROR_RED);
         errorLabel.setAlignmentX(LEFT_ALIGNMENT);
-        errorLabel.setVisible(false);
         stack.add(errorLabel);
 
         add(stack, BorderLayout.CENTER);
