@@ -53,12 +53,32 @@ final class FooterStrip extends JPanel
             + categories + (categories == 1 ? " category" : " categories");
     }
 
+    // Pure filtered count-line formatter: shown-of-total plus the count of categories with
+    // matches. Package-private for unit tests, like countText. Separator is U+00B7.
+    static String countTextFiltered(int shown, int total, int categories)
+    {
+        return shown + " of " + total + " shown"
+            + " · "
+            + categories + (categories == 1 ? " category" : " categories");
+    }
+
     /** Refresh the label from counts the caller already computed. {@code waypoints} is the full
      * library total; {@code categories} is non-empty categories only. */
     void refresh(int waypoints, int categories)
     {
         label.setText("<html><div style='text-align:center;'>"
             + "<span style='color:" + Styles.MUTED_HEX + ";'>" + countText(waypoints, categories) + "</span><br>"
+            + "<span style='color:" + Styles.FAINT_HEX + ";font-style:italic;'>" + TIPS[tipIndex] + "</span>"
+            + "</div></html>");
+    }
+
+    /** Refresh the label for the filtered state. {@code shown} is the count of waypoints
+     * matching the active filter; {@code total} is the full library size; {@code categories}
+     * is the number of categories that have at least one match. */
+    void refreshFiltered(int shown, int total, int categories)
+    {
+        label.setText("<html><div style='text-align:center;'>"
+            + "<span style='color:" + Styles.MUTED_HEX + ";'>" + countTextFiltered(shown, total, categories) + "</span><br>"
             + "<span style='color:" + Styles.FAINT_HEX + ";font-style:italic;'>" + TIPS[tipIndex] + "</span>"
             + "</div></html>");
     }
