@@ -284,7 +284,7 @@ public class WaypointerPanel extends PluginPanel
         capture.readCurrentLocation(packed -> {
             if (packed == WorldPointPacker.UNDEFINED)
             {
-                toastOverlay.show("Log in to mark a location.");
+                toastOverlay.show("Log in to mark a location.", Toasts.Severity.WARN);
                 return;
             }
             captureForm.show(packed);
@@ -732,7 +732,7 @@ public class WaypointerPanel extends PluginPanel
                 }
                 if (!pathfinder.isAvailable())
                 {
-                    toastOverlay.show("Install the Shortest Path plugin to use Play.");
+                    toastOverlay.show("Install the Shortest Path plugin to use Play.", Toasts.Severity.WARN);
                     return;
                 }
                 if (!WildernessConfirmGuard.shouldProceed(w, config, wildernessGate, this, store)) return;
