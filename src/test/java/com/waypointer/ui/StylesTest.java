@@ -1,11 +1,13 @@
 package com.waypointer.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class StylesTest
@@ -43,5 +45,14 @@ public class StylesTest
         assertTrue(fired[0]);
         assertTrue(fired[1]);
         assertTrue(fired[2]);
+    }
+
+    @Test
+    public void errorLabel_isHiddenBlankAndRed()
+    {
+        JLabel label = Styles.errorLabel();
+        assertFalse("error label starts hidden", label.isVisible());
+        assertEquals(" ", label.getText());
+        assertEquals(Styles.ERROR_RED, label.getForeground());
     }
 }

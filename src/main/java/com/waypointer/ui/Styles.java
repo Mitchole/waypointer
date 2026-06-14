@@ -138,6 +138,17 @@ final class Styles
         return l;
     }
 
+    // A hidden, blank, red label for inline form-validation messages. Callers set the text and
+    // flip it visible on a failure, and clear it on success. Used by InlineInputForm and the
+    // import dialog so the validation style is defined once.
+    static JLabel errorLabel()
+    {
+        JLabel l = new JLabel(" ");
+        l.setForeground(ERROR_RED);
+        l.setVisible(false);
+        return l;
+    }
+
     // Width-unbounded, height-pinned maximum size. Return this from a component's
     // getMaximumSize() override so BoxLayout(Y_AXIS) stacks it at its preferred height
     // instead of stretching it into leftover column space.
