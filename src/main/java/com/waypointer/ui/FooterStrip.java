@@ -13,9 +13,9 @@ import net.runelite.client.ui.ColorScheme;
  * Footer strip: a centered count line plus one static tip, appended as the last body child after
  * the vertical glue so on a short list the glue pins it to the bottom of the viewport and on a
  * long list it scrolls in after the last section. Height-capped like the banners so the body's
- * {@code BoxLayout(Y_AXIS)} does not stretch it. Never hidden -- renders in every state. The
- * waypoint count is the full library total; the category count is non-empty categories only.
- * Neither count changes with the active search filter.
+ * {@code BoxLayout(Y_AXIS)} does not stretch it. Never hidden -- renders in every state. With no
+ * filter the count line shows the full library total and the non-empty category count; while a
+ * search filter is active it switches to "N of M shown" plus the number of categories that match.
  */
 final class FooterStrip extends JPanel
 {
