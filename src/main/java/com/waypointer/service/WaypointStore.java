@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,12 @@ public class WaypointStore
      * through {@link #notifyChanged()}, which clears it.
      */
     private final UndoBuffer undo = new UndoBuffer();
+
+    /**
+     * Time source for createdAt / pinnedAt stamps. Defaults to the wall clock; tests swap in a
+     * deterministic supplier via {@link #setClockForTest(Supplier)} to order pins without sleeping.
+     */
+    private Supplier<Instant> clock = Instant::now;
 
     /**
      * Re-entrancy depth of {@link #batch(Runnable)}. While positive, {@link #fireChanged()} keeps
@@ -334,7 +341,7 @@ public class WaypointStore
             categoryId,
             null,
             "",
-            Instant.now(),
+            clock.get(),
             views.nextWaypointSortOrder(categoryId),
             false,
             null,
@@ -367,7 +374,7 @@ public class WaypointStore
         if (w == null) return;
         if (pinned == w.isPinned()) return;
         w.setPinned(pinned);
-        w.setPinnedAt(pinned ? Instant.now() : null);
+        w.setPinnedAt(pinned ? clock.get() : null);
         notifyChanged();
     }
 
@@ -540,6 +547,10 @@ public class WaypointStore
     // Package-private test seam: arm the slot with an arbitrary runnable so tests can
     // verify that non-undoable mutations clear it. Production code never calls this.
     void testArmUndoSlot(Runnable r) { undo.arm(r); }
+
+    // Package-private test seam: swap the createdAt / pinnedAt time source so ordering tests do
+    // not rely on Thread.sleep. Production code never calls this.
+    void setClockForTest(Supplier<Instant> source) { this.clock = source; }
 
     /** Test seam: number of currently-subscribed listeners. */
     public int listenerCountForTest()

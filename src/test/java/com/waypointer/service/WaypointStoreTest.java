@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -554,16 +555,16 @@ public class WaypointStoreTest
     }
 
     @Test
-    public void getPinnedWaypointsAscendingByPinnedAt() throws InterruptedException
+    public void getPinnedWaypointsAscendingByPinnedAt()
     {
+        AtomicLong tick = new AtomicLong(1000L);
+        store.setClockForTest(() -> Instant.ofEpochMilli(tick.getAndAdd(1000L)));
         UUID uId = store.getUncategorized().getId();
         Waypoint a = store.createWaypoint(1, "A", uId);
         Waypoint b = store.createWaypoint(2, "B", uId);
         Waypoint c = store.createWaypoint(3, "C", uId);
         store.setWaypointPinned(a.getId(), true);
-        Thread.sleep(5);
         store.setWaypointPinned(b.getId(), true);
-        Thread.sleep(5);
         store.setWaypointPinned(c.getId(), true);
 
         List<Waypoint> asc = store.getPinnedWaypoints(false);
@@ -573,13 +574,14 @@ public class WaypointStoreTest
     }
 
     @Test
-    public void getPinnedWaypointsDescendingByPinnedAt() throws InterruptedException
+    public void getPinnedWaypointsDescendingByPinnedAt()
     {
+        AtomicLong tick = new AtomicLong(1000L);
+        store.setClockForTest(() -> Instant.ofEpochMilli(tick.getAndAdd(1000L)));
         UUID uId = store.getUncategorized().getId();
         Waypoint a = store.createWaypoint(1, "A", uId);
         Waypoint b = store.createWaypoint(2, "B", uId);
         store.setWaypointPinned(a.getId(), true);
-        Thread.sleep(5);
         store.setWaypointPinned(b.getId(), true);
 
         List<Waypoint> desc = store.getPinnedWaypoints(true);
