@@ -4,7 +4,6 @@ import com.waypointer.model.route.Route;
 import com.waypointer.model.route.RouteLibrary;
 import com.waypointer.model.route.RouteStep;
 import com.waypointer.model.route.StepType;
-import com.waypointer.util.Listeners;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,30 +22,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Singleton
-public class RouteStore
+public class RouteStore extends AbstractStore<RouteLibrary>
 {
-    // volatile: safe publication of the reference; mutations remain EDT-confined.
-    private volatile RouteLibrary library = new RouteLibrary();
-    private final Listeners listeners = new Listeners();
-
     @Inject
-    public RouteStore() {}
+    public RouteStore() { super(new RouteLibrary()); }
 
-    public void bootstrap(RouteLibrary lib)
-    {
-        this.library = lib;
-        notifyChanged();
-    }
-
-    public RouteLibrary getLibrary() { return library; }
-
-    public Listeners.Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
-
-    /** Test seam: number of currently-subscribed listeners. */
-    public int listenerCountForTest()
-    {
-        return listeners.size();
-    }
+    @Override
+    protected void notifyChanged() { fire(); }
 
     public List<Route> getRoutesOrdered()
     {
@@ -196,29 +178,5 @@ public class RouteStore
         if (r == null) return null;
         for (RouteStep s : r.getSteps()) if (s.getId().equals(stepId)) return s;
         return null;
-    }
-
-    private void notifyChanged()
-    {
-        listeners.fire();
-    }
-
-    // ---- Persistence wiring (write-through) ----
-
-    private Listeners.Subscription saveSub;
-
-    public void enablePersistence(Runnable saver)
-    {
-        if (saveSub != null) return;
-        saveSub = listeners.subscribe(saver);
-    }
-
-    public void disablePersistence()
-    {
-        if (saveSub != null)
-        {
-            saveSub.close();
-            saveSub = null;
-        }
     }
 }
