@@ -56,6 +56,16 @@ public class WaypointStore
     private final UndoBuffer undo = new UndoBuffer();
 
     /**
+     * Re-entrancy depth of {@link #batch(Runnable)}. While positive, {@link #fireChanged()} keeps
+     * the views cache and NPC snapshot current but defers the listener fire (and so the
+     * write-through save) until the outermost batch closes.
+     */
+    private int batchDepth = 0;
+
+    /** Set by a deferred {@link #fireChanged()} inside a batch; drives the single fire on close. */
+    private boolean batchDirty = false;
+
+    /**
      * Default notify path for every mutation: clears the undo slot, then fires. Clearing here
      * makes "no undo" the default for any successful mutation that fires listeners. Methods that
      * want their inverse to survive must opt in via {@link #armUndoAndNotify(Runnable)} instead.
@@ -73,10 +83,42 @@ public class WaypointStore
         fireChanged();
     }
 
+    /**
+     * Runs {@code body} as one logical mutation: any {@code notifyChanged} / {@code armUndoAndNotify}
+     * it triggers is coalesced into a single listener fire (and thus a single write-through save)
+     * when the outermost batch closes. The views cache and NPC snapshot are still refreshed after
+     * each inner mutation, so a later step inside the batch sees the effects of earlier ones (the
+     * cross-category drag path reparents, then reads the category to reorder). Undo is cleared:
+     * a multi-step batch is not individually undoable. A batch that changes nothing fires nothing.
+     */
+    public void batch(Runnable body)
+    {
+        batchDepth++;
+        try
+        {
+            body.run();
+        }
+        finally
+        {
+            batchDepth--;
+            if (batchDepth == 0 && batchDirty)
+            {
+                batchDirty = false;
+                undo.clear();
+                listeners.fire();
+            }
+        }
+    }
+
     private void fireChanged()
     {
         views.invalidate();
         rebuildNpcNameSnapshot();
+        if (batchDepth > 0)
+        {
+            batchDirty = true;
+            return;
+        }
         listeners.fire();
     }
 

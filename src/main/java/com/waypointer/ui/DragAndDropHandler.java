@@ -97,11 +97,13 @@ public class DragAndDropHandler
                     if (dragged.equals(waypointId)) return false;
                     Waypoint draggedW = store.getWaypointById(dragged);
                     if (draggedW == null) return false;
-                    if (!draggedW.getCategoryId().equals(categoryId))
-                    {
-                        store.moveWaypointToCategory(dragged, categoryId);
-                    }
-                    moveBefore(categoryId, dragged, waypointId);
+                    store.batch(() -> {
+                        if (!draggedW.getCategoryId().equals(categoryId))
+                        {
+                            store.moveWaypointToCategory(dragged, categoryId);
+                        }
+                        moveBefore(categoryId, dragged, waypointId);
+                    });
                     springLoad.resolveOnDrop(categoryId);
                     onChange.run();
                     return true;
