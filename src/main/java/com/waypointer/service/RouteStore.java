@@ -42,6 +42,12 @@ public class RouteStore
 
     public Listeners.Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
 
+    /** Test seam: number of currently-subscribed listeners. */
+    public int listenerCountForTest()
+    {
+        return listeners.size();
+    }
+
     public List<Route> getRoutesOrdered()
     {
         List<Route> sorted = new ArrayList<>(library.getRoutes());
