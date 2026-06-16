@@ -4,7 +4,6 @@ import com.waypointer.model.Category;
 import com.waypointer.model.CategorySortMode;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
-import com.waypointer.util.Listeners;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,16 +27,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Singleton
-public class WaypointStore
+public class WaypointStore extends AbstractStore<Library>
 {
     private static final String UNCATEGORIZED_NAME = "Uncategorized";
 
-    /**
-     * Live in-memory library. {@code volatile} for safe publication of the reference to the
-     * render thread's NPC-name snapshot reads; multi-step mutations remain EDT-confined.
-     */
-    private volatile Library library = new Library();
-    private final Listeners listeners = new Listeners();
     private final LibraryViews views = new LibraryViews(() -> library);
     private final LibraryMerger merger = new LibraryMerger();
 
@@ -77,7 +70,8 @@ public class WaypointStore
      * makes "no undo" the default for any successful mutation that fires listeners. Methods that
      * want their inverse to survive must opt in via {@link #armUndoAndNotify(Runnable)} instead.
      */
-    private void notifyChanged()
+    @Override
+    protected void notifyChanged()
     {
         undo.clear();
         fireChanged();
@@ -112,7 +106,7 @@ public class WaypointStore
             {
                 batchDirty = false;
                 undo.clear();
-                listeners.fire();
+                fire();
             }
         }
     }
@@ -126,7 +120,7 @@ public class WaypointStore
             batchDirty = true;
             return;
         }
-        listeners.fire();
+        fire();
     }
 
     // Eagerly rebuild the packed->NPC-name snapshot on the mutating thread (the live list is only
@@ -148,22 +142,19 @@ public class WaypointStore
     }
 
     @Inject
-    public WaypointStore() {}
+    public WaypointStore() { super(new Library()); }
 
-    /** Initializes the store with a library, ensuring the Uncategorized sentinel is present. */
-    public void bootstrap(Library lib)
+    /**
+     * Ensures the Uncategorized sentinel after a bootstrap library swap. Invoked by
+     * {@link AbstractStore#bootstrap(Object)} before listeners fire, so a listener attached before
+     * bootstrap (e.g. the panel built by Guice before WaypointerPlugin.startUp() calls bootstrap)
+     * renders against the freshly-loaded data.
+     */
+    @Override
+    protected void afterBootstrap()
     {
-        this.library = lib;
         ensureUncategorized();
-        // Notify so any listener attached before bootstrap (e.g. the panel built by Guice
-        // before WaypointerPlugin.startUp() calls bootstrap with the loaded library) re-renders
-        // against the freshly-loaded data.
-        notifyChanged();
     }
-
-    // Live in-memory library. NOT a defensive copy; callers that mutate it bypass listeners
-    // and risk corrupting state. Read-only outside of test fixtures.
-    public Library getLibrary() { return library; }
 
     /**
      * Current packed-point -> NPC-name snapshot. Backed by a volatile reference rebuilt on every
@@ -531,8 +522,6 @@ public class WaypointStore
         return result;
     }
 
-    public Listeners.Subscription subscribe(Runnable r) { return listeners.subscribe(r); }
-
     public boolean hasUndoable() { return undo.hasUndoable(); }
 
     /**
@@ -551,40 +540,6 @@ public class WaypointStore
     // Package-private test seam: swap the createdAt / pinnedAt time source so ordering tests do
     // not rely on Thread.sleep. Production code never calls this.
     void setClockForTest(Supplier<Instant> source) { this.clock = source; }
-
-    /** Test seam: number of currently-subscribed listeners. */
-    public int listenerCountForTest()
-    {
-        return listeners.size();
-    }
-
-    // ---- Persistence wiring (write-through) ----
-
-    private Listeners.Subscription saveSub;
-
-    /**
-     * Subscribe a write-through saver fired synchronously on every mutation. Idempotent. The
-     * saver should read the live library (e.g. {@code () -> persistence.save(getLibrary())}); a
-     * later {@link #bootstrap(Library)} that swaps the library is picked up automatically.
-     */
-    public void enablePersistence(Runnable saver)
-    {
-        if (saveSub != null) return;
-        saveSub = listeners.subscribe(saver);
-    }
-
-    /**
-     * Detach the saver. Idempotent. Called from {@link com.waypointer.WaypointerPlugin#shutDown()}
-     * so plugin reload cycles do not stack savers.
-     */
-    public void disablePersistence()
-    {
-        if (saveSub != null)
-        {
-            saveSub.close();
-            saveSub = null;
-        }
-    }
 
     private void ensureUncategorized()
     {
