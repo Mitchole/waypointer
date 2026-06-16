@@ -1,6 +1,7 @@
 package com.waypointer.codec;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
@@ -57,9 +58,20 @@ final class JsonDecodeSupport
     {
         JsonObject obj = parseObject(json, onMalformed);
 
-        // Treat a missing schemaVersion as 0 (pre-versioned) so the migrator runs. Trusting the
-        // current version here would silently skip every future migration on legacy files.
-        int version = obj.has("schemaVersion") ? obj.get("schemaVersion").getAsInt() : 0;
+        // Treat a missing schemaVersion as 0 (pre-versioned) so the migrator runs. A present-but-
+        // non-numeric schemaVersion is a corrupt blob: route it through onMalformed rather than let
+        // getAsInt() throw an uncaught UnsupportedOperationException / NumberFormatException.
+        int version = 0;
+        if (obj.has("schemaVersion"))
+        {
+            JsonElement sv = obj.get("schemaVersion");
+            if (!sv.isJsonPrimitive() || !sv.getAsJsonPrimitive().isNumber())
+            {
+                throw onMalformed.apply(
+                    new JsonParseException("schemaVersion is not a number: " + sv));
+            }
+            version = sv.getAsInt();
+        }
         if (version > currentSchemaVersion)
         {
             throw onUnsupported.apply(version);

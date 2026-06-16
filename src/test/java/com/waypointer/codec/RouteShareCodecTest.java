@@ -102,6 +102,16 @@ public class RouteShareCodecTest
     }
 
     @Test
+    public void decodesRouteWithNullStepsAsEmpty() throws Exception
+    {
+        // A null steps array must sanitize to zero steps, not NPE in sanitizeSteps.
+        Route decoded = codec.decodeRoute(
+            rt1("{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"R\",\"steps\":null}"));
+        assertNotNull(decoded);
+        assertEquals(0, decoded.getSteps().size());
+    }
+
+    @Test
     public void dropsInvalidStepsButKeepsRoute() throws Exception
     {
         String json = "{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Herb run\",\"steps\":["

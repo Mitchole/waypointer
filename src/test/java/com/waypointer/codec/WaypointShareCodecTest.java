@@ -264,6 +264,47 @@ public class WaypointShareCodecTest
         codec.decodeSingle(wp1(json));
     }
 
+    @Test(expected = WaypointShareCodec.MalformedCodeException.class)
+    public void rejectsLibraryWithNullSchemaVersion() throws Exception
+    {
+        codec.decodeLibrary(wpl1("{\"schemaVersion\":null,\"categories\":[],\"waypoints\":[]}"));
+    }
+
+    @Test(expected = WaypointShareCodec.MalformedCodeException.class)
+    public void rejectsLibraryWithStringSchemaVersion() throws Exception
+    {
+        codec.decodeLibrary(wpl1("{\"schemaVersion\":\"x\",\"categories\":[],\"waypoints\":[]}"));
+    }
+
+    @Test(expected = WaypointShareCodec.MalformedCodeException.class)
+    public void rejectsLibraryWithInvalidBase64()
+    {
+        codec.decodeLibrary("WPL1:!!!notbase64!!!");
+    }
+
+    @Test(expected = WaypointShareCodec.MalformedCodeException.class)
+    public void rejectsLibraryWithArrayTopLevel() throws Exception
+    {
+        codec.decodeLibrary(wpl1("[]"));
+    }
+
+    @Test(expected = WaypointShareCodec.MalformedCodeException.class)
+    public void rejectsLibraryWithStringTopLevel() throws Exception
+    {
+        codec.decodeLibrary(wpl1("\"not an object\""));
+    }
+
+    @Test
+    public void decodesLibraryWithNullArrays() throws Exception
+    {
+        // Null categories/waypoints must decode to an empty library, not crash. Asserts the
+        // LibraryJsonCodec null-array defense reached through the share path.
+        Library back = codec.decodeLibrary(wpl1("{\"categories\":null,\"waypoints\":null}"));
+        assertNotNull(back);
+        assertEquals(0, back.getCategories().size());
+        assertEquals(0, back.getWaypoints().size());
+    }
+
     @Test
     public void decodeLibraryWithReportCountsDrops() throws Exception
     {
