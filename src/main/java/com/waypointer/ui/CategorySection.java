@@ -41,21 +41,67 @@ public class CategorySection extends CollapsibleSection
 
     private final Category category;
 
-    public CategorySection(Category category, List<Waypoint> waypoints, int activePathTarget,
-        boolean collapsed,
-        Consumer<Boolean> onCollapseChange,
-        BiConsumer<Waypoint, RowAction> onRowAction,
-        Function<Waypoint, Component> inlineProvider,
-        DragAndDropHandler dnd,
-        Actions actions,
-        SpriteManager spriteManager,
-        boolean selectMode,
-        BulkSelection selection,
-        BiConsumer<Waypoint, Boolean> onRowSelectClick,
-        BiConsumer<List<UUID>, Boolean> onHeaderSelectToggle)
+    public static Spec spec(Category category, List<Waypoint> waypoints)
     {
-        super(collapsed, onCollapseChange);
-        this.category = category;
+        return new Spec(category, waypoints);
+    }
+
+    /** Named, defaulted parameter object for {@link CategorySection}. Mirrors {@link WaypointRow.Spec}. */
+    public static final class Spec
+    {
+        private final Category category;
+        private final List<Waypoint> waypoints;
+        private int activePathTarget = WorldPointPacker.UNDEFINED;
+        private boolean collapsed;
+        private Consumer<Boolean> onCollapseChange = c -> {};
+        private BiConsumer<Waypoint, RowAction> onRowAction = (w, a) -> {};
+        private Function<Waypoint, Component> inlineProvider = w -> null;
+        private DragAndDropHandler dnd;
+        private Actions actions;
+        private SpriteManager spriteManager;
+        private boolean selectMode;
+        private BulkSelection selection;
+        private BiConsumer<Waypoint, Boolean> onRowSelectClick = (w, sel) -> {};
+        private BiConsumer<List<UUID>, Boolean> onHeaderSelectToggle = (ids, sel) -> {};
+
+        private Spec(Category category, List<Waypoint> waypoints)
+        {
+            this.category = category;
+            this.waypoints = waypoints;
+        }
+
+        public Spec activePathTarget(int v) { this.activePathTarget = v; return this; }
+        public Spec collapsed(boolean v) { this.collapsed = v; return this; }
+        public Spec onCollapseChange(Consumer<Boolean> v) { this.onCollapseChange = v; return this; }
+        public Spec onRowAction(BiConsumer<Waypoint, RowAction> v) { this.onRowAction = v; return this; }
+        public Spec inlineProvider(Function<Waypoint, Component> v) { this.inlineProvider = v; return this; }
+        public Spec dnd(DragAndDropHandler v) { this.dnd = v; return this; }
+        public Spec actions(Actions v) { this.actions = v; return this; }
+        public Spec spriteManager(SpriteManager v) { this.spriteManager = v; return this; }
+        public Spec selectMode(boolean v) { this.selectMode = v; return this; }
+        public Spec selection(BulkSelection v) { this.selection = v; return this; }
+        public Spec onRowSelectClick(BiConsumer<Waypoint, Boolean> v) { this.onRowSelectClick = v; return this; }
+        public Spec onHeaderSelectToggle(BiConsumer<List<UUID>, Boolean> v) { this.onHeaderSelectToggle = v; return this; }
+
+        public CategorySection build() { return new CategorySection(this); }
+    }
+
+    private CategorySection(Spec s)
+    {
+        super(s.collapsed, s.onCollapseChange);
+        this.category = s.category;
+        // Unpack the spec into locals so the construction logic below reads unchanged.
+        List<Waypoint> waypoints = s.waypoints;
+        int activePathTarget = s.activePathTarget;
+        BiConsumer<Waypoint, RowAction> onRowAction = s.onRowAction;
+        Function<Waypoint, Component> inlineProvider = s.inlineProvider;
+        DragAndDropHandler dnd = s.dnd;
+        Actions actions = s.actions;
+        SpriteManager spriteManager = s.spriteManager;
+        boolean selectMode = s.selectMode;
+        BulkSelection selection = s.selection;
+        BiConsumer<Waypoint, Boolean> onRowSelectClick = s.onRowSelectClick;
+        BiConsumer<List<UUID>, Boolean> onHeaderSelectToggle = s.onHeaderSelectToggle;
         Integer accent = category.getColor();
         if (accent != null)
         {

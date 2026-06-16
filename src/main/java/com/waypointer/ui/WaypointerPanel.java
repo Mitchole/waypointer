@@ -601,27 +601,29 @@ public class WaypointerPanel extends PluginPanel
                 // While filtering, force expanded so matches are visible.
                 boolean collapsed = isFiltering ? false
                     : collapsedByCategory.getOrDefault(c.getId(), false);
-                CategorySection section = new CategorySection(
-                    c, ws, pathfinder.getActiveTarget(), collapsed,
-                    isCollapsed -> {
+                CategorySection section = CategorySection.spec(c, ws)
+                    .activePathTarget(pathfinder.getActiveTarget())
+                    .collapsed(collapsed)
+                    .onCollapseChange(isCollapsed -> {
                         collapsedByCategory.put(c.getId(), isCollapsed);
                         config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
-                    },
-                    this::handleRowAction,
-                    this::inlineProviderFor,
-                    dnd,
-                    new CategorySection.Actions(
+                    })
+                    .onRowAction(this::handleRowAction)
+                    .inlineProvider(this::inlineProviderFor)
+                    .dnd(dnd)
+                    .actions(new CategorySection.Actions(
                         () -> categoryMenu.promptRename(c),
                         () -> categoryMenu.promptDelete(c),
                         () -> categoryMenu.promptSetIcon(c),
                         () -> categoryMenu.promptSetColour(c, this),
                         mode -> store.setCategorySortMode(c.getId(), mode),
-                        bulkSelect::enterSelectMode),
-                    spriteManager,
-                    bulkSelect.isSelectMode(),
-                    bulkSelect.selection(),
-                    bulkSelect::onRowSelectClicked,
-                    bulkSelect::onHeaderSelectToggle);
+                        bulkSelect::enterSelectMode))
+                    .spriteManager(spriteManager)
+                    .selectMode(bulkSelect.isSelectMode())
+                    .selection(bulkSelect.selection())
+                    .onRowSelectClick(bulkSelect::onRowSelectClicked)
+                    .onHeaderSelectToggle(bulkSelect::onHeaderSelectToggle)
+                    .build();
                 if (prevWasSection) body.add(buildSectionDivider());
                 body.add(section);
                 result.rendered = true;
