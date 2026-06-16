@@ -85,11 +85,11 @@ public class WaypointerPluginLifecycleTest
     {
         plugin.startUp();
         assertEquals("one saver after first startUp", 1, store.listenerCountForTest());
-        assertEquals(1, routeStore.listenerCountForTest());
+        assertEquals("one routeStore saver after first startUp", 1, routeStore.listenerCountForTest());
 
         plugin.shutDown();
         assertEquals("saver detached on shutDown", 0, store.listenerCountForTest());
-        assertEquals(0, routeStore.listenerCountForTest());
+        assertEquals("routeStore saver detached on shutDown", 0, routeStore.listenerCountForTest());
 
         // Every EventBus registration in startUp must have a matching unregistration in shutDown.
         // Captured before the second startUp, so register() reflects only the first startUp.
@@ -108,6 +108,6 @@ public class WaypointerPluginLifecycleTest
 
         plugin.startUp();
         assertEquals("saver must not stack on re-enable", 1, store.listenerCountForTest());
-        assertEquals(1, routeStore.listenerCountForTest());
+        assertEquals("routeStore saver must not stack on re-enable", 1, routeStore.listenerCountForTest());
     }
 }
