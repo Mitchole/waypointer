@@ -123,27 +123,7 @@ public class CategorySection extends CollapsibleSection
         // Drag must come from the label only; on headerRow, a click on the menu trigger
         // would accidentally start a drag.
         DropIndicatable headerIndicator = mode ->
-        {
-            switch (mode)
-            {
-                case NONE:
-                    headerRow.setBorder(restingHeaderBorder);
-                    headerRow.setBackground(restingHeaderBg);
-                    break;
-                case TINT:
-                    headerRow.setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
-                    break;
-                case BORDER_AND_TINT:
-                    headerRow.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(2, 0, 0, 0, ColorScheme.BRAND_ORANGE),
-                        restingHeaderBorder == null
-                            ? BorderFactory.createEmptyBorder()
-                            : restingHeaderBorder));
-                    headerRow.setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
-                    break;
-            }
-            headerRow.repaint();
-        };
+            DropIndicators.apply(headerRow, mode, restingHeaderBorder, restingHeaderBg);
         if (dnd != null) dnd.attachCategoryHeader(headerLabel, headerIndicator, category.getId(), this, headerRow);
 
         // Optional icon on the LEFT of the header row.
@@ -360,17 +340,9 @@ public class CategorySection extends CollapsibleSection
         @Override
         public void setDropIndicator(DropIndicatorMode mode)
         {
-            switch (mode)
-            {
-                case BORDER_AND_TINT:
-                    setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, ColorScheme.BRAND_ORANGE));
-                    break;
-                case NONE:
-                case TINT:
-                default:
-                    setBorder(resting);
-                    break;
-            }
+            // Transparent zone: it carries the orange accent border but never the tint.
+            setBorder(mode == DropIndicatorMode.BORDER_AND_TINT
+                ? DropIndicators.topAccentOver(resting) : resting);
             repaint();
         }
     }
@@ -402,21 +374,17 @@ public class CategorySection extends CollapsibleSection
         @Override
         public void setDropIndicator(DropIndicatorMode mode)
         {
-            switch (mode)
+            if (mode == DropIndicatorMode.BORDER_AND_TINT)
             {
-                case BORDER_AND_TINT:
-                    setOpaque(true);
-                    setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
-                    setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(2, 0, 0, 0, ColorScheme.BRAND_ORANGE),
-                        BorderFactory.createEmptyBorder(2, 10, 2, 4)));
-                    break;
-                case NONE:
-                case TINT:
-                default:
-                    setOpaque(false);
-                    setBorder(resting);
-                    break;
+                setOpaque(true);
+                setBackground(DropIndicators.TINT_BG);
+                // Accent over the zone's own padding (not the dashed resting border).
+                setBorder(DropIndicators.topAccentOver(BorderFactory.createEmptyBorder(2, 10, 2, 4)));
+            }
+            else
+            {
+                setOpaque(false);
+                setBorder(resting);
             }
             repaint();
         }

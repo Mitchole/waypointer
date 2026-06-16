@@ -261,24 +261,12 @@ public class WaypointRow extends JPanel implements DropIndicatable
     @Override
     public void setDropIndicator(DropIndicatorMode mode)
     {
-        switch (mode)
-        {
-            case NONE:
-                if (prevBorder != null) { setBorder(prevBorder); prevBorder = null; }
-                setBackground(restingBackground);
-                break;
-            case TINT:
-                setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
-                break;
-            case BORDER_AND_TINT:
-                if (prevBorder == null) prevBorder = getBorder();
-                setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(2, 0, 0, 0, ColorScheme.BRAND_ORANGE),
-                    prevBorder == null ? BorderFactory.createEmptyBorder() : prevBorder));
-                setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
-                break;
-        }
-        repaint();
+        // Lazily snapshot the resting border the first time the accent is added, so a later NONE
+        // restores it. prevBorder stays null until then, which topAccentOver() tolerates.
+        if (mode == DropIndicatorMode.BORDER_AND_TINT && prevBorder == null) prevBorder = getBorder();
+        Border resting = prevBorder != null ? prevBorder : getBorder();
+        DropIndicators.apply(this, mode, resting, restingBackground);
+        if (mode == DropIndicatorMode.NONE) prevBorder = null;
     }
 
     /**
