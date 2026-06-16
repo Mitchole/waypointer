@@ -10,8 +10,8 @@ public interface WaypointerConfig extends Config
     @ConfigItem(
         keyName = "tileRightClickEnabled",
         name = "Right-click tiles to save",
-        description = "Adds 'Save as Waypoint' to the right-click menu on tiles in the 3D world. "
-            + "Requires holding Shift to avoid menu clutter.",
+        description = "Adds 'Save as Waypoint' to the Shift + right-click menu on tiles in the 3D world. "
+            + "Shift is required, to keep the plain right-click menu uncluttered.",
         position = 10
     )
     default boolean tileRightClickEnabled() { return false; }

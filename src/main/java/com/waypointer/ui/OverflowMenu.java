@@ -76,7 +76,7 @@ final class OverflowMenu
         reset.addActionListener(e -> {
             // Custom options with Cancel as the default-focused button so a stray Enter
             // can't wipe the whole library - there is no undo for this.
-            String[] options = {"Cancel", "Delete everything"};
+            String[] options = {"Cancel", "Delete all waypoints and categories"};
             int choice = JOptionPane.showOptionDialog(anchor,
                 "Delete ALL waypoints and categories? This cannot be undone.",
                 "Reset library", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,

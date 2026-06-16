@@ -688,8 +688,8 @@ public class WaypointerPanel extends PluginPanel
         wrap.add(arrow, BorderLayout.NORTH);
 
         JLabel empty = new JLabel("<html><div style='text-align:center;padding:8px 12px 8px;"
-            + "color:" + Styles.MUTED_HEX + ";'>No waypoints yet.<br>Mark a location to begin. Or select "
-            + "'Presets' to add premade Waypoints</div></html>", SwingConstants.CENTER);
+            + "color:" + Styles.MUTED_HEX + ";'>No waypoints yet.<br>Use 'Mark current location' above to "
+            + "save one, or open 'Presets' for premade waypoints.</div></html>", SwingConstants.CENTER);
         empty.setForeground(Color.LIGHT_GRAY);
         wrap.add(empty, BorderLayout.CENTER);
 
