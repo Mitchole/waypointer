@@ -71,7 +71,10 @@ public class SailingJourneyOrchestrator
             feedback.show("Install Chart Plotter to sail to ocean waypoints.", true);
             return;
         }
-        reset(false); // drop any prior journey without firing yet
+        // Drop any prior journey, clearing its in-flight leg, without firing yet.
+        if (state == State.WALKING_TO_DOCK) pathfinder.clearPath();
+        else if (state == State.SAILING) bridge.clear();
+        reset(false);
         destination = w.getPackedWorldPoint();
         destinationName = w.getName();
 

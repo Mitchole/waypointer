@@ -166,4 +166,46 @@ public class SailingJourneyOrchestratorTest
         orch.onGameStateChanged(g);
         org.junit.Assert.assertEquals(WorldPointPacker.UNDEFINED, orch.activeDestination());
     }
+
+    @Test
+    public void switchingTargetsClearsPriorLeg()
+    {
+        // Journey A: already aboard -> SAILING (bridge.chart to A).
+        when(boats.isBoarded()).thenReturn(true);
+        orch.start(waypoint());
+        // Journey B: now on land with a moored boat.
+        when(boats.isBoarded()).thenReturn(false);
+        when(boats.mooredBoats()).thenReturn(java.util.Collections.singletonList(boat(1, SailingDock.LUNAR_ISLE)));
+        com.waypointer.model.Waypoint b = new com.waypointer.model.Waypoint();
+        b.setId(java.util.UUID.randomUUID());
+        b.setName("B");
+        b.setPackedWorldPoint(com.waypointer.model.WorldPointPacker.pack(2150, 3530, 0));
+        orch.start(b);
+        // The prior SAILING leg must have been cleared before the new land leg started.
+        verify(bridge).clear();
+        verify(pathfinder).requestPath(anyInt(), anyString());
+    }
+
+    @Test
+    public void pinnedBoatNameDriftToasts()
+    {
+        when(boats.isBoarded()).thenReturn(false);
+        when(pin.isEnabled()).thenReturn(true);
+        when(pin.slot()).thenReturn(3);
+        when(pin.name()).thenReturn("Old Name"); // boat(3,...) is named "Boat 3" -> drift
+        when(boats.boat(3)).thenReturn(boat(3, SailingDock.LUNAR_ISLE));
+        orch.start(waypoint());
+        verify(feedback).show(anyString(), eq(true));
+        verify(pathfinder, never()).requestPath(anyInt(), anyString());
+    }
+
+    @Test
+    public void cancelWhileSailingClearsChart()
+    {
+        when(boats.isBoarded()).thenReturn(true);
+        orch.start(waypoint()); // -> SAILING
+        orch.cancel();
+        verify(bridge).clear();
+        org.junit.Assert.assertEquals(com.waypointer.model.WorldPointPacker.UNDEFINED, orch.activeDestination());
+    }
 }
