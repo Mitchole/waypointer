@@ -520,7 +520,7 @@ public class WaypointerPanel extends PluginPanel
 
         addBanners();
         sailingControls.setVisible(config.sailingEnabled());
-        sailingControls.refresh();
+        if (config.sailingEnabled()) sailingControls.refresh();
         boolean pinnedRendered = addPinnedSection(loweredFilter, isFiltering);
         CategoryRender cat = addCategorySections(loweredFilter, isFiltering, pinnedRendered, visibleIds);
 

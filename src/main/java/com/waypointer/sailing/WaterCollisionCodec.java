@@ -12,9 +12,11 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /** Parses the bundled text collision format: a `data <version>` header line, then per-chunk
  *  lines of `cx cy blockedHex` (all tiles known) or `cx cy knownHex blockedHex`. */
+@Slf4j
 public final class WaterCollisionCodec
 {
     private static final int USHORT = 0xffff;
@@ -43,6 +45,7 @@ public final class WaterCollisionCodec
         }
         catch (Exception e)
         {
+            log.warn("Failed to parse bundled water collision data", e);
             return null;
         }
         return data;
