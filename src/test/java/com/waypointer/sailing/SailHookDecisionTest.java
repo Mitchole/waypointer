@@ -3,7 +3,6 @@ package com.waypointer.sailing;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import com.waypointer.model.WorldPointPacker;
-import net.runelite.api.coords.WorldPoint;
 import org.junit.Test;
 
 /** Locks the rule the PLAY branch uses: sail only when enabled AND the target tile is water. */

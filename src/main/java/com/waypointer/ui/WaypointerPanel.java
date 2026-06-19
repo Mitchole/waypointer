@@ -97,6 +97,7 @@ public class WaypointerPanel extends PluginPanel
     // a Singleton today, in case shutdown ordering changes or the panel ever gets re-created.
     private Listeners.Subscription storeSub;
     private Listeners.Subscription pathSub;
+    private Listeners.Subscription sailingSub;
 
     // Coalesce back-to-back rebuild requests within one EDT cycle into a single call.
     private volatile boolean rebuildPending = false;
@@ -206,7 +207,7 @@ public class WaypointerPanel extends PluginPanel
         nearestLandmarkBar.setToasts(toastOverlay);
         sailingOrchestrator.setFeedback((msg, warning) ->
             toastOverlay.show(msg, warning ? Toasts.Severity.WARN : Toasts.Severity.SUCCESS));
-        sailingOrchestrator.subscribe(() -> SwingUtilities.invokeLater(this::scheduleRebuild));
+        sailingSub = sailingOrchestrator.subscribe(() -> SwingUtilities.invokeLater(this::scheduleRebuild));
         overflowBtn.addActionListener(e -> overflowMenu.show(overflowBtn, this, toastOverlay));
 
         this.captureForm = new CaptureForm(store, capture);
@@ -257,6 +258,7 @@ public class WaypointerPanel extends PluginPanel
         if (searchDebounceTimer != null) searchDebounceTimer.stop();
         if (storeSub != null) { storeSub.close(); storeSub = null; }
         if (pathSub != null) { pathSub.close(); pathSub = null; }
+        if (sailingSub != null) { sailingSub.close(); sailingSub = null; }
         nearestLandmarkBar.dispose();
     }
 
