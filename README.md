@@ -200,3 +200,11 @@ Landmark locations (banks, altars, anvils, furnaces, looms, spinning wheels, tan
 trees, charter ships, fairy rings, slayer masters, and more) are derived from the
 [OSRS Wiki](https://oldschool.runescape.wiki/) under the Creative Commons
 Attribution-ShareAlike 4.0 International licence.
+
+## Third-party data and code
+
+Ocean pathing reuses data and code from these BSD 2-Clause projects:
+
+- Water/land collision map and reader — from Chart Plotter (Copyright (c) 2026, Dazuzi).
+- Sailing dock locations — from "Dude, Where's My Boat?" (Copyright (c) 2025, ArchRBX,
+  Logical-sh; dock table Copyright (c) 2025, nucleon, coopermor, AtchRBX).
