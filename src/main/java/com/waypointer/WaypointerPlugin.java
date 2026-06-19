@@ -46,6 +46,7 @@ public class WaypointerPlugin extends Plugin
     @Inject private com.waypointer.service.RouteStorePersistence routePersistence;
     @Inject private com.waypointer.service.RoutePlaybackEngine routePlaybackEngine;
     @Inject private com.waypointer.ui.RouteOverlay routeOverlay;
+    @Inject private com.waypointer.sailing.SailingJourneyOrchestrator sailingOrchestrator;
     @Inject private net.runelite.api.Client client;
     @Inject private net.runelite.client.input.KeyManager keyManager;
 
@@ -92,6 +93,7 @@ public class WaypointerPlugin extends Plugin
         clientToolbar.addNavigation(navButton);
         eventBus.register(menuHandler);
         eventBus.register(pathfinderService);
+        eventBus.register(sailingOrchestrator);
         eventBus.register(deathAutoPathfinder);
         eventBus.register(panel);
         eventBus.register(tabHost);
@@ -122,6 +124,7 @@ public class WaypointerPlugin extends Plugin
 
         eventBus.unregister(menuHandler);
         eventBus.unregister(pathfinderService);
+        eventBus.unregister(sailingOrchestrator);
         eventBus.unregister(deathAutoPathfinder);
         eventBus.unregister(panel);
         eventBus.unregister(tabHost);

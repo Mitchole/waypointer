@@ -14,6 +14,8 @@ import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.preset.PresetCatalog;
+import com.waypointer.sailing.SailingJourneyOrchestrator;
+import com.waypointer.sailing.WaterMap;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.RoutePlaybackEngine;
 import com.waypointer.service.RouteRecorder;
@@ -180,6 +182,8 @@ public class TabHostTest
             config,
             new Gson());
 
+        SailingJourneyOrchestrator sailingOrchestrator = mock(SailingJourneyOrchestrator.class);
+        when(sailingOrchestrator.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
         WaypointerPanel waypointerPanel = new WaypointerPanel(
             store,
             mock(WaypointCapture.class),
@@ -194,7 +198,9 @@ public class TabHostTest
             mock(Client.class),
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
-            mock(WaypointShareCodec.class));
+            mock(WaypointShareCodec.class),
+            mock(WaterMap.class),
+            sailingOrchestrator);
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 
@@ -238,11 +244,14 @@ public class TabHostTest
             mock(BboxIndex.class), pathfinder, mock(Client.class), mock(ClientThread.class),
             mock(SpriteManager.class), config, new Gson());
 
+        SailingJourneyOrchestrator sailingOrchestrator2 = mock(SailingJourneyOrchestrator.class);
+        when(sailingOrchestrator2.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
         WaypointerPanel waypointerPanel = new WaypointerPanel(
             store, mock(WaypointCapture.class), pathfinder, config,
             new CollapseStateCodec(new Gson()), persistence, mock(SpriteManager.class),
             null, null, nearestLandmarkBar, mock(Client.class), mock(ClientThread.class),
-            mock(WildernessConfirmGate.class), mock(WaypointShareCodec.class));
+            mock(WildernessConfirmGate.class), mock(WaypointShareCodec.class),
+            mock(WaterMap.class), sailingOrchestrator2);
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 
@@ -305,6 +314,8 @@ public class TabHostTest
             config,
             new Gson());
 
+        SailingJourneyOrchestrator sailingOrchestratorB = mock(SailingJourneyOrchestrator.class);
+        when(sailingOrchestratorB.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
         WaypointerPanel waypointerPanel = new WaypointerPanel(
             store,
             mock(WaypointCapture.class),
@@ -319,7 +330,9 @@ public class TabHostTest
             mock(Client.class),
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
-            mock(WaypointShareCodec.class));
+            mock(WaypointShareCodec.class),
+            mock(WaterMap.class),
+            sailingOrchestratorB);
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
 

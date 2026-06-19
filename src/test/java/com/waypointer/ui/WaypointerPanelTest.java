@@ -4,6 +4,9 @@ import com.google.gson.Gson;
 import com.waypointer.WaypointerConfig;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
+import com.waypointer.model.WorldPointPacker;
+import com.waypointer.sailing.SailingJourneyOrchestrator;
+import com.waypointer.sailing.WaterMap;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointPathfinder;
@@ -63,6 +66,8 @@ public class WaypointerPanelTest
             config,
             new Gson());
 
+        SailingJourneyOrchestrator sailingOrchestrator = mock(SailingJourneyOrchestrator.class);
+        when(sailingOrchestrator.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
         return new WaypointerPanel(
             store,
             mock(WaypointCapture.class),
@@ -77,6 +82,8 @@ public class WaypointerPanelTest
             mock(Client.class),
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
-            mock(WaypointShareCodec.class));
+            mock(WaypointShareCodec.class),
+            mock(WaterMap.class),
+            sailingOrchestrator);
     }
 }

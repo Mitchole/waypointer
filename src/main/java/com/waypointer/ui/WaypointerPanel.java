@@ -76,6 +76,8 @@ public class WaypointerPanel extends PluginPanel
     private final BulkSelectController bulkSelect;
     private final CategoryMenuController categoryMenu;
     private final FooterStrip footer;
+    private final com.waypointer.sailing.WaterMap waterMap;
+    private final com.waypointer.sailing.SailingJourneyOrchestrator sailingOrchestrator;
     private final JPanel body = new JPanel();
     private final JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
@@ -108,7 +110,9 @@ public class WaypointerPanel extends PluginPanel
         IconCatalog iconCatalog, OverflowMenu overflowMenu,
         NearestLandmarkBar nearestLandmarkBar,
         Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate,
-        WaypointShareCodec shareCodec)
+        WaypointShareCodec shareCodec,
+        com.waypointer.sailing.WaterMap waterMap,
+        com.waypointer.sailing.SailingJourneyOrchestrator sailingOrchestrator)
     {
         super(false);
         this.store = store;
@@ -126,6 +130,8 @@ public class WaypointerPanel extends PluginPanel
         this.wildernessGate = wildernessGate;
         this.shareCodec = shareCodec;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
+        this.waterMap = waterMap;
+        this.sailingOrchestrator = sailingOrchestrator;
 
         // Build the panel header: Mark current location with the overflow trigger pinned
         // to its right, then the nearest-landmark bar, then the search bar.
@@ -198,6 +204,9 @@ public class WaypointerPanel extends PluginPanel
         this.bodyScrollBar = bodyScroll.getVerticalScrollBar();
         this.toastOverlay = new ToastOverlay(bodyScroll);
         nearestLandmarkBar.setToasts(toastOverlay);
+        sailingOrchestrator.setFeedback((msg, warning) ->
+            toastOverlay.show(msg, warning ? Toasts.Severity.WARN : Toasts.Severity.SUCCESS));
+        sailingOrchestrator.subscribe(() -> SwingUtilities.invokeLater(this::scheduleRebuild));
         overflowBtn.addActionListener(e -> overflowMenu.show(overflowBtn, this, toastOverlay));
 
         this.captureForm = new CaptureForm(store, capture);
@@ -377,6 +386,18 @@ public class WaypointerPanel extends PluginPanel
         });
     }
 
+    private boolean shouldSail(Waypoint w)
+    {
+        return config.sailingEnabled()
+            && waterMap.isWater(WorldPointPacker.unpack(w.getPackedWorldPoint()));
+    }
+
+    private int activeHighlightTarget()
+    {
+        int sailing = sailingOrchestrator.activeDestination();
+        return sailing != WorldPointPacker.UNDEFINED ? sailing : pathfinder.getActiveTarget();
+    }
+
     /**
      * A path-target change only affects the active row's Play tint here -- the ActivePathBanner is
      * refreshed separately by TabHost. Retint rows in place rather than rebuilding the whole body
@@ -388,7 +409,7 @@ public class WaypointerPanel extends PluginPanel
         // with the correct tint from the current target; this retint then no-ops (playIconButton
         // is idempotent). The reverse order can't happen -- a path change never fires storeSub.
         SwingUtilities.invokeLater(() -> {
-            int target = pathfinder.getActiveTarget();
+            int target = activeHighlightTarget();
             retintRows(body, target);
         });
     }
@@ -551,7 +572,7 @@ public class WaypointerPanel extends PluginPanel
                 : collapsedByCategory.getOrDefault(PINNED_COLLAPSE_KEY, false);
             PinnedSection pinnedSec = new PinnedSection(
                 visiblePinned,
-                pathfinder.getActiveTarget(),
+                activeHighlightTarget(),
                 pinnedCollapsed,
                 isCollapsed -> {
                     collapsedByCategory.put(PINNED_COLLAPSE_KEY, isCollapsed);
@@ -602,7 +623,7 @@ public class WaypointerPanel extends PluginPanel
                 boolean collapsed = isFiltering ? false
                     : collapsedByCategory.getOrDefault(c.getId(), false);
                 CategorySection section = CategorySection.spec(c, ws)
-                    .activePathTarget(pathfinder.getActiveTarget())
+                    .activePathTarget(activeHighlightTarget())
                     .collapsed(collapsed)
                     .onCollapseChange(isCollapsed -> {
                         collapsedByCategory.put(c.getId(), isCollapsed);
@@ -725,6 +746,18 @@ public class WaypointerPanel extends PluginPanel
         switch (action)
         {
             case PLAY:
+                if (shouldSail(w))
+                {
+                    if (sailingOrchestrator.isActiveDestination(w.getPackedWorldPoint()))
+                    {
+                        sailingOrchestrator.cancel();
+                    }
+                    else
+                    {
+                        sailingOrchestrator.start(w);
+                    }
+                    break;
+                }
                 // Clicking the active row's button again stops pathing. Stopping skips the
                 // availability and wilderness gates -- those only guard starting a path.
                 if (pathfinder.getActiveTarget() != WorldPointPacker.UNDEFINED

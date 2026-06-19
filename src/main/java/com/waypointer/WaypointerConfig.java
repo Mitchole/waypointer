@@ -3,10 +3,18 @@ package com.waypointer;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 
 @ConfigGroup("waypointer")
 public interface WaypointerConfig extends Config
 {
+    @ConfigSection(
+        name = "Sailing",
+        description = "Ocean waypoint pathing via Chart Plotter",
+        position = 100
+    )
+    String sailingSection = "sailing";
+
     @ConfigItem(
         keyName = "tileRightClickEnabled",
         name = "Right-click tiles to save",
@@ -105,6 +113,16 @@ public interface WaypointerConfig extends Config
         position = 42
     )
     default boolean showRouteOverlay() { return true; }
+
+    @ConfigItem(
+        keyName = "sailingEnabled",
+        name = "Sail to ocean waypoints",
+        description = "When you press Play on a waypoint that sits on open water, walk to a dock, "
+            + "then hand off to the Chart Plotter plugin to sail there. Requires Chart Plotter.",
+        position = 101,
+        section = sailingSection
+    )
+    default boolean sailingEnabled() { return true; }
 
     // Hidden:JSON-encoded map of categoryId -> collapsed boolean. Empty = all expanded.
     @ConfigItem(
