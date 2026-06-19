@@ -5,6 +5,8 @@ import com.waypointer.WaypointerConfig;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.model.WorldPointPacker;
+import com.waypointer.sailing.SailingBoatPin;
+import com.waypointer.sailing.SailingBoats;
 import com.waypointer.sailing.SailingJourneyOrchestrator;
 import com.waypointer.sailing.WaterMap;
 import com.waypointer.service.BboxIndex;
@@ -84,6 +86,8 @@ public class WaypointerPanelTest
             mock(WildernessConfirmGate.class),
             mock(WaypointShareCodec.class),
             mock(WaterMap.class),
-            sailingOrchestrator);
+            sailingOrchestrator,
+            mock(SailingBoats.class),
+            mock(SailingBoatPin.class));
     }
 }

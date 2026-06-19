@@ -78,6 +78,7 @@ public class WaypointerPanel extends PluginPanel
     private final FooterStrip footer;
     private final com.waypointer.sailing.WaterMap waterMap;
     private final com.waypointer.sailing.SailingJourneyOrchestrator sailingOrchestrator;
+    private final SailingControls sailingControls;
     private final JPanel body = new JPanel();
     private final JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
@@ -113,7 +114,9 @@ public class WaypointerPanel extends PluginPanel
         Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate,
         WaypointShareCodec shareCodec,
         com.waypointer.sailing.WaterMap waterMap,
-        com.waypointer.sailing.SailingJourneyOrchestrator sailingOrchestrator)
+        com.waypointer.sailing.SailingJourneyOrchestrator sailingOrchestrator,
+        com.waypointer.sailing.SailingBoats sailingBoats,
+        com.waypointer.sailing.SailingBoatPin sailingBoatPin)
     {
         super(false);
         this.store = store;
@@ -133,6 +136,7 @@ public class WaypointerPanel extends PluginPanel
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
         this.waterMap = waterMap;
         this.sailingOrchestrator = sailingOrchestrator;
+        this.sailingControls = new SailingControls(sailingBoats, sailingBoatPin, client, clientThread);
 
         // Build the panel header: Mark current location with the overflow trigger pinned
         // to its right, then the nearest-landmark bar, then the search bar.
@@ -169,6 +173,8 @@ public class WaypointerPanel extends PluginPanel
         nearestLandmarkBar.setAlignmentX(LEFT_ALIGNMENT);
         nearestLandmarkBar.setVisible(config.showNearestLandmarkBar());
         topStack.add(nearestLandmarkBar);
+        sailingControls.setAlignmentX(LEFT_ALIGNMENT);
+        topStack.add(sailingControls);
         JComponent searchBar = buildSearchBar();
         searchBar.setAlignmentX(LEFT_ALIGNMENT);
         topStack.add(searchBar);
@@ -513,6 +519,7 @@ public class WaypointerPanel extends PluginPanel
         List<UUID> visibleIds = new ArrayList<>();
 
         addBanners();
+        sailingControls.refresh();
         boolean pinnedRendered = addPinnedSection(loweredFilter, isFiltering);
         CategoryRender cat = addCategorySections(loweredFilter, isFiltering, pinnedRendered, visibleIds);
 

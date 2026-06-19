@@ -11,6 +11,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -129,6 +130,14 @@ final class Styles
     {
         c.setBackground(ColorScheme.DARK_GRAY_COLOR);
         c.setForeground(Color.WHITE);
+    }
+
+    static void checkBox(JCheckBox c)
+    {
+        c.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        c.setForeground(Color.WHITE);
+        c.setFocusPainted(false);
+        c.setFont(FontManager.getRunescapeSmallFont());
     }
 
     static JLabel fieldLabel(String text)
