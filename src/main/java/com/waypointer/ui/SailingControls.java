@@ -10,7 +10,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import net.runelite.api.Client;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.ui.ColorScheme;
 
@@ -20,17 +19,17 @@ public class SailingControls extends JPanel
 {
     private final SailingBoats boats;
     private final SailingBoatPin pin;
-    private final Client client;
     private final ClientThread clientThread;
 
     private final JCheckBox useSpecific = new JCheckBox("Always use a specific boat");
     private final JComboBox<BoatChoice> combo = new JComboBox<>();
 
-    public SailingControls(SailingBoats boats, SailingBoatPin pin, Client client, ClientThread clientThread)
+    private boolean updating;
+
+    public SailingControls(SailingBoats boats, SailingBoatPin pin, ClientThread clientThread)
     {
         this.boats = boats;
         this.pin = pin;
-        this.client = client;
         this.clientThread = clientThread;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -63,22 +62,31 @@ public class SailingControls extends JPanel
 
     private void render(List<SailingBoats.BoatInfo> moored, boolean enabled, int savedSlot)
     {
-        DefaultComboBoxModel<BoatChoice> model = new DefaultComboBoxModel<>();
-        BoatChoice toSelect = null;
-        for (SailingBoats.BoatInfo b : moored)
+        updating = true;
+        try
         {
-            BoatChoice c = new BoatChoice(b.slot, b.name + " . " + b.dock.getDockName());
-            model.addElement(c);
-            if (b.slot == savedSlot) toSelect = c;
+            DefaultComboBoxModel<BoatChoice> model = new DefaultComboBoxModel<>();
+            BoatChoice toSelect = null;
+            for (SailingBoats.BoatInfo b : moored)
+            {
+                BoatChoice c = new BoatChoice(b.slot, b.name + " . " + b.dock.getDockName());
+                model.addElement(c);
+                if (b.slot == savedSlot) toSelect = c;
+            }
+            combo.setModel(model);
+            if (toSelect != null) combo.setSelectedItem(toSelect);
+            useSpecific.setSelected(enabled);
+            combo.setEnabled(enabled && model.getSize() > 0);
         }
-        combo.setModel(model);
-        if (toSelect != null) combo.setSelectedItem(toSelect);
-        useSpecific.setSelected(enabled);
-        combo.setEnabled(enabled && model.getSize() > 0);
+        finally
+        {
+            updating = false;
+        }
     }
 
     private void persist()
     {
+        if (updating) return;
         BoatChoice c = (BoatChoice) combo.getSelectedItem();
         int slot = c == null ? -1 : c.slot;
         String name = c == null ? "" : c.label;

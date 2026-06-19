@@ -136,7 +136,7 @@ public class WaypointerPanel extends PluginPanel
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
         this.waterMap = waterMap;
         this.sailingOrchestrator = sailingOrchestrator;
-        this.sailingControls = new SailingControls(sailingBoats, sailingBoatPin, client, clientThread);
+        this.sailingControls = new SailingControls(sailingBoats, sailingBoatPin, clientThread);
 
         // Build the panel header: Mark current location with the overflow trigger pinned
         // to its right, then the nearest-landmark bar, then the search bar.
@@ -519,6 +519,7 @@ public class WaypointerPanel extends PluginPanel
         List<UUID> visibleIds = new ArrayList<>();
 
         addBanners();
+        sailingControls.setVisible(config.sailingEnabled());
         sailingControls.refresh();
         boolean pinnedRendered = addPinnedSection(loweredFilter, isFiltering);
         CategoryRender cat = addCategorySections(loweredFilter, isFiltering, pinnedRendered, visibleIds);
