@@ -28,6 +28,34 @@ public class RouteStoreTest
     }
 
     @Test
+    public void addWaypointStepsAppendsInOrderWithOneFire()
+    {
+        Route r = store.createRoute("R");
+        store.addManualStep(r.getId(), "first");
+        com.waypointer.model.Waypoint a = new com.waypointer.model.Waypoint(UUID.randomUUID(), "A",
+            WorldPointPacker.pack(1, 1, 0), UUID.randomUUID(), null, "",
+            java.time.Instant.now(), 0, false, null, false);
+        com.waypointer.model.Waypoint b = new com.waypointer.model.Waypoint(UUID.randomUUID(), "B",
+            WorldPointPacker.pack(2, 2, 0), UUID.randomUUID(), null, "",
+            java.time.Instant.now(), 1, false, null, false);
+        AtomicInteger fires = new AtomicInteger();
+        store.subscribe(fires::incrementAndGet);
+
+        store.addWaypointSteps(r.getId(), Arrays.asList(a, b));
+
+        assertEquals(1, fires.get());
+        List<RouteStep> steps = store.getRouteById(r.getId()).getSteps();
+        assertEquals(3, steps.size());
+        assertEquals("A", steps.get(1).getLabel());
+        assertEquals(a.getId(), steps.get(1).getSourceWaypointId());
+        assertEquals(WorldPointPacker.pack(2, 2, 0), steps.get(2).getPackedWorldPoint());
+
+        store.addWaypointSteps(r.getId(), java.util.Collections.emptyList());
+        store.addWaypointSteps(UUID.randomUUID(), Arrays.asList(a));
+        assertEquals(1, fires.get());
+    }
+
+    @Test
     public void createRouteAppearsInOrderedList()
     {
         Route r = store.createRoute("Herb run");

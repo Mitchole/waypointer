@@ -112,6 +112,20 @@ final class WaypointPickerModel
         checkedEmptyCategories.clear();
     }
 
+    /** Checked waypoints in display order: categories as listed, then each category's own order. */
+    List<Waypoint> checkedWaypointsInOrder()
+    {
+        List<Waypoint> out = new ArrayList<>();
+        for (Category c : orderedCategories)
+        {
+            for (Waypoint w : waypointsOf(c.getId()))
+            {
+                if (checkedWaypoints.contains(w.getId())) out.add(w);
+            }
+        }
+        return out;
+    }
+
     Set<UUID> getSelectedWaypointIds() { return new HashSet<>(checkedWaypoints); }
 
     Set<UUID> getSelectedCategoryIds()

@@ -2,6 +2,7 @@ package com.waypointer.ui;
 
 import com.waypointer.codec.CoordinateText;
 import com.waypointer.model.route.Route;
+import com.waypointer.model.route.RouteDistance;
 import com.waypointer.model.route.RouteStep;
 import com.waypointer.model.route.StepType;
 import com.waypointer.service.RouteStore;
@@ -18,6 +19,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 
 /**
  * Edits one route's steps: an ordered list of {@link RouteStepRow}s plus add-step controls and a
@@ -31,6 +33,7 @@ final class RouteEditorPanel extends JPanel
     private final Runnable onMarkCurrentLocation;
     private final Runnable onAddFromLibrary;
     private final JPanel stepList = new JPanel();
+    private final JLabel summary = new JLabel(" ");
 
     RouteEditorPanel(RouteStore store, UUID routeId, Runnable onBack,
         Runnable onMarkCurrentLocation, Runnable onAddFromLibrary)
@@ -50,6 +53,11 @@ final class RouteEditorPanel extends JPanel
         top.setBackground(ColorScheme.DARK_GRAY_COLOR);
         top.add(buildNavRow());
         top.add(buildAddStepBar());
+        summary.setFont(FontManager.getRunescapeSmallFont());
+        summary.setForeground(Styles.MUTED_TEXT);
+        summary.setAlignmentX(LEFT_ALIGNMENT);
+        summary.setBorder(BorderFactory.createEmptyBorder(0, 8, 4, 6));
+        top.add(summary);
         add(top, BorderLayout.NORTH);
 
         stepList.setLayout(new BoxLayout(stepList, BoxLayout.Y_AXIS));
@@ -118,10 +126,12 @@ final class RouteEditorPanel extends JPanel
         if (r != null)
         {
             RouteStepDragHandler dragHandler = new RouteStepDragHandler(store, routeId);
+            summary.setText(summaryText(r));
+            int[] legs = RouteDistance.legs(r);
             int i = 0;
             for (RouteStep s : r.getSteps())
             {
-                stepList.add(new RouteStepRow(i++, s,
+                stepList.add(new RouteStepRow(i, legs[i], s,
                     () -> editStep(s),
                     step -> {
                         String[] options = {"Cancel", "Delete"};
@@ -132,10 +142,21 @@ final class RouteEditorPanel extends JPanel
                         if (choice == 1) store.deleteStep(routeId, step.getId());
                     },
                     dragHandler));
+                i++;
             }
         }
         stepList.revalidate();
         stepList.repaint();
+    }
+
+    /** Header line: stop count, then the straight-line total when there is one. */
+    static String summaryText(Route route)
+    {
+        int stops = RouteDistance.stops(route);
+        String text = stops + (stops == 1 ? " stop" : " stops");
+        int tiles = RouteDistance.total(route);
+        if (tiles > 0) text += String.format(", %,d tiles straight-line", tiles);
+        return text;
     }
 
     private void editStep(RouteStep s)

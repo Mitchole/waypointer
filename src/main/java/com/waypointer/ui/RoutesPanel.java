@@ -245,34 +245,27 @@ public class RoutesPanel extends JPanel
     }
 
     /**
-     * Pick a saved waypoint from the library and append it as a route step, snapshotting the
-     * tile + name and recording the source waypoint id (hybrid sourcing: snapshot is
-     * authoritative, so deleting the library waypoint never breaks the route).
+     * Pick saved waypoints (or whole categories) from the library and append them as route
+     * steps, snapshotting the tile + name and recording the source waypoint id (hybrid
+     * sourcing: snapshot is authoritative, so deleting the library waypoint never breaks the
+     * route).
      */
     private void addFromLibrary(UUID routeId)
     {
-        java.util.List<com.waypointer.model.Waypoint> all = waypointStore.getLibrary().getWaypoints();
-        if (all.isEmpty())
+        if (waypointStore.getLibrary().getWaypoints().isEmpty())
         {
             toasts.show("No saved waypoints to choose from.");
             return;
         }
-        java.util.List<WaypointChoice> choices = new java.util.ArrayList<>();
-        for (com.waypointer.model.Waypoint w : all) choices.add(new WaypointChoice(w));
-        choices.sort((a, b) -> a.toString().compareToIgnoreCase(b.toString()));
-        Object picked = JOptionPane.showInputDialog(this, "Pick a saved waypoint:", "From saved",
-            JOptionPane.QUESTION_MESSAGE, null, choices.toArray(), choices.get(0));
-        if (!(picked instanceof WaypointChoice)) return;
-        com.waypointer.model.Waypoint w = ((WaypointChoice) picked).waypoint;
-        store.addWaypointStep(routeId, w.getPackedWorldPoint(), w.getName(), w.getId());
+        new LibraryPickerDialog(SwingUtilities.getWindowAncestor(this), waypointStore.getLibrary(),
+            picked -> addPickedWaypoints(routeId, picked)).setVisible(true);
     }
 
-    /** Wraps a library waypoint so the chooser shows its name; carries the waypoint for selection. */
-    private static final class WaypointChoice
+    /** Appends the picked waypoints to the route in the order given, as one change. */
+    void addPickedWaypoints(UUID routeId, java.util.List<com.waypointer.model.Waypoint> picked)
     {
-        final com.waypointer.model.Waypoint waypoint;
-        WaypointChoice(com.waypointer.model.Waypoint waypoint) { this.waypoint = waypoint; }
-        @Override public String toString() { return waypoint.getName(); }
+        if (picked == null || picked.isEmpty()) return;
+        store.addWaypointSteps(routeId, picked);
     }
 
     private static JMenuItem menuItem(String text, Runnable action)

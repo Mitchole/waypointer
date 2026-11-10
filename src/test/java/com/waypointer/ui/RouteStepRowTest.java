@@ -24,6 +24,27 @@ public class RouteStepRowTest
     }
 
     @Test
+    public void legLabelShownOnlyWhenNonNegative()
+    {
+        assertNull(RouteStepRow.legText(-1));
+        assertEquals("0 tiles", RouteStepRow.legText(0));
+        assertEquals("12 tiles", RouteStepRow.legText(12));
+        assertEquals("1,250 tiles", RouteStepRow.legText(1250));
+    }
+
+    @Test
+    public void summaryTextFormatsStopsAndDistance()
+    {
+        Route r = new Route(java.util.UUID.randomUUID(), "R", new java.util.ArrayList<>(), false,
+            java.time.Instant.now(), 0);
+        assertEquals("0 stops", RouteEditorPanel.summaryText(r));
+        r.getSteps().add(RouteStep.waypoint(WorldPointPacker.pack(0, 0, 0), "a"));
+        assertEquals("1 stop", RouteEditorPanel.summaryText(r));
+        r.getSteps().add(RouteStep.waypoint(WorldPointPacker.pack(1500, 0, 0), "b"));
+        assertEquals("2 stops, 1,500 tiles straight-line", RouteEditorPanel.summaryText(r));
+    }
+
+    @Test
     public void stepCoordinatesEditUpdatesStepOnly()
     {
         WaypointStore waypoints = new WaypointStore();

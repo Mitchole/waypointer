@@ -8,6 +8,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.util.function.Consumer;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -28,7 +29,13 @@ final class RouteStepRow extends JPanel
     private static final String GLYPH_EDIT     = "✎";
     private static final String GLYPH_DELETE   = "✕";
 
-    RouteStepRow(int index, RouteStep step, Runnable onEdit, Consumer<RouteStep> onDelete,
+    /** Text for the distance from the previous stop, or null when there is none to show. */
+    static String legText(int leg)
+    {
+        return leg < 0 ? null : String.format("%,d tiles", leg);
+    }
+
+    RouteStepRow(int index, int leg, RouteStep step, Runnable onEdit, Consumer<RouteStep> onDelete,
         RouteStepDragHandler dragHandler)
     {
         setLayout(new BorderLayout(6, 0));
@@ -52,7 +59,24 @@ final class RouteStepRow extends JPanel
         {
             @Override public void mouseClicked(java.awt.event.MouseEvent e) { onEdit.run(); }
         });
-        add(text, BorderLayout.CENTER);
+
+        // The leg distance sits on its own line under the label so it cannot crowd the buttons.
+        JPanel center = new JPanel();
+        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
+        center.setOpaque(false);
+        text.setAlignmentX(LEFT_ALIGNMENT);
+        center.add(text);
+        String legText = legText(leg);
+        if (legText != null)
+        {
+            JLabel legLabel = new JLabel(legText);
+            legLabel.setFont(FontManager.getRunescapeSmallFont());
+            legLabel.setForeground(Styles.MUTED_TEXT);
+            legLabel.setAlignmentX(LEFT_ALIGNMENT);
+            legLabel.setBorder(BorderFactory.createEmptyBorder(0, 14, 0, 0));
+            center.add(legLabel);
+        }
+        add(center, BorderLayout.CENTER);
 
         // East: edit (pencil) then delete (x). Pencil is the primary, visible edit affordance.
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));

@@ -1,5 +1,6 @@
 package com.waypointer.service;
 
+import com.waypointer.model.Waypoint;
 import com.waypointer.model.route.Route;
 import com.waypointer.model.route.RouteLibrary;
 import com.waypointer.model.route.RouteStep;
@@ -111,6 +112,19 @@ public class RouteStore extends AbstractStore<RouteLibrary>
         if (r == null) return;
         r.getSteps().add(new RouteStep(UUID.randomUUID(),
             StepType.WAYPOINT, label, packed, sourceWaypointId, null));
+        notifyChanged();
+    }
+
+    /** Appends one step per waypoint, in list order, and notifies listeners once. */
+    public void addWaypointSteps(UUID routeId, List<Waypoint> waypoints)
+    {
+        Route r = getRouteById(routeId);
+        if (r == null || waypoints == null || waypoints.isEmpty()) return;
+        for (Waypoint w : waypoints)
+        {
+            r.getSteps().add(new RouteStep(UUID.randomUUID(), StepType.WAYPOINT,
+                w.getName(), w.getPackedWorldPoint(), w.getId(), null));
+        }
         notifyChanged();
     }
 
