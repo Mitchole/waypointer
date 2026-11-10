@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import com.waypointer.codec.DecodeReport;
+import com.waypointer.codec.ReadableImport;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.LibrarySubsetBuilder;
@@ -31,6 +32,7 @@ final class ImportPickerDialog extends JDialog
 {
     private final WaypointStore store;
     private final WaypointShareCodec shareCodec;
+    private final ReadableImport readableImport;
     private final Toasts toasts;
 
     private final JTextArea codeArea = new JTextArea(3, 32);
@@ -42,11 +44,12 @@ final class ImportPickerDialog extends JDialog
     private WaypointPickerModel model;   // null until a source loads
 
     ImportPickerDialog(Window owner, WaypointStore store, WaypointShareCodec shareCodec,
-        Toasts toasts)
+        ReadableImport readableImport, Toasts toasts)
     {
         super(owner, "Import waypoints", Dialog.ModalityType.APPLICATION_MODAL);
         this.store = store;
         this.shareCodec = shareCodec;
+        this.readableImport = readableImport;
         this.toasts = toasts == null ? Toasts.NO_OP : toasts;
 
         JPanel content = Dialogs.applyDarkContentPane(this);
@@ -70,7 +73,9 @@ final class ImportPickerDialog extends JDialog
         JPanel wrap = new JPanel(new BorderLayout(4, 4));
         wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        JLabel prompt = new JLabel("Paste a WP1: or WPL1: code:");
+        JLabel prompt = new JLabel("Paste a share code or a list of coordinates:");
+        prompt.setToolTipText("<html>One per line, for example: Shipwreck, 2301, 3690<br>"
+            + "A line such as # Category sets the category for the lines after it.</html>");
         prompt.setForeground(Color.WHITE);
         wrap.add(prompt, BorderLayout.NORTH);
 
@@ -127,6 +132,13 @@ final class ImportPickerDialog extends JDialog
             report.totalDropped());
     }
 
+    /** Load-time notice for pasted entries that were already saved; null when there are none. */
+    static String alreadyPresentNoticeOrNull(int alreadyPresent)
+    {
+        if (alreadyPresent <= 0) return null;
+        return alreadyPresent + " already in your library, skipped.";
+    }
+
     /** Import summary: base counts, plus a duplicates clause only when some were skipped. */
     static String importSummary(WaypointStore.ImportResult r)
     {
@@ -174,6 +186,11 @@ final class ImportPickerDialog extends JDialog
     /** Package-private so a test can drive load without popping any dialog. */
     void loadCode(String text)
     {
+        if (!ReadableImport.isShareCode(text))
+        {
+            loadList(text);
+            return;
+        }
         DecodeReport report = decodeReportOrNull(text);
         if (report == null)
         {
@@ -183,6 +200,24 @@ final class ImportPickerDialog extends JDialog
         clearError();
         populate(report.library);
         String notice = loadNoticeOrNull(report);
+        if (notice != null) toasts.show(notice);
+    }
+
+    private void loadList(String text)
+    {
+        ReadableImport.Result result;
+        try
+        {
+            result = readableImport.parse(text, store.getLibrary());
+        }
+        catch (ReadableImport.MalformedListException ex)
+        {
+            showError(ex.getMessage());
+            return;
+        }
+        clearError();
+        populate(result.library);
+        String notice = alreadyPresentNoticeOrNull(result.alreadyPresent);
         if (notice != null) toasts.show(notice);
     }
 

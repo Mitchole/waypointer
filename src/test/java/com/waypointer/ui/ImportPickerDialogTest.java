@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.waypointer.codec.DecodeReport;
 import com.waypointer.codec.LibraryJsonCodec;
+import com.waypointer.codec.ReadableImport;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
@@ -55,9 +56,14 @@ public class ImportPickerDialogTest
         return lib;
     }
 
+    private ImportPickerDialog newDialog(WaypointStore store, Toasts toasts)
+    {
+        return new ImportPickerDialog(null, store, shareCodec, new ReadableImport(new Gson()), toasts);
+    }
+
     private ImportPickerDialog newDialog(WaypointStore store)
     {
-        return new ImportPickerDialog(null, store, shareCodec, Toasts.NO_OP);
+        return newDialog(store, Toasts.NO_OP);
     }
 
     @Test
@@ -147,7 +153,7 @@ public class ImportPickerDialogTest
         store.bootstrap(new Library());
         ImportPickerDialog d = newDialog(store);
 
-        d.loadCode("not a real code");
+        d.loadCode("WP1:not a real code");
 
         assertTrue("error mentions the expected prefixes, got: " + d.getErrorText(),
             d.getErrorText().contains("WP1:"));
@@ -169,5 +175,57 @@ public class ImportPickerDialogTest
 
         assertFalse(d.isErrorVisible());
         assertTrue(d.hasLoadedSource());
+    }
+
+    @Test
+    public void readableListLoadsIntoPicker()
+    {
+        Headless.assumeDisplay();
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+        ImportPickerDialog d = newDialog(store);
+
+        d.loadCode("# Sea\nWreck, 2301, 3690\n");
+
+        assertFalse(d.isErrorVisible());
+        assertTrue(d.hasLoadedSource());
+    }
+
+    @Test
+    public void malformedListShowsLineError()
+    {
+        Headless.assumeDisplay();
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+        ImportPickerDialog d = newDialog(store);
+
+        d.loadCode("A 1 2\nJust a name");
+
+        assertEquals("Line 2: expected a name followed by x, y.", d.getErrorText());
+        assertTrue(d.isErrorVisible());
+        assertFalse(d.hasLoadedSource());
+    }
+
+    @Test
+    public void alreadyPresentCountShown()
+    {
+        Headless.assumeDisplay();
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+        UUID sea = store.createCategory("Sea").getId();
+        store.createWaypoint(com.waypointer.model.WorldPointPacker.pack(10, 20, 0), "Wreck", sea);
+        java.util.List<String> shown = new java.util.ArrayList<>();
+        Toasts capture = new Toasts()
+        {
+            @Override public void show(String text) { shown.add(text); }
+            @Override public void show(String text, String label, Runnable onClick) { shown.add(text); }
+        };
+        ImportPickerDialog d = newDialog(store, capture);
+
+        d.loadCode("# Sea\nWreck 10 20\nNew 1 2");
+
+        assertEquals(java.util.Collections.singletonList("1 already in your library, skipped."), shown);
+        assertEquals("1 already in your library, skipped.", ImportPickerDialog.alreadyPresentNoticeOrNull(1));
+        assertNull(ImportPickerDialog.alreadyPresentNoticeOrNull(0));
     }
 }

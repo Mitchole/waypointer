@@ -1,5 +1,6 @@
 package com.waypointer.ui;
 
+import com.waypointer.codec.ReadableImport;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
 import com.waypointer.service.WaypointStore;
@@ -22,12 +23,15 @@ final class OverflowMenu
 {
     private final WaypointStore store;
     private final WaypointShareCodec shareCodec;
+    private final ReadableImport readableImport;
 
     @Inject
-    OverflowMenu(WaypointStore store, WaypointShareCodec shareCodec)
+    OverflowMenu(WaypointStore store, WaypointShareCodec shareCodec,
+        ReadableImport readableImport)
     {
         this.store = store;
         this.shareCodec = shareCodec;
+        this.readableImport = readableImport;
     }
 
     /** Show the popup anchored just below {@code near}; uses {@code panel} as JOption parent. */
@@ -71,7 +75,7 @@ final class OverflowMenu
         JMenuItem importItem = new JMenuItem("Import...");
         importItem.addActionListener(e ->
             new ImportPickerDialog(SwingUtilities.getWindowAncestor(anchor), store, shareCodec,
-                toasts).setVisible(true));
+                readableImport, toasts).setVisible(true));
         menu.add(importItem);
 
         menu.addSeparator();

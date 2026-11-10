@@ -1,6 +1,7 @@
 package com.waypointer.codec;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -38,6 +39,22 @@ final class JsonDecodeSupport
             return parsed;
         }
         catch (JsonParseException | IllegalStateException e)
+        {
+            throw onMalformed.apply(e);
+        }
+    }
+
+    /** Parse JSON to an array with the injected Gson, wrapping any failure via {@code onMalformed}. */
+    static JsonArray parseArray(Gson gson, String json,
+        Function<Throwable, RuntimeException> onMalformed)
+    {
+        try
+        {
+            JsonArray parsed = gson.fromJson(json, JsonArray.class);
+            if (parsed == null) throw new JsonParseException("empty");
+            return parsed;
+        }
+        catch (JsonParseException e)
         {
             throw onMalformed.apply(e);
         }

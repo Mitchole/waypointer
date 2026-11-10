@@ -42,16 +42,25 @@ public final class CoordinateText
             }
             n[i] = new BigInteger(parts[i]);
         }
-        if (!inRange(n[0], BIG_MAX_XY) || !inRange(n[1], BIG_MAX_XY))
+        return parse(n[0], n[1], n.length == 3 ? n[2] : BigInteger.ZERO);
+    }
+
+    /**
+     * Range-checks already split numbers and packs them.
+     *
+     * @throws IllegalArgumentException with a message fit to show the user
+     */
+    public static int parse(BigInteger x, BigInteger y, BigInteger plane)
+    {
+        if (!inRange(x, BIG_MAX_XY) || !inRange(y, BIG_MAX_XY))
         {
             throw new IllegalArgumentException(RANGE_MESSAGE);
         }
-        BigInteger plane = n.length == 3 ? n[2] : BigInteger.ZERO;
         if (!inRange(plane, BIG_MAX_PLANE))
         {
             throw new IllegalArgumentException(PLANE_MESSAGE);
         }
-        return WorldPointPacker.pack(n[0].intValue(), n[1].intValue(), plane.intValue());
+        return WorldPointPacker.pack(x.intValue(), y.intValue(), plane.intValue());
     }
 
     /** Formats a packed tile as {@code x, y}, with {@code , plane} appended above plane 0. */
