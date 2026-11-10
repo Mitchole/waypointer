@@ -21,8 +21,8 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.PluginMessage;
 
 /** Bridge to the shortest-path plugin via PluginMessage. Detects shortest-path by
- *  listening for inbound messages in its namespace, or by probing ConfigManager.
- *  Class.forName can't see across plugin-hub classloaders. Availability is sticky
+ *  listening for inbound messages in its namespace, or by probing ConfigManager, since
+ *  its classes are not visible from another plugin-hub classloader. Availability is sticky
  *  once detected. */
 @Slf4j
 @Singleton

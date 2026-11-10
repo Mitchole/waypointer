@@ -22,8 +22,9 @@ import net.runelite.client.ui.FontManager;
 
 /**
  * Renders a {@link WaypointPickerModel} as a collapsible, dark-themed checkbox tree, reusing the
- * panel's section idiom instead of a {@code JTree} (which would fight the Metal LAF described in
- * CLAUDE.md). Category rows carry a tri-state box, an expand caret, the name, and a count;
+ * panel's section idiom instead of a {@code JTree}. A tree's renderers and icons come from
+ * the look and feel, which can still be Metal when panels are built, so it would not match the
+ * dark theme. Category rows carry a tri-state box, an expand caret, the name, and a count;
  * waypoint leaves carry an indented box and a name. Toggling any box updates the model and fires
  * {@code onChange} so the host dialog can re-gate its confirm buttons.
  */

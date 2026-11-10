@@ -25,7 +25,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 @Slf4j
 @PluginDescriptor(
     name = "Waypointer",
-    description = "Save in-game locations and one-click path to them via Shortest Path.",
+    description = "Save in-game locations and one-click path to them, on land or at sea.",
     tags = {"map", "travel", "pathfinding", "waypoints"}
 )
 public class WaypointerPlugin extends Plugin

@@ -12,8 +12,8 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginManager;
 
 /** Bridge to the Chart Plotter plugin's inbound PluginMessage API (namespace "chartplotter",
- *  name "chart" data {x,y}; name "clear"). Availability is detected by class simple name via
- *  PluginManager (works across plugin-hub classloaders; not java.lang.reflect). */
+ *  name "chart" data {x,y}; name "clear"). Availability is detected by matching the plugin's
+ *  class simple name in PluginManager, which works across plugin-hub classloaders. */
 @Slf4j
 @Singleton
 public class ChartPlotterBridge

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2025, AtchRBX <https://github.com/AtchRBX>
- * Copyright (c) 2025, Logical-sh <https://github.com/Logical-sh>
+ * Copyright (c) 2025, ArchRBX
+ * Copyright (c) 2025, Logical-sh
  * All rights reserved. Mirroring technique from "Dude, Where's My Boat?" under BSD 2-Clause.
  * THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.
  */
