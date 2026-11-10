@@ -165,6 +165,8 @@ public class WaterMap
     private static final class SeaMask
     {
         static final SeaMask EMPTY = new SeaMask(new long[0], new long[0], 0);
+        /** The bundled map spans about 330,000 chunks; this caps the fill's grid at 32 MB. */
+        private static final long MAX_GRID_CHUNKS = 4_000_000;
 
         private final long[] keys;
         private final long[] masks;
@@ -201,7 +203,13 @@ public class WaterMap
                 maxCy = Math.max(maxCy, cy);
             }
             int h = maxCy - minCy + 1;
-            long[] open = new long[(maxCx - minCx + 1) * h];
+            long cells = (long) (maxCx - minCx + 1) * h;
+            if (cells > MAX_GRID_CHUNKS)
+            {
+                log.warn("Water collision data spans {} chunks; treating everything as land", cells);
+                return EMPTY;
+            }
+            long[] open = new long[(int) cells];
             for (Map.Entry<Long, WaterCollisionData.Chunk> e : data.chunks().entrySet())
             {
                 long key = e.getKey();
