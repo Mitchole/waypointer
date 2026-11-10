@@ -132,7 +132,7 @@ How `Play` behaves depends on where the waypoint is and where you are:
 A waypoint counts as at sea when it is on the open sea, or on a blocked tile such as a wreck
 that is mostly surrounded by it. Inland lakes and rivers do not count.
 
-When sailing is on, the panel shows an **Always use a specific boat** box and a list of your
+When sailing is on and Chart Plotter is running, the panel shows an **Always use a specific boat** box and a list of your
 moored boats. Leave it unticked and Waypointer uses the boat whose dock is nearest the
 waypoint. Tick it to pin one boat. If that boat is no longer moored, or the boats have been
 reshuffled, you get a message and have to pick again.

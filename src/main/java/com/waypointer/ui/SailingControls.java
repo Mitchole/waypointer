@@ -10,6 +10,8 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.ui.ColorScheme;
 
@@ -19,6 +21,7 @@ public class SailingControls extends JPanel
 {
     private final SailingBoats boats;
     private final SailingBoatPin pin;
+    private final Client client;
     private final ClientThread clientThread;
 
     final JCheckBox useSpecific = new JCheckBox("Always use a specific boat");
@@ -26,10 +29,11 @@ public class SailingControls extends JPanel
 
     private boolean updating;
 
-    public SailingControls(SailingBoats boats, SailingBoatPin pin, ClientThread clientThread)
+    public SailingControls(SailingBoats boats, SailingBoatPin pin, Client client, ClientThread clientThread)
     {
         this.boats = boats;
         this.pin = pin;
+        this.client = client;
         this.clientThread = clientThread;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -48,9 +52,11 @@ public class SailingControls extends JPanel
         combo.addActionListener(e -> persist());
     }
 
-    /** Re-read the live boats and the saved pin. Call from the panel rebuild. */
+    /** Re-read the live boats and the saved pin. Call from the panel rebuild. Does nothing
+     *  until the player is logged in, since the boat varbits mean nothing before then. */
     public void refresh()
     {
+        if (client.getGameState() != GameState.LOGGED_IN) return;
         clientThread.invoke(() -> {
             List<SailingBoats.BoatInfo> moored = boats.mooredBoats();
             boolean enabled = pin.isEnabled();

@@ -24,6 +24,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class WaypointerPanelTest
@@ -88,22 +90,79 @@ public class WaypointerPanelTest
         return newPanel(store);
     }
 
-    private static WaypointerPanel newPanel(WaypointStore store)
+    @Test
+    public void boatPickerHiddenWithoutChartPlotter()
     {
+        // Sailing is on (the default) but Chart Plotter is not running.
+        WaypointerConfig config = baseConfig();
+        when(config.sailingEnabled()).thenReturn(true);
+        Navigator navigator = mock(Navigator.class);
+        when(navigator.shortestPathOnly()).thenReturn(true);
+        when(navigator.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        Client client = mock(Client.class);
+        ClientThread clientThread = mock(ClientThread.class);
 
+        WaypointerPanel panel = newPanel(emptyStore(), config, navigator, client, clientThread);
+
+        assertFalse(panel.sailingControlsForTest().isVisible());
+        verify(clientThread, never()).invoke(any(java.util.function.BooleanSupplier.class));
+    }
+
+    @Test
+    public void boatPickerShownWithChartPlotter()
+    {
+        Navigator navigator = mock(Navigator.class);
+        when(navigator.shortestPathOnly()).thenReturn(false);
+        when(navigator.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+
+        WaypointerPanel panel = newPanel(emptyStore(), baseConfig(), navigator, mock(Client.class),
+            mock(ClientThread.class));
+
+        assertTrue(panel.sailingControlsForTest().isVisible());
+    }
+
+    private static WaypointStore emptyStore()
+    {
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+        return store;
+    }
+
+    private static WaypointerConfig baseConfig()
+    {
         WaypointerConfig config = mock(WaypointerConfig.class);
         when(config.categoryCollapsedJson()).thenReturn("{}");
         when(config.shortestPathBannerDismissed()).thenReturn(true);
         when(config.landmarkSelectionJson()).thenReturn("");
+        return config;
+    }
 
+    private static WaypointerPanel newPanel(WaypointStore store)
+    {
+        WaypointPathfinder pathfinder = pathfinder();
+        return newPanel(store, baseConfig(), pathfinder, LandNavigator.over(pathfinder),
+            mock(Client.class), mock(ClientThread.class));
+    }
+
+    private static WaypointerPanel newPanel(WaypointStore store, WaypointerConfig config, Navigator navigator,
+        Client client, ClientThread clientThread)
+    {
+        return newPanel(store, config, pathfinder(), navigator, client, clientThread);
+    }
+
+    private static WaypointPathfinder pathfinder()
+    {
         WaypointPathfinder pathfinder = mock(WaypointPathfinder.class);
         when(pathfinder.isAvailable()).thenReturn(true);
         when(pathfinder.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        return pathfinder;
+    }
 
+    private static WaypointerPanel newPanel(WaypointStore store, WaypointerConfig config,
+        WaypointPathfinder pathfinder, Navigator navigator, Client client, ClientThread clientThread)
+    {
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
-
-        Navigator navigator = LandNavigator.over(pathfinder);
 
         NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
             mock(BboxIndex.class),
@@ -128,8 +187,8 @@ public class WaypointerPanelTest
             null,
             null,
             nearestLandmarkBar,
-            mock(Client.class),
-            mock(ClientThread.class),
+            client,
+            clientThread,
             mock(WildernessConfirmGate.class),
             mock(WaypointShareCodec.class),
             navigator,

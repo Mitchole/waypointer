@@ -39,12 +39,18 @@ public class ChartPlotterBridge
     {
         for (Plugin p : pluginManager.getPlugins())
         {
-            if (PLUGIN_CLASS.equals(p.getClass().getSimpleName()) && pluginManager.isPluginActive(p))
+            if (isChartPlotter(p) && pluginManager.isPluginActive(p))
             {
                 return true;
             }
         }
         return false;
+    }
+
+    /** True when {@code p} is Chart Plotter. */
+    public static boolean isChartPlotter(Plugin p)
+    {
+        return p != null && PLUGIN_CLASS.equals(p.getClass().getSimpleName());
     }
 
     public void chart(int x, int y)

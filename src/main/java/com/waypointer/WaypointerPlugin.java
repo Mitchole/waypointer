@@ -107,9 +107,7 @@ public class WaypointerPlugin extends Plugin
 
         overlayManager.add(npcHighlightOverlay);
 
-        // Only users who can sail pay for building the sea map, and they pay it here, off the
-        // game threads.
-        if (!navigator.shortestPathOnly()) executor.execute(waterMap::warm);
+        warmSeaMapIfSailing();
 
         log.info("Waypointer started: {} waypoints loaded",
             store.getLibrary().getWaypoints().size());
@@ -141,6 +139,26 @@ public class WaypointerPlugin extends Plugin
         tabHost.dispose();
         overlayManager.remove(npcHighlightOverlay);
         log.info("Waypointer stopped");
+    }
+
+    // Only users who can sail pay for building the sea map, and they pay it off the game
+    // threads. Chart Plotter may start after this plugin, or sailing may be turned on later,
+    // so those events warm it too; warm() does the work only once.
+    private void warmSeaMapIfSailing()
+    {
+        if (!navigator.shortestPathOnly()) executor.execute(waterMap::warm);
+    }
+
+    @Subscribe
+    public void onPluginChanged(net.runelite.client.events.PluginChanged e)
+    {
+        if (com.waypointer.sailing.ChartPlotterBridge.isChartPlotter(e.getPlugin())) warmSeaMapIfSailing();
+    }
+
+    @Subscribe
+    public void onConfigChanged(net.runelite.client.events.ConfigChanged e)
+    {
+        if ("waypointer".equals(e.getGroup()) && "sailingEnabled".equals(e.getKey())) warmSeaMapIfSailing();
     }
 
     @Subscribe

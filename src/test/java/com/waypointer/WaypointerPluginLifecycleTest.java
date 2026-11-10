@@ -146,4 +146,23 @@ public class WaypointerPluginLifecycleTest
         verify(executor, never()).execute(any());
         verify(waterMap, never()).warm();
     }
+
+    /** Stands in for Chart Plotter, which is matched by class name. */
+    static final class ChartPlotterPlugin extends net.runelite.client.plugins.Plugin { }
+
+    @Test
+    public void chartPlotterStartingWarmsTheSeaMap()
+    {
+        when(navigator.shortestPathOnly()).thenReturn(false);
+        plugin.onPluginChanged(new net.runelite.client.events.PluginChanged(new ChartPlotterPlugin(), true));
+        verify(executor).execute(any());
+    }
+
+    @Test
+    public void otherPluginsStartingDoNotWarmTheSeaMap()
+    {
+        when(navigator.shortestPathOnly()).thenReturn(false);
+        plugin.onPluginChanged(new net.runelite.client.events.PluginChanged(mock(net.runelite.client.plugins.Plugin.class), true));
+        verify(executor, never()).execute(any());
+    }
 }

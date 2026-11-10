@@ -7,6 +7,7 @@ import com.waypointer.model.Category;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
+import com.waypointer.sailing.ChartPlotterBridge;
 import com.waypointer.service.IconCatalog;
 import com.waypointer.service.Navigator;
 import com.waypointer.service.WaypointCapture;
@@ -51,6 +52,7 @@ import net.runelite.api.worldmap.WorldMap;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.events.PluginChanged;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
@@ -136,7 +138,7 @@ public class WaypointerPanel extends PluginPanel
         this.shareCodec = shareCodec;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
         this.navigator = navigator;
-        this.sailingControls = new SailingControls(sailingBoats, sailingBoatPin, clientThread);
+        this.sailingControls = new SailingControls(sailingBoats, sailingBoatPin, client, clientThread);
 
         // Build the panel header: Mark current location with the overflow trigger pinned
         // to its right, then the nearest-landmark bar, then the search bar.
@@ -335,6 +337,7 @@ public class WaypointerPanel extends PluginPanel
 
     InlineInputForm coordinatesFormForTest() { return coordinatesForm; }
     CaptureForm captureFormForTest() { return captureForm; }
+    SailingControls sailingControlsForTest() { return sailingControls; }
 
     /**
      * Show the inline capture form for an externally-supplied tile (right-click capture). Used by
@@ -476,10 +479,18 @@ public class WaypointerPanel extends PluginPanel
             });
         }
         if ("showWildernessGlyph".equals(e.getKey())
-            || "newestPinAtTop".equals(e.getKey()))
+            || "newestPinAtTop".equals(e.getKey())
+            || "sailingEnabled".equals(e.getKey()))
         {
             SwingUtilities.invokeLater(this::rebuild);
         }
+    }
+
+    /** Chart Plotter starting or stopping shows or hides the boat picker. */
+    @Subscribe
+    public void onPluginChanged(PluginChanged e)
+    {
+        if (ChartPlotterBridge.isChartPlotter(e.getPlugin())) SwingUtilities.invokeLater(this::rebuild);
     }
 
     /**
@@ -534,8 +545,11 @@ public class WaypointerPanel extends PluginPanel
         List<UUID> visibleIds = new ArrayList<>();
 
         addBanners();
-        sailingControls.setVisible(config.sailingEnabled());
-        if (config.sailingEnabled()) sailingControls.refresh();
+        // The boat picker only matters when sea targets can be routed: sailing on and Chart
+        // Plotter running.
+        boolean sailing = !navigator.shortestPathOnly();
+        sailingControls.setVisible(sailing);
+        if (sailing) sailingControls.refresh();
         boolean pinnedRendered = addPinnedSection(loweredFilter, isFiltering);
         CategoryRender cat = addCategorySections(loweredFilter, isFiltering, pinnedRendered, visibleIds);
 
