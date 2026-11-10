@@ -55,4 +55,32 @@ public class WorldPointPackerTest
         int target = WorldPointPacker.pack(new WorldPoint(3200, 3200, 0));
         assertFalse(WorldPointPacker.arrived(target, new WorldPoint(3200, 3200, 1), 3));
     }
+
+    @Test
+    public void arrivedAboardIgnoresPlane()
+    {
+        int target = WorldPointPacker.pack(100, 100, 1);
+        assertTrue(WorldPointPacker.arrivedAboard(target, new WorldPoint(104, 106, 0), 6));
+    }
+
+    @Test
+    public void arrivedAboardIsChebyshev()
+    {
+        int target = WorldPointPacker.pack(100, 100, 1);
+        assertTrue(WorldPointPacker.arrivedAboard(target, new WorldPoint(106, 106, 0), 6));
+        assertFalse(WorldPointPacker.arrivedAboard(target, new WorldPoint(107, 100, 0), 6));
+    }
+
+    @Test
+    public void arrivedAboardRejectsUndefinedAndNull()
+    {
+        assertFalse(WorldPointPacker.arrivedAboard(WorldPointPacker.UNDEFINED, new WorldPoint(0, 0, 0), 6));
+        assertFalse(WorldPointPacker.arrivedAboard(WorldPointPacker.pack(100, 100, 0), null, 6));
+    }
+
+    @Test
+    public void chebyshevIsMaxOfAxes()
+    {
+        assertEquals(10, WorldPointPacker.chebyshev(WorldPointPacker.pack(0, 0, 0), WorldPointPacker.pack(3, 10, 0)));
+    }
 }

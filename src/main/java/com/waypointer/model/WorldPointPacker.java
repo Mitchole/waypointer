@@ -51,4 +51,21 @@ public final class WorldPointPacker
         int dy = player.getY() - getY(packedTarget);
         return dx * dx + dy * dy <= radiusTiles * radiusTiles;
     }
+
+    /** Largest of the x and y distances between two packed points. Plane is ignored. */
+    public static int chebyshev(int packedA, int packedB)
+    {
+        return Math.max(Math.abs(getX(packedA) - getX(packedB)), Math.abs(getY(packedA) - getY(packedB)));
+    }
+
+    /**
+     * True if the boat is within {@code radiusTiles} of the packed target, measured as a square
+     * (Chebyshev) distance. Plane is ignored because a boat sails on plane 0 while a target may
+     * not be. False for an undefined target or a null boat tile.
+     */
+    public static boolean arrivedAboard(int packedTarget, WorldPoint boatTile, int radiusTiles)
+    {
+        if (packedTarget == UNDEFINED || boatTile == null) return false;
+        return chebyshev(packedTarget, pack(boatTile.getX(), boatTile.getY(), 0)) <= radiusTiles;
+    }
 }
