@@ -102,4 +102,17 @@ public class PlayerPositionTest
         when(client.getTopLevelWorldView()).thenReturn(null);
         assertNull(position.current());
     }
+
+    @Test
+    public void aboardTileComesFromTheBoatsLocalPointInTheTopView()
+    {
+        // The real toTile arithmetic: base + (local >> 7), on the top view's plane.
+        when(top.getBaseX()).thenReturn(2200);
+        when(top.getBaseY()).thenReturn(3600);
+        when(top.getPlane()).thenReturn(0);
+        when(entity.getLocalLocation()).thenReturn(new LocalPoint(5 * 128 + 3, 7 * 128 + 100, -1));
+        when(player.getWorldView()).thenReturn(boatView);
+
+        assertEquals(new WorldPoint(2205, 3607, 0), new PlayerPosition(client).current());
+    }
 }

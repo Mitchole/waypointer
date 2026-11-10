@@ -117,9 +117,10 @@ A couple of safety nets, both on by default and both toggleable in [Settings](#s
 ## Sailing
 
 Sailing needs the [Chart Plotter](https://github.com/Dazuzi/chart-plotter) plugin as well as
-Shortest Path. Install it from the Plugin Hub, then turn on one of its course displays (the
-charted line or the ETA). Waypointer sends Chart Plotter the course, and without a display
-turned on nothing is drawn. The first time you do this in a session a message reminds you.
+Shortest Path. Install it from the Plugin Hub, then turn on one of its course displays: a
+charted line, an ETA or the stop progress counter. Waypointer sends Chart Plotter the course, and with
+none of those on nothing is drawn. The first time you do this in a session a message reminds
+you. Without Chart Plotter installed, every waypoint goes to Shortest Path as before.
 
 How `Play` behaves depends on where the waypoint is and where you are:
 
@@ -132,9 +133,9 @@ How `Play` behaves depends on where the waypoint is and where you are:
 A waypoint counts as at sea when it is on the open sea, or on a blocked tile such as a wreck
 that is mostly surrounded by it. Inland lakes and rivers do not count.
 
-When sailing is on and Chart Plotter is running, the panel shows an **Always use a specific boat** box and a list of your
-moored boats. Leave it unticked and Waypointer uses the boat whose dock is nearest the
-waypoint. Tick it to pin one boat. If that boat is no longer moored, or the boats have been
+When sailing is on and Chart Plotter is running, the panel shows an **Always use a specific
+boat** box and a list of your moored boats. Leave it unticked and Waypointer uses the boat
+whose dock is nearest the waypoint. Tick it to pin one boat. If that boat is no longer moored, or the boats have been
 reshuffled, you get a message and have to pick again.
 
 Turn the feature off with **Sail to ocean waypoints** in [Settings](#settings). Every
@@ -168,8 +169,9 @@ that starts over at the end.
 Editing a waypoint step lets you retype its coordinates, which moves the step
 and leaves the saved waypoint alone.
 
-The route header shows the stop count and the total distance, and each step shows how far it
-is from the one before. These are straight-line tile counts, not the length of the path you
+The route header shows the stop count and the total distance, and each waypoint step after
+the first shows how far it is from the waypoint step before it. The first waypoint step and
+manual steps show no distance. These are straight-line tile counts, not the length of the path you
 would actually travel, so a route that goes around a lake or across the sea is longer than
 shown. A repeating route adds the leg back to its first stop.
 
@@ -221,7 +223,8 @@ goes back to how you left it.
 
   A line starting with `#` sets the category for the lines after it. Entries with no heading
   go in a category called `Imported`. Lines longer than 300 characters are rejected, and so is
-  the tile 0, 0. Pasting the same list twice skips entries you already have in that category.
+  the tile 0, 0. An entry is skipped when that category already has one with the same name
+  (ignoring case) and the same tile, so pasting the same list twice adds nothing new.
 - A JSON array works as well, with one object per entry. `plane` and `category` are optional:
 
   ```

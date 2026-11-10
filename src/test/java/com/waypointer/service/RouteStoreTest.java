@@ -180,6 +180,24 @@ public class RouteStoreTest
     }
 
     @Test
+    public void updateStepSetsTextAndTileAndFiresOnce()
+    {
+        Route r = store.createRoute("R");
+        store.addWaypointStep(r.getId(), WorldPointPacker.pack(3200, 3200, 0), "old", null);
+        UUID stepId = r.getSteps().get(0).getId();
+
+        AtomicInteger fires = new AtomicInteger();
+        store.subscribe(fires::incrementAndGet);
+        store.updateStep(r.getId(), stepId, "Bank", "Withdraw 5 seeds", WorldPointPacker.pack(3100, 3100, 1));
+
+        RouteStep s = store.getRouteById(r.getId()).getSteps().get(0);
+        assertEquals("Bank", s.getLabel());
+        assertEquals("Withdraw 5 seeds", s.getBoxText());
+        assertEquals(WorldPointPacker.pack(3100, 3100, 1), s.getPackedWorldPoint());
+        assertEquals(1, fires.get());
+    }
+
+    @Test
     public void duplicateRouteCopiesBoxText()
     {
         Route r = store.createRoute("R");

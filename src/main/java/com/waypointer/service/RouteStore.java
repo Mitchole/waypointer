@@ -1,6 +1,7 @@
 package com.waypointer.service;
 
 import com.waypointer.model.Waypoint;
+import com.waypointer.model.WorldPointPacker;
 import com.waypointer.model.route.Route;
 import com.waypointer.model.route.RouteLibrary;
 import com.waypointer.model.route.RouteStep;
@@ -159,6 +160,18 @@ public class RouteStore extends AbstractStore<RouteLibrary>
         if (s == null) return;
         s.setLabel(name);
         s.setBoxText(boxText);
+        notifyChanged();
+    }
+
+    /** Sets a step's name, box text and tile in one change; listeners fire once. A tile of
+     *  {@link WorldPointPacker#UNDEFINED} leaves the tile as it is. */
+    public void updateStep(UUID routeId, UUID stepId, String name, String boxText, int packed)
+    {
+        RouteStep s = findStep(routeId, stepId);
+        if (s == null) return;
+        s.setLabel(name);
+        s.setBoxText(boxText);
+        if (packed != WorldPointPacker.UNDEFINED) s.setPackedWorldPoint(packed);
         notifyChanged();
     }
 

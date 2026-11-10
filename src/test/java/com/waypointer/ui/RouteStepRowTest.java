@@ -60,14 +60,36 @@ public class RouteStepRowTest
         routes.addWaypointStep(route.getId(), original, "Dock", source.getId());
         RouteStep step = routes.getRouteById(route.getId()).getSteps().get(0);
 
-        assertNull(RouteEditorPanel.applyStepCoordinates(routes, route.getId(), step, "2400, 3500, 1"));
+        java.util.concurrent.atomic.AtomicInteger fires = new java.util.concurrent.atomic.AtomicInteger();
+        routes.subscribe(fires::incrementAndGet);
+        assertNull(RouteEditorPanel.applyStepEdit(routes, route.getId(), step, "Jetty", "Board here",
+            "2400, 3500, 1"));
 
+        // Text and tile both changed, saved as one change.
+        assertEquals(1, fires.get());
         assertEquals(WorldPointPacker.pack(2400, 3500, 1), step.getPackedWorldPoint());
-        assertEquals("Dock", step.getLabel());
+        assertEquals("Jetty", step.getLabel());
+        assertEquals("Board here", step.getBoxText());
         assertEquals(original, waypoints.getWaypointById(source.getId()).getPackedWorldPoint());
 
         assertEquals("Plane must be between 0 and 3.",
-            RouteEditorPanel.applyStepCoordinates(routes, route.getId(), step, "1, 2, 9"));
+            RouteEditorPanel.applyStepEdit(routes, route.getId(), step, "Jetty 2", "Board here", "1, 2, 9"));
         assertEquals(WorldPointPacker.pack(2400, 3500, 1), step.getPackedWorldPoint());
+        assertEquals("Jetty 2", step.getLabel());
+    }
+
+    @Test
+    public void manualStepEditKeepsItsTile()
+    {
+        RouteStore routes = new RouteStore();
+        routes.bootstrap(new RouteLibrary());
+        Route route = routes.createRoute("Trip");
+        routes.addManualStep(route.getId(), "Bank");
+        RouteStep step = routes.getRouteById(route.getId()).getSteps().get(0);
+        int tile = step.getPackedWorldPoint();
+
+        assertNull(RouteEditorPanel.applyStepEdit(routes, route.getId(), step, "Bank all", "", null));
+        assertEquals("Bank all", step.getLabel());
+        assertEquals(tile, step.getPackedWorldPoint());
     }
 }

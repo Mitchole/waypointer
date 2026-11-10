@@ -130,6 +130,11 @@ public class WaypointerPlugin extends Plugin
         eventBus.unregister(menuHandler);
         eventBus.unregister(pathfinderService);
         eventBus.unregister(sailingOrchestrator);
+        // The orchestrator is a singleton, so a journey would otherwise outlive the plugin.
+        if (sailingOrchestrator.activeDestination() != com.waypointer.model.WorldPointPacker.UNDEFINED)
+        {
+            sailingOrchestrator.cancel();
+        }
         sailingOrchestrator.resetSession();
         eventBus.unregister(deathAutoPathfinder);
         eventBus.unregister(panel);

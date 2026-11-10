@@ -46,6 +46,7 @@ public class WaypointerPluginLifecycleTest
     private Navigator navigator;
     private WaterMap waterMap;
     private ScheduledExecutorService executor;
+    private com.waypointer.sailing.SailingJourneyOrchestrator orchestrator;
 
     @Before
     public void setUp() throws Exception
@@ -77,7 +78,9 @@ public class WaypointerPluginLifecycleTest
         inject("routePersistence", routePersistence);
         inject("routePlaybackEngine", mock(RoutePlaybackEngine.class));
         inject("routeOverlay", mock(RouteOverlay.class));
-        inject("sailingOrchestrator", mock(com.waypointer.sailing.SailingJourneyOrchestrator.class));
+        orchestrator = mock(com.waypointer.sailing.SailingJourneyOrchestrator.class);
+        when(orchestrator.activeDestination()).thenReturn(com.waypointer.model.WorldPointPacker.UNDEFINED);
+        inject("sailingOrchestrator", orchestrator);
         inject("client", mock(Client.class));
         inject("keyManager", keyManager);
         navigator = mock(Navigator.class);
@@ -164,5 +167,22 @@ public class WaypointerPluginLifecycleTest
         when(navigator.shortestPathOnly()).thenReturn(false);
         plugin.onPluginChanged(new net.runelite.client.events.PluginChanged(mock(net.runelite.client.plugins.Plugin.class), true));
         verify(executor, never()).execute(any());
+    }
+
+    @Test
+    public void shutDownCancelsASeaJourney() throws Exception
+    {
+        plugin.startUp();
+        when(orchestrator.activeDestination()).thenReturn(com.waypointer.model.WorldPointPacker.pack(2151, 3880, 0));
+        plugin.shutDown();
+        verify(orchestrator).cancel();
+    }
+
+    @Test
+    public void shutDownWithNoJourneyCancelsNothing() throws Exception
+    {
+        plugin.startUp();
+        plugin.shutDown();
+        verify(orchestrator, never()).cancel();
     }
 }

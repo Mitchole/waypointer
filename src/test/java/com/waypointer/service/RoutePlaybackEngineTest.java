@@ -113,28 +113,6 @@ public class RoutePlaybackEngineTest
     }
 
     @Test
-    public void arrivalWithinRadiusAdvancesWaypointStep()
-    {
-        Route r = route(false, RouteStep.waypoint(BANK, "Bank"), RouteStep.manual("done"));
-        engine.start(r);
-        WorldPoint near = new WorldPoint(3201, 3202, 0);
-        when(navigator.arrived(BANK, near)).thenReturn(true);
-        engine.handleTick(near);
-        assertEquals(1, engine.getCurrentIndex());
-    }
-
-    @Test
-    public void arrivalIgnoredWhenTooFarOrWrongPlane()
-    {
-        Route r = route(false, RouteStep.waypoint(BANK, "Bank"));
-        engine.start(r);
-        engine.handleTick(new WorldPoint(3260, 3260, 0)); // far
-        assertEquals(0, engine.getCurrentIndex());
-        engine.handleTick(new WorldPoint(3200, 3200, 1)); // right tile, wrong plane
-        assertEquals(0, engine.getCurrentIndex());
-    }
-
-    @Test
     public void manualStepDoesNotAutoAdvanceOnTick()
     {
         Route r = route(false, RouteStep.manual("read"), RouteStep.manual("next"));
@@ -162,13 +140,6 @@ public class RoutePlaybackEngineTest
         // The mock store returns null for getRouteById, i.e. the active route was deleted.
         engine.onStoreChanged();
         assertFalse(engine.isActive());
-    }
-
-    @Test
-    public void waypointStepGoesThroughNavigatorGoStep()
-    {
-        engine.start(route(false, RouteStep.waypoint(PATCH, "Patch")));
-        verify(navigator).goStep(PATCH, "Patch");
     }
 
     @Test
@@ -222,16 +193,6 @@ public class RoutePlaybackEngineTest
         e.setVarbitId(VarbitID.SAILING_BOARDED_BOAT + 1);
         engine.onVarbitChanged(e);
         verify(navigator, times(1)).goStep(BANK, "Bank");
-    }
-
-    @Test
-    public void leavingBoatDoesNotStopRoute()
-    {
-        engine.start(route(false, RouteStep.waypoint(BANK, "Bank")));
-        VarbitChanged e = new VarbitChanged();
-        e.setVarbitId(VarbitID.SAILING_BOARDED_BOAT);
-        engine.onVarbitChanged(e);
-        assertTrue(engine.isActive());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import com.waypointer.codec.CoordinateText;
+import com.waypointer.model.WorldPointPacker;
 import com.waypointer.model.route.Route;
 import com.waypointer.model.route.RouteDistance;
 import com.waypointer.model.route.RouteStep;
@@ -184,39 +185,39 @@ final class RouteEditorPanel extends JPanel
             JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION)
         {
-            store.updateStepText(routeId, s.getId(),
-                nameField.getText().trim(), boxField.getText().trim());
-            if (coordsField != null)
+            String error = applyStepEdit(store, routeId, s, nameField.getText().trim(),
+                boxField.getText().trim(), coordsField == null ? null : coordsField.getText());
+            if (error != null)
             {
-                String error = applyStepCoordinates(store, routeId, s, coordsField.getText());
-                if (error != null)
-                {
-                    JOptionPane.showMessageDialog(this, error, "Edit step",
-                        JOptionPane.WARNING_MESSAGE);
-                }
+                JOptionPane.showMessageDialog(this, error, "Edit step",
+                    JOptionPane.WARNING_MESSAGE);
             }
         }
     }
 
     /**
-     * Moves a waypoint step to typed coordinates. Only the step changes; the saved waypoint it
-     * was copied from is left alone. Returns a message to show the user, or null on success.
+     * Saves the step edit dialog in one store change. {@code coordsText} is null for a manual
+     * step; for a waypoint step it moves the step only, and the saved waypoint it was copied
+     * from is left alone. Coordinates that do not parse keep the old tile, and the message to
+     * show is returned; otherwise null.
      */
-    static String applyStepCoordinates(RouteStore store, UUID routeId, RouteStep step, String text)
+    static String applyStepEdit(RouteStore store, UUID routeId, RouteStep step, String name,
+        String boxText, String coordsText)
     {
-        int packed;
-        try
+        int packed = WorldPointPacker.UNDEFINED;
+        String error = null;
+        if (coordsText != null)
         {
-            packed = CoordinateText.parse(text);
+            try
+            {
+                packed = CoordinateText.parse(coordsText);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                error = ex.getMessage();
+            }
         }
-        catch (IllegalArgumentException ex)
-        {
-            return ex.getMessage();
-        }
-        if (packed != step.getPackedWorldPoint())
-        {
-            store.updateStepWaypoint(routeId, step.getId(), packed, null);
-        }
-        return null;
+        store.updateStep(routeId, step.getId(), name, boxText, packed);
+        return error;
     }
 }
