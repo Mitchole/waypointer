@@ -75,7 +75,7 @@ public class NearestLandmarkBarTest
     @Test
     public void barHasFourDefaultButtonsPlusOverflow()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
         Container iconRow = (Container) bar.getComponent(0);
         int buttonCount = 0;
@@ -90,7 +90,7 @@ public class NearestLandmarkBarTest
     @Test
     public void applyHitRequestsPath()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
         BboxIndex.Hit hit = new BboxIndex.Hit(123456, "Edgeville Bank", 7);
         bar.applyHit(LandmarkType.BANK, hit);
@@ -101,7 +101,7 @@ public class NearestLandmarkBarTest
     @Test
     public void applyHitWithNullHitSkipsPathRequest()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
         bar.applyHit(LandmarkType.BANK, null);
 
@@ -111,7 +111,7 @@ public class NearestLandmarkBarTest
     @Test
     public void applyHitWithNullHitShowsToast()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
         CapturingToasts toasts = new CapturingToasts();
         bar.setToasts(toasts);
 
@@ -126,7 +126,7 @@ public class NearestLandmarkBarTest
     public void onPickShortcircuitsWhenShortestPathUnavailable()
     {
         when(pathfinder.isAvailable()).thenReturn(false);
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
         CapturingToasts toasts = new CapturingToasts();
         bar.setToasts(toasts);
 
@@ -142,7 +142,7 @@ public class NearestLandmarkBarTest
     @Test
     public void setLoggedInTogglesLandmarkButtonEnabledState()
     {
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
         // Bar contents: 4 landmark buttons then the customize (▾) button. ▾ is always enabled.
         List<JButton> allButtons = findLandmarkButtons(bar);
@@ -178,7 +178,7 @@ public class NearestLandmarkBarTest
         String emptyJson = empty.toJson(realGson);
         when(config.landmarkSelectionJson()).thenReturn(emptyJson);
         // Use the real Gson here so the constructor's parse(...) reconstructs the empty selection.
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, realGson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, realGson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
         Container iconRow = (Container) bar.getComponent(0);
         int buttonCount = 0;
@@ -204,7 +204,7 @@ public class NearestLandmarkBarTest
             all = all.withSelected(t, true);
         }
         when(config.landmarkSelectionJson()).thenReturn(all.toJson(realGson));
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, realGson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, realGson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
         bar.setSize(net.runelite.client.ui.PluginPanel.PANEL_WIDTH, 600);
         bar.doLayout(); // BoxLayout sizes the icon row to the bar width
@@ -239,7 +239,7 @@ public class NearestLandmarkBarTest
         // above the search field that only a Customize toggle could clear. The row only ever
         // renders in the fixed-width sidebar, so a momentarily narrow width must not inflate the
         // reported height -- it should stay a single row.
-        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
         Container iconRow = (Container) bar.getComponent(0);
         iconRow.setSize(34, 10); // one BUTTON_SIZE wide -- the collapsed transient width
@@ -279,7 +279,7 @@ public class NearestLandmarkBarTest
             ArgumentCaptor.forClass(Consumer.class);
 
         NearestLandmarkBar bar = new NearestLandmarkBar(
-            bbox, pathfinder, client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+            bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
         verify(spriteManager, atLeastOnce()).getSpriteAsync(anyInt(), anyInt(), callback.capture());
         for (Consumer<BufferedImage> cb : callback.getAllValues())

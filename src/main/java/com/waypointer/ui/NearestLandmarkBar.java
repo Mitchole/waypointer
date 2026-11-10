@@ -5,6 +5,7 @@ import com.waypointer.WaypointerConfig;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkType;
+import com.waypointer.service.Navigator;
 import com.waypointer.service.PlayerPosition;
 import com.waypointer.service.WaypointPathfinder;
 import java.awt.Component;
@@ -52,6 +53,7 @@ public final class NearestLandmarkBar extends JPanel
 
     private final BboxIndex bbox;
     private final WaypointPathfinder pathfinder;
+    private final Navigator navigator;
     private final Client client;
     private final ClientThread clientThread;
     private final SpriteManager spriteManager;
@@ -77,13 +79,14 @@ public final class NearestLandmarkBar extends JPanel
     }
 
     @Inject
-    public NearestLandmarkBar(BboxIndex bbox, WaypointPathfinder pathfinder, Client client,
+    public NearestLandmarkBar(BboxIndex bbox, WaypointPathfinder pathfinder, Navigator navigator, Client client,
         ClientThread clientThread, SpriteManager spriteManager,
         WaypointerConfig config, Gson gson, PlayerPosition playerPosition)
     {
         this.playerPosition = playerPosition;
         this.bbox = bbox;
         this.pathfinder = pathfinder;
+        this.navigator = navigator;
         this.client = client;
         this.clientThread = clientThread;
         this.spriteManager = spriteManager;
@@ -275,7 +278,8 @@ public final class NearestLandmarkBar extends JPanel
 
     void onPick(LandmarkType type)
     {
-        if (!pathfinder.isAvailable())
+        // Landmarks are on land, so their router is known before the lookup picks one.
+        if (navigator.landRouter() == Navigator.Router.SHORTEST_PATH && !pathfinder.isAvailable())
         {
             toasts.show("Install the Shortest Path plugin to use Play.", Toasts.Severity.WARN);
             return;
@@ -298,7 +302,7 @@ public final class NearestLandmarkBar extends JPanel
             toasts.show("No " + type.displayName().toLowerCase() + " found.", Toasts.Severity.WARN);
             return;
         }
-        pathfinder.requestPath(hit.packed, hit.name);
+        navigator.go(hit.packed, hit.name);
     }
 
     private static Map<LandmarkType, Integer> spriteIds()

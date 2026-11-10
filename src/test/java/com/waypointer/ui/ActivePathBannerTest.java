@@ -28,7 +28,7 @@ public class ActivePathBannerTest
         when(config.showPathingBanner()).thenReturn(true);
         when(pathfinder.getActiveTarget()).thenReturn(WorldPointPacker.UNDEFINED);
         targetHasRow = false;
-        banner = new ActivePathBanner(pathfinder, config, packed -> targetHasRow);
+        banner = new ActivePathBanner(com.waypointer.service.LandNavigator.over(pathfinder), config, packed -> targetHasRow);
     }
 
     @Test

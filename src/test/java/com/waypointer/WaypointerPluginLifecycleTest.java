@@ -69,6 +69,7 @@ public class WaypointerPluginLifecycleTest
         inject("routePersistence", routePersistence);
         inject("routePlaybackEngine", mock(RoutePlaybackEngine.class));
         inject("routeOverlay", mock(RouteOverlay.class));
+        inject("sailingOrchestrator", mock(com.waypointer.sailing.SailingJourneyOrchestrator.class));
         inject("client", mock(Client.class));
         inject("keyManager", keyManager);
     }

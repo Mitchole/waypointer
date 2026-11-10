@@ -17,8 +17,9 @@ import com.waypointer.preset.PresetCatalog;
 import com.waypointer.sailing.SailingBoatPin;
 import com.waypointer.sailing.SailingBoats;
 import com.waypointer.sailing.SailingJourneyOrchestrator;
-import com.waypointer.sailing.WaterMap;
 import com.waypointer.service.BboxIndex;
+import com.waypointer.service.LandNavigator;
+import com.waypointer.service.Navigator;
 import com.waypointer.service.RoutePlaybackEngine;
 import com.waypointer.service.RouteRecorder;
 import com.waypointer.service.RouteStore;
@@ -175,9 +176,12 @@ public class TabHostTest
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
 
+        Navigator navigator = LandNavigator.over(pathfinder);
+
         NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
             mock(BboxIndex.class),
             pathfinder,
+            navigator,
             mock(Client.class),
             mock(ClientThread.class),
             mock(SpriteManager.class),
@@ -186,7 +190,6 @@ public class TabHostTest
             mock(com.waypointer.service.PlayerPosition.class));
 
         SailingJourneyOrchestrator sailingOrchestrator = mock(SailingJourneyOrchestrator.class);
-        when(sailingOrchestrator.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
         WaypointerPanel waypointerPanel = new WaypointerPanel(
             store,
             mock(WaypointCapture.class),
@@ -202,7 +205,7 @@ public class TabHostTest
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
             mock(WaypointShareCodec.class),
-            mock(WaterMap.class),
+            navigator,
             sailingOrchestrator,
             mock(SailingBoats.class),
             mock(SailingBoatPin.class));
@@ -219,7 +222,7 @@ public class TabHostTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        TabHost host = new TabHost(waypointerPanel, presetPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class), store);
+        TabHost host = new TabHost(waypointerPanel, presetPanel, routesPanel, navigator, config, mock(ClientToolbar.class), store);
         assertEquals(3, host.visibleTabCountForTest());
     }
 
@@ -245,18 +248,19 @@ public class TabHostTest
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
 
+        Navigator navigator = LandNavigator.over(pathfinder);
+
         NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
-            mock(BboxIndex.class), pathfinder, mock(Client.class), mock(ClientThread.class),
+            mock(BboxIndex.class), pathfinder, navigator, mock(Client.class), mock(ClientThread.class),
             mock(SpriteManager.class), config, new Gson(), mock(com.waypointer.service.PlayerPosition.class));
 
         SailingJourneyOrchestrator sailingOrchestrator2 = mock(SailingJourneyOrchestrator.class);
-        when(sailingOrchestrator2.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
         WaypointerPanel waypointerPanel = new WaypointerPanel(
             store, mock(WaypointCapture.class), pathfinder, config,
             new CollapseStateCodec(new Gson()), persistence, mock(SpriteManager.class),
             null, null, nearestLandmarkBar, mock(Client.class), mock(ClientThread.class),
             mock(WildernessConfirmGate.class), mock(WaypointShareCodec.class),
-            mock(WaterMap.class), sailingOrchestrator2,
+            navigator, sailingOrchestrator2,
             mock(SailingBoats.class), mock(SailingBoatPin.class));
         PresetBrowserPanel presetPanel =
             new PresetBrowserPanel(catalog, store, mock(SpriteManager.class));
@@ -273,7 +277,7 @@ public class TabHostTest
             mock(com.waypointer.codec.RouteShareCodec.class),
             mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        new TabHost(waypointerPanel, presetPanel, routesPanel, pathfinder, config,
+        new TabHost(waypointerPanel, presetPanel, routesPanel, navigator, config,
             mock(ClientToolbar.class), store);
 
         assertEquals(false, routesPanel.getToastsForTest() == Toasts.NO_OP);
@@ -311,9 +315,12 @@ public class TabHostTest
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
 
+        Navigator navigator = LandNavigator.over(pathfinder);
+
         NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
             mock(BboxIndex.class),
             pathfinder,
+            navigator,
             mock(Client.class),
             mock(ClientThread.class),
             mock(SpriteManager.class),
@@ -322,7 +329,6 @@ public class TabHostTest
             mock(com.waypointer.service.PlayerPosition.class));
 
         SailingJourneyOrchestrator sailingOrchestratorB = mock(SailingJourneyOrchestrator.class);
-        when(sailingOrchestratorB.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
         WaypointerPanel waypointerPanel = new WaypointerPanel(
             store,
             mock(WaypointCapture.class),
@@ -338,7 +344,7 @@ public class TabHostTest
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
             mock(WaypointShareCodec.class),
-            mock(WaterMap.class),
+            navigator,
             sailingOrchestratorB,
             mock(SailingBoats.class),
             mock(SailingBoatPin.class));
@@ -355,6 +361,6 @@ public class TabHostTest
         when(routePersistence.isRefusingSaves()).thenReturn(false);
         RoutesPanel routesPanel = new RoutesPanel(routeStore, routeEngine, routeRecorder, mock(com.waypointer.codec.RouteShareCodec.class), mock(com.waypointer.service.WaypointStore.class), routePersistence);
 
-        return new TabHost(waypointerPanel, presetPanel, routesPanel, pathfinder, config, mock(ClientToolbar.class), store);
+        return new TabHost(waypointerPanel, presetPanel, routesPanel, navigator, config, mock(ClientToolbar.class), store);
     }
 }

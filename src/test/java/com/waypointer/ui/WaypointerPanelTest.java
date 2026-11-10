@@ -4,12 +4,12 @@ import com.google.gson.Gson;
 import com.waypointer.WaypointerConfig;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Library;
-import com.waypointer.model.WorldPointPacker;
 import com.waypointer.sailing.SailingBoatPin;
 import com.waypointer.sailing.SailingBoats;
 import com.waypointer.sailing.SailingJourneyOrchestrator;
-import com.waypointer.sailing.WaterMap;
 import com.waypointer.service.BboxIndex;
+import com.waypointer.service.LandNavigator;
+import com.waypointer.service.Navigator;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.service.WaypointStore;
@@ -59,9 +59,12 @@ public class WaypointerPanelTest
         WaypointStorePersistence persistence = mock(WaypointStorePersistence.class);
         when(persistence.isRefusingSaves()).thenReturn(false);
 
+        Navigator navigator = LandNavigator.over(pathfinder);
+
         NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
             mock(BboxIndex.class),
             pathfinder,
+            navigator,
             mock(Client.class),
             mock(ClientThread.class),
             mock(SpriteManager.class),
@@ -70,7 +73,6 @@ public class WaypointerPanelTest
             mock(com.waypointer.service.PlayerPosition.class));
 
         SailingJourneyOrchestrator sailingOrchestrator = mock(SailingJourneyOrchestrator.class);
-        when(sailingOrchestrator.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
         return new WaypointerPanel(
             store,
             mock(WaypointCapture.class),
@@ -86,7 +88,7 @@ public class WaypointerPanelTest
             mock(ClientThread.class),
             mock(WildernessConfirmGate.class),
             mock(WaypointShareCodec.class),
-            mock(WaterMap.class),
+            navigator,
             sailingOrchestrator,
             mock(SailingBoats.class),
             mock(SailingBoatPin.class));

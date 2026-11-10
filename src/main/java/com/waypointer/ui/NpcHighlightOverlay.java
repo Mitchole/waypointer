@@ -2,7 +2,7 @@ package com.waypointer.ui;
 
 import com.waypointer.model.WorldPointPacker;
 import java.util.Map;
-import com.waypointer.service.WaypointPathfinder;
+import com.waypointer.service.Navigator;
 import com.waypointer.service.WaypointStore;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -30,14 +30,14 @@ public class NpcHighlightOverlay extends Overlay
 
     private final Client client;
     private final WaypointStore store;
-    private final WaypointPathfinder pathfinder;
+    private final Navigator navigator;
 
     @Inject
-    public NpcHighlightOverlay(Client client, WaypointStore store, WaypointPathfinder pathfinder)
+    public NpcHighlightOverlay(Client client, WaypointStore store, Navigator navigator)
     {
         this.client = client;
         this.store = store;
-        this.pathfinder = pathfinder;
+        this.navigator = navigator;
         setLayer(OverlayLayer.ABOVE_SCENE);
         setPosition(OverlayPosition.DYNAMIC);
     }
@@ -57,7 +57,7 @@ public class NpcHighlightOverlay extends Overlay
     @Override
     public Dimension render(Graphics2D g)
     {
-        String name = activeNpcName(store.npcNamesSnapshot(), pathfinder.getActiveTarget());
+        String name = activeNpcName(store.npcNamesSnapshot(), navigator.activeTarget());
         if (name == null) return null;
 
         WorldView wv = client.getTopLevelWorldView();

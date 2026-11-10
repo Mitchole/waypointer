@@ -46,7 +46,7 @@ public class DeathAutoPathfinderTest
         when(client.getLocalPlayer()).thenReturn(localPlayer);
         when(playerPosition.current()).thenReturn(new WorldPoint(3200, 3200, 0));
 
-        subject = new DeathAutoPathfinder(client, pathfinder, config, playerPosition);
+        subject = new DeathAutoPathfinder(client, pathfinder, LandNavigator.over(pathfinder), config, playerPosition);
     }
 
     @Test

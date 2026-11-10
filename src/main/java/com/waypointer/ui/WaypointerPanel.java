@@ -7,6 +7,7 @@ import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.IconCatalog;
+import com.waypointer.service.Navigator;
 import com.waypointer.service.WaypointCapture;
 import com.waypointer.service.WaypointFilter;
 import com.waypointer.service.WaypointPathfinder;
@@ -76,8 +77,7 @@ public class WaypointerPanel extends PluginPanel
     private final BulkSelectController bulkSelect;
     private final CategoryMenuController categoryMenu;
     private final FooterStrip footer;
-    private final com.waypointer.sailing.WaterMap waterMap;
-    private final com.waypointer.sailing.SailingJourneyOrchestrator sailingOrchestrator;
+    private final Navigator navigator;
     private final SailingControls sailingControls;
     private final JPanel body = new JPanel();
     private final JScrollBar bodyScrollBar;
@@ -98,7 +98,6 @@ public class WaypointerPanel extends PluginPanel
     // a Singleton today, in case shutdown ordering changes or the panel ever gets re-created.
     private Listeners.Subscription storeSub;
     private Listeners.Subscription pathSub;
-    private Listeners.Subscription sailingSub;
 
     // Coalesce back-to-back rebuild requests within one EDT cycle into a single call.
     private volatile boolean rebuildPending = false;
@@ -113,7 +112,7 @@ public class WaypointerPanel extends PluginPanel
         NearestLandmarkBar nearestLandmarkBar,
         Client client, ClientThread clientThread, WildernessConfirmGate wildernessGate,
         WaypointShareCodec shareCodec,
-        com.waypointer.sailing.WaterMap waterMap,
+        Navigator navigator,
         com.waypointer.sailing.SailingJourneyOrchestrator sailingOrchestrator,
         com.waypointer.sailing.SailingBoats sailingBoats,
         com.waypointer.sailing.SailingBoatPin sailingBoatPin)
@@ -134,8 +133,7 @@ public class WaypointerPanel extends PluginPanel
         this.wildernessGate = wildernessGate;
         this.shareCodec = shareCodec;
         this.collapsedByCategory = collapseCodec.decode(config.categoryCollapsedJson());
-        this.waterMap = waterMap;
-        this.sailingOrchestrator = sailingOrchestrator;
+        this.navigator = navigator;
         this.sailingControls = new SailingControls(sailingBoats, sailingBoatPin, clientThread);
 
         // Build the panel header: Mark current location with the overflow trigger pinned
@@ -213,7 +211,6 @@ public class WaypointerPanel extends PluginPanel
         nearestLandmarkBar.setToasts(toastOverlay);
         sailingOrchestrator.setFeedback((msg, warning) ->
             toastOverlay.show(msg, warning ? Toasts.Severity.WARN : Toasts.Severity.SUCCESS));
-        sailingSub = sailingOrchestrator.subscribe(() -> SwingUtilities.invokeLater(this::scheduleRebuild));
         overflowBtn.addActionListener(e -> overflowMenu.show(overflowBtn, this, toastOverlay));
 
         this.captureForm = new CaptureForm(store, capture);
@@ -249,7 +246,7 @@ public class WaypointerPanel extends PluginPanel
         this.footer = new FooterStrip();
 
         storeSub = store.subscribe(this::scheduleRebuild);
-        pathSub = pathfinder.subscribe(this::onActivePathChanged);
+        pathSub = navigator.subscribe(this::onActivePathChanged);
         rebuild();
     }
 
@@ -264,7 +261,6 @@ public class WaypointerPanel extends PluginPanel
         if (searchDebounceTimer != null) searchDebounceTimer.stop();
         if (storeSub != null) { storeSub.close(); storeSub = null; }
         if (pathSub != null) { pathSub.close(); pathSub = null; }
-        if (sailingSub != null) { sailingSub.close(); sailingSub = null; }
         nearestLandmarkBar.dispose();
     }
 
@@ -394,18 +390,6 @@ public class WaypointerPanel extends PluginPanel
         });
     }
 
-    private boolean shouldSail(Waypoint w)
-    {
-        return config.sailingEnabled()
-            && waterMap.isWater(WorldPointPacker.unpack(w.getPackedWorldPoint()));
-    }
-
-    private int activeHighlightTarget()
-    {
-        int sailing = sailingOrchestrator.activeDestination();
-        return sailing != WorldPointPacker.UNDEFINED ? sailing : pathfinder.getActiveTarget();
-    }
-
     /**
      * A path-target change only affects the active row's Play tint here -- the ActivePathBanner is
      * refreshed separately by TabHost. Retint rows in place rather than rebuilding the whole body
@@ -417,7 +401,7 @@ public class WaypointerPanel extends PluginPanel
         // with the correct tint from the current target; this retint then no-ops (playIconButton
         // is idempotent). The reverse order can't happen -- a path change never fires storeSub.
         SwingUtilities.invokeLater(() -> {
-            int target = activeHighlightTarget();
+            int target = navigator.activeTarget();
             retintRows(body, target);
         });
     }
@@ -582,7 +566,7 @@ public class WaypointerPanel extends PluginPanel
                 : collapsedByCategory.getOrDefault(PINNED_COLLAPSE_KEY, false);
             PinnedSection pinnedSec = new PinnedSection(
                 visiblePinned,
-                activeHighlightTarget(),
+                navigator.activeTarget(),
                 pinnedCollapsed,
                 isCollapsed -> {
                     collapsedByCategory.put(PINNED_COLLAPSE_KEY, isCollapsed);
@@ -633,7 +617,7 @@ public class WaypointerPanel extends PluginPanel
                 boolean collapsed = isFiltering ? false
                     : collapsedByCategory.getOrDefault(c.getId(), false);
                 CategorySection section = CategorySection.spec(c, ws)
-                    .activePathTarget(activeHighlightTarget())
+                    .activePathTarget(navigator.activeTarget())
                     .collapsed(collapsed)
                     .onCollapseChange(isCollapsed -> {
                         collapsedByCategory.put(c.getId(), isCollapsed);
@@ -756,34 +740,28 @@ public class WaypointerPanel extends PluginPanel
         switch (action)
         {
             case PLAY:
-                if (shouldSail(w))
-                {
-                    if (sailingOrchestrator.isActiveDestination(w.getPackedWorldPoint()))
-                    {
-                        sailingOrchestrator.cancel();
-                    }
-                    else
-                    {
-                        sailingOrchestrator.start(w);
-                    }
-                    break;
-                }
+            {
+                int packed = w.getPackedWorldPoint();
                 // Clicking the active row's button again stops pathing. Stopping skips the
                 // availability and wilderness gates -- those only guard starting a path.
-                if (pathfinder.getActiveTarget() != WorldPointPacker.UNDEFINED
-                    && pathfinder.getActiveTarget() == w.getPackedWorldPoint())
+                if (navigator.activeTarget() != WorldPointPacker.UNDEFINED
+                    && navigator.activeTarget() == packed)
                 {
-                    pathfinder.clearPath();
+                    navigator.stop();
                     break;
                 }
-                if (!pathfinder.isAvailable())
+                if (navigator.routerFor(packed) == Navigator.Router.SHORTEST_PATH)
                 {
-                    toastOverlay.show("Install the Shortest Path plugin to use Play.", Toasts.Severity.WARN);
-                    return;
+                    if (!pathfinder.isAvailable())
+                    {
+                        toastOverlay.show("Install the Shortest Path plugin to use Play.", Toasts.Severity.WARN);
+                        return;
+                    }
+                    if (!WildernessConfirmGuard.shouldProceed(w, config, wildernessGate, this, store)) return;
                 }
-                if (!WildernessConfirmGuard.shouldProceed(w, config, wildernessGate, this, store)) return;
-                pathfinder.requestPath(w.getPackedWorldPoint(), w.getName());
+                navigator.go(packed, w.getName());
                 break;
+            }
             case DELETE:
                 softDeleteWithUndo(store, w, toastOverlay);
                 break;

@@ -125,6 +125,7 @@ public class WaypointerPlugin extends Plugin
         eventBus.unregister(menuHandler);
         eventBus.unregister(pathfinderService);
         eventBus.unregister(sailingOrchestrator);
+        sailingOrchestrator.resetSession();
         eventBus.unregister(deathAutoPathfinder);
         eventBus.unregister(panel);
         eventBus.unregister(tabHost);
