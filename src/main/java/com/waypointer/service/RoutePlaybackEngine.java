@@ -197,6 +197,8 @@ public class RoutePlaybackEngine
     public void onVarbitChanged(VarbitChanged e)
     {
         if (active == null || e.getVarbitId() != VarbitID.SAILING_BOARDED_BOAT) return;
+        // Boarding only changes the router when sea routes are possible at all.
+        if (navigator.shortestPathOnly()) return;
         enterCurrentStep();
     }
 

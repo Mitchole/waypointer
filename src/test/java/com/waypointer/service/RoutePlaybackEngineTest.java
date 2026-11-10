@@ -201,6 +201,20 @@ public class RoutePlaybackEngineTest
     }
 
     @Test
+    public void boardingIsIgnoredWithoutSeaRoutes()
+    {
+        engine.start(route(false, RouteStep.waypoint(BANK, "Bank")));
+        org.mockito.Mockito.clearInvocations(navigator);
+        when(navigator.shortestPathOnly()).thenReturn(true);
+        VarbitChanged e = new VarbitChanged();
+        e.setVarbitId(VarbitID.SAILING_BOARDED_BOAT);
+        engine.onVarbitChanged(e);
+        verify(navigator).shortestPathOnly();
+        org.mockito.Mockito.verifyNoMoreInteractions(navigator);
+        assertTrue(engine.isActive());
+    }
+
+    @Test
     public void unrelatedVarbitIgnored()
     {
         engine.start(route(false, RouteStep.waypoint(BANK, "Bank")));
