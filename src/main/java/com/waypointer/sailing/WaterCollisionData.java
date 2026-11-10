@@ -11,8 +11,9 @@ package com.waypointer.sailing;
 import java.util.Map;
 import net.runelite.api.CollisionDataFlag;
 
-/** Immutable water/land lookup baked from sailing collision. OPEN = sailable water,
- *  BLOCKED = land/obstacle, UNKNOWN = not in the dataset. Plane 0 only. */
+/** Immutable collision lookup baked from Chart Plotter's map. OPEN = not movement-blocked,
+ *  which covers walkable land as well as water (see {@link WaterMap} for what counts as sea),
+ *  BLOCKED = blocked, UNKNOWN = not in the dataset. Plane 0 only. */
 public final class WaterCollisionData
 {
     public static final int UNKNOWN = -1;

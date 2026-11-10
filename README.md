@@ -118,9 +118,9 @@ A couple of safety nets, both on by default and both toggleable in [Settings](#s
 
 Sailing needs the [Chart Plotter](https://github.com/Dazuzi/chart-plotter) plugin as well as
 Shortest Path. Install it from the Plugin Hub, then turn on one of its course displays: a
-charted line, an ETA or the stop progress counter. Waypointer sends Chart Plotter the course, and with
-none of those on nothing is drawn. The first time you do this in a session a message reminds
-you. Without Chart Plotter installed, every waypoint goes to Shortest Path as before.
+charted line, an ETA or the stop progress counter. Waypointer sends Chart Plotter the course,
+and with none of those on nothing is drawn. The first time you do this in a session a message
+reminds you. Without Chart Plotter installed, every waypoint goes to Shortest Path as before.
 
 How `Play` behaves depends on where the waypoint is and where you are:
 
