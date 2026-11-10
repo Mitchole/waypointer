@@ -464,6 +464,8 @@ public class WaypointerPanel extends PluginPanel
     {
         boolean loggedIn = e.getGameState() == net.runelite.api.GameState.LOGGED_IN;
         SwingUtilities.invokeLater(() -> nearestLandmarkBar.setLoggedIn(loggedIn));
+        // The boat list is empty until login, so fill it once the varbits are in.
+        if (loggedIn && !navigator.shortestPathOnly()) sailingControls.refresh();
     }
 
     @Subscribe

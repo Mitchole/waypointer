@@ -199,8 +199,10 @@ public class SailingJourneyOrchestrator
 
     private void sendChart()
     {
+        int target = destination;
         chartPending = false;
-        bridge.chart(WorldPointPacker.getX(destination), WorldPointPacker.getY(destination));
+        if (target == WorldPointPacker.UNDEFINED) return;
+        bridge.chart(WorldPointPacker.getX(target), WorldPointPacker.getY(target));
         if (!handoverNoticeShown)
         {
             handoverNoticeShown = true;
