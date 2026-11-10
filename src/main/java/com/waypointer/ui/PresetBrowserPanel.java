@@ -69,9 +69,9 @@ public class PresetBrowserPanel extends PluginPanel
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        JPanel bodyHolder = new JPanel(new BorderLayout());
-        bodyHolder.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        bodyHolder.add(body, BorderLayout.NORTH);
+        // Width-pinned so a long preset name cannot push the count and the add buttons past
+        // the right edge.
+        JPanel bodyHolder = Styles.sidebarWidthHolder(body);
 
         // Constructed during loadCorePlugins(), before ClientUI.init() installs RuneLiteLAF,
         // so the scrollbar's UI delegate would inherit Metal defaults. Styles.pinnedScrollPane

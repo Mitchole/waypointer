@@ -40,7 +40,7 @@ final class RouteStepRow extends JPanel
     {
         setLayout(new BorderLayout(6, 0));
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 4));
 
         // Grip handle (west): dragging it past the threshold starts a reorder.
         JLabel grip = new JLabel(GLYPH_GRIP);
@@ -55,6 +55,8 @@ final class RouteStepRow extends JPanel
         JLabel text = new JLabel((index + 1) + ". " + stepGlyph(step.getType()) + "  " + labelText);
         text.setFont(FontManager.getRunescapeSmallFont());
         text.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+        // Long instructions are cut off by the panel width; the tooltip carries the rest.
+        text.setToolTipText(labelText);
         text.addMouseListener(new java.awt.event.MouseAdapter()
         {
             @Override public void mouseClicked(java.awt.event.MouseEvent e) { onEdit.run(); }
@@ -79,17 +81,17 @@ final class RouteStepRow extends JPanel
         add(center, BorderLayout.CENTER);
 
         // East: edit (pencil) then delete (x). Pencil is the primary, visible edit affordance.
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         actions.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
         JButton edit = new JButton(GLYPH_EDIT);
-        Styles.compactSecondaryButton(edit);
+        Styles.glyphButton(edit);
         edit.getAccessibleContext().setAccessibleName("Edit step");
         edit.addActionListener(e -> onEdit.run());
         actions.add(edit);
 
         JButton del = new JButton(GLYPH_DELETE);
-        Styles.compactSecondaryButton(del);
+        Styles.glyphButton(del);
         del.getAccessibleContext().setAccessibleName("Delete step");
         del.addActionListener(e -> onDelete.accept(step));
         actions.add(del);

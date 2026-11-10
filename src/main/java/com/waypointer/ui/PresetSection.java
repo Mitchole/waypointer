@@ -41,9 +41,9 @@ class PresetSection extends JPanel
     // real container width. Derived from the old constant kept as a safety value for tests /
     // very early paint passes when getWidth() is still zero.
     private static final int FALLBACK_LABEL_WIDTH_PX = 107;
-    // Row chrome reserved on either side of the label: border left (22) + border right (40)
-    // + BorderLayout hgap (12) + AddRemoveToggle button (~23) + a small margin (6).
-    private static final int ROW_RESERVED_PX = 22 + 40 + 12 + 23 + 6;
+    // Row chrome reserved on either side of the label: border left (22) + border right (8)
+    // + BorderLayout hgap (8) + AddRemoveToggle button (~23) + a small margin (6).
+    private static final int ROW_RESERVED_PX = 22 + 8 + 8 + 23 + 6;
     private static final int MIN_LABEL_WIDTH_PX = 60;
 
     private final Preset preset;
@@ -121,7 +121,7 @@ class PresetSection extends JPanel
     {
         JPanel header = new JPanel(new BorderLayout(6, 0));
         header.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        header.setBorder(BorderFactory.createEmptyBorder(7, 9, 7, 9));
+        header.setBorder(BorderFactory.createEmptyBorder(4, 9, 4, 9));
         header.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         chevron.setForeground(Color.LIGHT_GRAY);
@@ -211,7 +211,7 @@ class PresetSection extends JPanel
 
     private JPanel buildRow(PresetWaypoint wp)
     {
-        JPanel row = new JPanel(new BorderLayout(12, 0))
+        JPanel row = new JPanel(new BorderLayout(8, 0))
         {
             @Override
             public Dimension getMaximumSize()
@@ -220,7 +220,7 @@ class PresetSection extends JPanel
             }
         };
         row.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        row.setBorder(BorderFactory.createEmptyBorder(5, 22, 5, 40));
+        row.setBorder(BorderFactory.createEmptyBorder(2, 22, 2, 8));
 
         String descHtml = wp.getDescription() == null || wp.getDescription().trim().isEmpty()
             ? ""

@@ -35,6 +35,7 @@ final class RouteEditorPanel extends JPanel
     private final Runnable onAddFromLibrary;
     private final JPanel stepList = new JPanel();
     private final JLabel summary = new JLabel(" ");
+    private final JLabel title = new JLabel(" ");
 
     RouteEditorPanel(RouteStore store, UUID routeId, Runnable onBack,
         Runnable onMarkCurrentLocation, Runnable onAddFromLibrary)
@@ -52,8 +53,17 @@ final class RouteEditorPanel extends JPanel
         JPanel top = new JPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        top.add(buildNavRow());
-        top.add(buildAddStepBar());
+        JPanel nav = buildNavRow();
+        nav.setAlignmentX(LEFT_ALIGNMENT);
+        top.add(nav);
+        title.setForeground(java.awt.Color.WHITE);
+        title.setFont(FontManager.getRunescapeBoldFont());
+        title.setAlignmentX(LEFT_ALIGNMENT);
+        title.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 6));
+        top.add(title);
+        JPanel addBar = buildAddStepBar();
+        addBar.setAlignmentX(LEFT_ALIGNMENT);
+        top.add(addBar);
         summary.setFont(FontManager.getRunescapeSmallFont());
         summary.setForeground(Styles.MUTED_TEXT);
         summary.setAlignmentX(LEFT_ALIGNMENT);
@@ -63,7 +73,7 @@ final class RouteEditorPanel extends JPanel
 
         stepList.setLayout(new BoxLayout(stepList, BoxLayout.Y_AXIS));
         stepList.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        add(Styles.pinnedScrollPane(stepList), BorderLayout.CENTER);
+        add(Styles.pinnedScrollPane(Styles.sidebarWidthHolder(stepList)), BorderLayout.CENTER);
 
         rebuild();
     }
@@ -113,6 +123,7 @@ final class RouteEditorPanel extends JPanel
     {
         JButton b = new JButton(text);
         Styles.secondaryButton(b);
+        Styles.slim(b);
         b.setAlignmentX(LEFT_ALIGNMENT);
         b.setMaximumSize(Styles.capHeight(b));
         b.addActionListener(onClick);
@@ -128,6 +139,7 @@ final class RouteEditorPanel extends JPanel
         {
             RouteStepDragHandler dragHandler = new RouteStepDragHandler(store, routeId);
             summary.setText(summaryText(r));
+            title.setText(r.getName());
             int[] legs = RouteDistance.legs(r);
             int i = 0;
             for (RouteStep s : r.getSteps())

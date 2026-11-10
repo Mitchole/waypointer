@@ -93,7 +93,7 @@ public class RoutesPanel extends JPanel
 
         // The panel is built before RuneLiteLAF installs, so pin the dark scrollbar now and
         // re-derive it from startUp() via refreshScrollbarStyling() once the LAF is live.
-        javax.swing.JScrollPane listScroll = Styles.pinnedScrollPane(routeList);
+        javax.swing.JScrollPane listScroll = Styles.pinnedScrollPane(Styles.sidebarWidthHolder(routeList));
         this.routeListScrollBar = listScroll.getVerticalScrollBar();
         listCard.add(listScroll, BorderLayout.CENTER);
 
@@ -117,11 +117,13 @@ public class RoutesPanel extends JPanel
         header.setBackground(ColorScheme.DARK_GRAY_COLOR);
         JButton create = new JButton("New route");
         Styles.secondaryButton(create);
+        Styles.slim(create);
         create.addActionListener(e -> openNewRouteForm());
         header.add(create);
 
         JButton importBtn = new JButton("Import");
         Styles.secondaryButton(importBtn);
+        Styles.slim(importBtn);
         importBtn.addActionListener(e -> openImportForm());
         header.add(importBtn);
         return header;

@@ -18,28 +18,27 @@ final class RouteRow extends JPanel
     {
         setLayout(new BorderLayout(6, 0));
         setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 4));
 
         JPanel text = new JPanel(new BorderLayout());
         text.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         JLabel name = new JLabel(route.getName());
-        name.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        name.setFont(FontManager.getRunescapeBoldFont());
+        name.setForeground(java.awt.Color.WHITE);
         JLabel sub = new JLabel(subtitle(route));
-        sub.setForeground(ColorScheme.MEDIUM_GRAY_COLOR);
+        sub.setForeground(Styles.MUTED_TEXT);
         sub.setFont(FontManager.getRunescapeSmallFont());
         text.add(name, BorderLayout.NORTH);
         text.add(sub, BorderLayout.SOUTH);
         add(text, BorderLayout.CENTER);
 
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         actions.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         JButton play = new JButton("▶");
         JButton edit = new JButton("✎");
         JButton more = new JButton("⋮");
-        Styles.compactSecondaryButton(play);
-        Styles.compactSecondaryButton(edit);
-        Styles.compactSecondaryButton(more);
+        Styles.glyphButton(play);
+        Styles.glyphButton(edit);
+        Styles.glyphButton(more);
         play.getAccessibleContext().setAccessibleName("Play route " + route.getName());
         edit.getAccessibleContext().setAccessibleName("Edit route " + route.getName());
         more.getAccessibleContext().setAccessibleName("More actions for " + route.getName());

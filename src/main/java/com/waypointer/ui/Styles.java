@@ -71,6 +71,25 @@ final class Styles
             BorderFactory.createEmptyBorder(2, 6, 2, 6)));
     }
 
+    // Borderless glyph button for row actions: grey at rest, white under the pointer. Keeps
+    // rows quiet so the one orange control on screen is the thing that is active.
+    static void glyphButton(JButton b)
+    {
+        b.setForeground(MUTED_TEXT);
+        b.setFocusPainted(false);
+        b.setContentAreaFilled(false);
+        b.setBorderPainted(false);
+        b.setOpaque(false);
+        b.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        b.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.addMouseListener(new MouseAdapter()
+        {
+            @Override public void mouseEntered(MouseEvent e) { b.setForeground(Color.WHITE); }
+            @Override public void mouseExited(MouseEvent e) { b.setForeground(MUTED_TEXT); }
+        });
+    }
+
     // Small text button for inline row actions (dev editors). Same dark chrome as
     // compactSecondaryButton with a caller-chosen foreground so actions can be colour-coded.
     static JButton compactActionButton(String text, Color fg, Runnable onClick)
@@ -106,6 +125,13 @@ final class Styles
             BorderFactory.createLineBorder(ColorScheme.BRAND_ORANGE.darker(), 1),
             BorderFactory.createEmptyBorder(8, 12, 8, 12)));
         b.setFont(b.getFont().deriveFont(Font.BOLD));
+    }
+
+    // Tightens a styled button's padding for the panel header, keeping its line border.
+    static void slim(JButton b)
+    {
+        javax.swing.border.Border line = ((javax.swing.border.CompoundBorder) b.getBorder()).getOutsideBorder();
+        b.setBorder(BorderFactory.createCompoundBorder(line, BorderFactory.createEmptyBorder(5, 10, 5, 10)));
     }
 
     static void textField(JTextField f)
@@ -190,6 +216,24 @@ final class Styles
             @Override public void removeUpdate(DocumentEvent e)  { onChange.run(); }
             @Override public void changedUpdate(DocumentEvent e) { onChange.run(); }
         };
+    }
+
+    // Holds a scrolling list at the top of its viewport and reports the sidebar width, so one
+    // long label cannot widen the list and push the row buttons past the right edge. The
+    // viewport stretches the holder to the real width.
+    static JPanel sidebarWidthHolder(Component list)
+    {
+        JPanel holder = new JPanel(new BorderLayout())
+        {
+            @Override public Dimension getPreferredSize()
+            {
+                return new Dimension(net.runelite.client.ui.PluginPanel.PANEL_WIDTH,
+                    super.getPreferredSize().height);
+            }
+        };
+        holder.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        holder.add(list, BorderLayout.NORTH);
+        return holder;
     }
 
     // Builds a JScrollPane themed to match the dark plugin panel: no border, no horizontal bar,
