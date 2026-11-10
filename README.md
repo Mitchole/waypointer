@@ -22,7 +22,9 @@ waypoint and the [Shortest Path](https://github.com/Skretzo/shortest-path) plugi
 route to it on your world map and minimap.
 
 It also keeps a one-click bar to the nearest bank, altar, or anvil, and lets you string
-waypoints into guided **Routes** for farm runs and agility laps.
+waypoints into guided **Routes** for farm runs and agility laps. With the
+[Chart Plotter](https://github.com/Dazuzi/chart-plotter) plugin installed it can also sail you
+to waypoints out at sea.
 
 > **Waypointer needs the [Shortest Path](https://github.com/Skretzo/shortest-path) plugin.**
 > It does the actual pathfinding behind every Play button, the nearest-landmark bar, and
@@ -36,6 +38,7 @@ waypoints into guided **Routes** for farm runs and agility laps.
 - [Saving a waypoint](#saving-a-waypoint)
 - [Organising your library](#organising-your-library)
 - [Travelling to a waypoint](#travelling-to-a-waypoint)
+- [Sailing](#sailing)
 - [The nearest-landmark bar](#the-nearest-landmark-bar)
 - [Routes](#routes)
 - [Preset waypoints](#preset-waypoints)
@@ -60,17 +63,19 @@ waypoints into guided **Routes** for farm runs and agility laps.
 
 ## Saving a waypoint
 
-Four ways to capture a tile:
+Five ways to capture a tile:
 
 - **Mark current location** saves the tile your character is standing on.
 - **Right-click the world map** and choose `Save as Waypoint`.
 - **Shift right-click a tile in the 3D world** and choose `Save as Waypoint`.
 - **Right-click an NPC or object** and choose `Save as Waypoint`. The name and tile at the
   moment you click become the defaults.
+- **Add by coordinates...** in the overflow (`⋮`) menu takes a tile you type, as `x, y` or
+  `x, y, plane`. The plane defaults to 0. This works before you log in.
 
-The last two are off by default; turn them on in [Settings](#settings).
+The two right-click options are off by default; turn them on in [Settings](#settings).
 
-Each one opens a small dialog where you set the name and pick a category. Stand inside a known
+Each one opens a small form where you set the name and pick a category. Stand inside a known
 bank, altar, anvil, furnace, fairy ring, dungeon entrance, boss arena, or other named
 landmark, and the name is filled in for you.
 
@@ -89,7 +94,8 @@ landmark, and the name is filled in for you.
 - Give any category or waypoint an **icon** from the in-game sprite picker.
 - Hover a row to read the first line of its notes without opening it.
 - Click a row for an inline editor over its name, category, notes, and tile. `Recapture`
-  rewrites the waypoint to wherever you are standing now.
+  rewrites the waypoint to wherever you are standing now, or you can type new coordinates
+  into the `Coords` field.
 
 <p align="center">
   <img src="images/editor.png" alt="A category expanded with the inline editor open on a waypoint, showing the name, notes, and category fields" width="280">
@@ -108,6 +114,31 @@ A couple of safety nets, both on by default and both toggleable in [Settings](#s
 - **Auto-path to death location** starts a route back to where you died the moment it happens,
   so you can run for your gravestone without fishing for the tile.
 
+## Sailing
+
+Sailing needs the [Chart Plotter](https://github.com/Dazuzi/chart-plotter) plugin as well as
+Shortest Path. Install it from the Plugin Hub, then turn on one of its course displays (the
+charted line or the ETA). Waypointer sends Chart Plotter the course, and without a display
+turned on nothing is drawn. The first time you do this in a session a message reminds you.
+
+How `Play` behaves depends on where the waypoint is and where you are:
+
+- **On a boat.** Every `Play` goes to Chart Plotter, whatever the waypoint is.
+- **On land, waypoint at sea.** Waypointer paths you to the dock of one of your boats with
+  Shortest Path. When you board, it sends the course to Chart Plotter. Leaving the boat
+  cancels the trip. The boat must be moored at a port for this to work.
+- **On land, waypoint on land.** Nothing changes. Shortest Path draws the route as usual.
+
+A waypoint counts as at sea when most of the tiles around it are open water on the surface.
+
+When sailing is on, the panel shows an **Always use a specific boat** box and a list of your
+moored boats. Leave it unticked and Waypointer uses the boat whose dock is nearest the
+waypoint. Tick it to pin one boat. If that boat is no longer moored, or the boats have been
+reshuffled, you get a message and have to pick again.
+
+Turn the feature off with **Sail to ocean waypoints** in [Settings](#settings). Every
+waypoint then goes to Shortest Path.
+
 ## The nearest-landmark bar
 
 Across the top of the panel is a row of landmark buttons: bank, altar, anvil, and the like.
@@ -123,12 +154,27 @@ lap, a wintertodt prep loop. Open the **Routes** tab to build and run them.
 
 A route is made of steps, and there are two kinds:
 
-- **Waypoint steps** path to a tile and advance on their own once you arrive.
+- **Waypoint steps** path to a tile and advance on their own once you arrive. On foot that
+  means within 3 tiles. On a boat it means within 6.
 - **Manual steps** are a line of text ("climb the ladder", "bank everything") that wait for
   you to press Next.
 
 Build a route by adding steps from your library, marking your current tile as you walk it, or
-typing a manual instruction. Turn on **repeat** for a loop that starts over at the end.
+typing a manual instruction. `From saved` opens a tree of your categories and waypoints; tick
+as many as you like and they are added in library order in one go. Turn on **repeat** for a loop
+that starts over at the end.
+
+Editing a waypoint step lets you retype its coordinates, which moves the step
+and leaves the saved waypoint alone.
+
+The route header shows the stop count and the total distance, and each step shows how far it
+is from the one before. These are straight-line tile counts, not the length of the path you
+would actually travel, so a route that goes around a lake or across the sea is longer than
+shown. A repeating route adds the leg back to its first stop.
+
+Routes work at sea too. While you are on a boat the in-game route box adds a line with the
+distance and compass direction to the current stop, such as `14 tiles NE`. Chart Plotter
+drops its own line some way before the stop, so that line is there to cover the last stretch.
 
 Run a route from the playback bar: **Back**, **Next**, **Stop**, and a step counter. Set a
 **next-step hotkey** in [Settings](#settings) to advance without leaving the game, and keep the
@@ -161,7 +207,27 @@ goes back to how you left it.
 
 - Copy a share code for a single waypoint (`WP1:`), your whole library (`WPL1:`), or a route
   (`RT1:`).
-- Paste someone else's code through **Import library...** in the overflow menu.
+- Paste someone else's code through **Import...** in the overflow menu.
+- The same dialog takes a plain list of coordinates. Each line is a name, then `x, y`, with
+  an optional plane:
+
+  ```
+  # Fishing
+  Draynor willows, 3087, 3235
+  Barbarian Village fishing, 3103, 3425
+  Pest Control dock, 2638, 2653, 0
+  ```
+
+  A line starting with `#` sets the category for the lines after it. Entries with no heading
+  go in a category called `Imported`. Lines longer than 300 characters are rejected, and so is
+  the tile 0, 0. Pasting the same list twice skips entries you already have in that category.
+- A JSON array works as well, with one object per entry. `plane` and `category` are optional:
+
+  ```
+  [{"name": "Draynor willows", "x": 3087, "y": 3235, "category": "Fishing"}]
+  ```
+
+- You choose which of the imported entries to keep before anything is added.
 
 ## Settings
 
@@ -175,6 +241,7 @@ goes back to how you left it.
 | Show wilderness skull on row | On | Marks rows whose destination is in the Wilderness with a skull. |
 | Auto-path to death location | Off | Starts a path back to your death tile when you die. Needs Shortest Path. |
 | Newest pin at top | On | Orders pinned waypoints with the most recently pinned first. |
+| Sail to ocean waypoints | On | Lets `Play` on an open-water waypoint walk you to a dock, then hand the course to Chart Plotter. Needs Chart Plotter. |
 | Enable Routes | On | Shows the Routes tab. Off hides the feature. |
 | Route: next step hotkey | Unset | Key that advances the current route step while a route runs. |
 | Show in-game route box | On | Draws the read-only current-step box in the game window during a route. |
@@ -185,6 +252,8 @@ goes back to how you left it.
 - The [Shortest Path](https://github.com/Skretzo/shortest-path) plugin. Waypointer hands every
   destination to it for pathfinding, so install it first. Without it the Play button, the
   nearest-landmark bar, and routes have nothing to draw a path with.
+- Optional: the [Chart Plotter](https://github.com/Dazuzi/chart-plotter) plugin, for sailing
+  to waypoints at sea.
 
 ## License
 
