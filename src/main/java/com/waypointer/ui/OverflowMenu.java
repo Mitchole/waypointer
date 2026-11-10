@@ -49,6 +49,10 @@ final class OverflowMenu
         });
         menu.add(newCategory);
 
+        JMenuItem addByCoordinates = new JMenuItem("Add by coordinates...");
+        addByCoordinates.addActionListener(e -> panel.openAddByCoordinates());
+        menu.add(addByCoordinates);
+
         // Expand all / Collapse all: one toggle whose label flips based on current state.
         // Majority-collapsed → "Expand all"; otherwise "Collapse all". Walks both Pinned and
         // real categories via WaypointerPanel.setAllSectionsExpanded.

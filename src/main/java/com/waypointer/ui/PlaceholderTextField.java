@@ -16,7 +16,7 @@ import net.runelite.client.ui.ColorScheme;
  */
 class PlaceholderTextField extends JTextField
 {
-    private final String placeholder;
+    private String placeholder;
 
     PlaceholderTextField(String placeholder)
     {
@@ -28,6 +28,12 @@ class PlaceholderTextField extends JTextField
             @Override public void focusGained(FocusEvent e) { repaint(); }
             @Override public void focusLost(FocusEvent e)   { repaint(); }
         });
+    }
+
+    void setPlaceholder(String placeholder)
+    {
+        this.placeholder = placeholder == null ? "" : placeholder;
+        repaint();
     }
 
     String getPlaceholder()

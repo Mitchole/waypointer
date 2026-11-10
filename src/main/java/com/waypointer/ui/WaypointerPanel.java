@@ -1,6 +1,7 @@
 package com.waypointer.ui;
 
 import com.waypointer.WaypointerConfig;
+import com.waypointer.codec.CoordinateText;
 import com.waypointer.codec.WaypointShareCodec;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
@@ -74,6 +75,7 @@ public class WaypointerPanel extends PluginPanel
     private final WildernessConfirmGate wildernessGate;
     private final WaypointShareCodec shareCodec;
     private final CaptureForm captureForm;
+    private final InlineInputForm coordinatesForm = new InlineInputForm();
     private final BulkSelectController bulkSelect;
     private final CategoryMenuController categoryMenu;
     private final FooterStrip footer;
@@ -221,6 +223,8 @@ public class WaypointerPanel extends PluginPanel
         northStack.setLayout(new BoxLayout(northStack, BoxLayout.Y_AXIS));
         northStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
         northStack.add(topStack);
+        coordinatesForm.setAlignmentX(LEFT_ALIGNMENT);
+        northStack.add(coordinatesForm);
         northStack.add(captureForm);
 
         setLayout(new BorderLayout());
@@ -305,6 +309,32 @@ public class WaypointerPanel extends PluginPanel
             captureForm.show(packed);
         });
     }
+
+    /**
+     * Opens the inline coordinates form from the overflow menu. A valid entry hands the tile to
+     * the capture form; a bad one shows its message and leaves the form open. Typed tiles need
+     * no login.
+     */
+    void openAddByCoordinates()
+    {
+        coordinatesForm.openFor("Add by coordinates", "x, y or x, y, plane", "Next", text ->
+        {
+            int packed;
+            try
+            {
+                packed = CoordinateText.parse(text);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                return ex.getMessage();
+            }
+            captureForm.show(packed);
+            return null;
+        });
+    }
+
+    InlineInputForm coordinatesFormForTest() { return coordinatesForm; }
+    CaptureForm captureFormForTest() { return captureForm; }
 
     /**
      * Show the inline capture form for an externally-supplied tile (right-click capture). Used by

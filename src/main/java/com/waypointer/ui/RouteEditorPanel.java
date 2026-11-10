@@ -1,7 +1,9 @@
 package com.waypointer.ui;
 
+import com.waypointer.codec.CoordinateText;
 import com.waypointer.model.route.Route;
 import com.waypointer.model.route.RouteStep;
+import com.waypointer.model.route.StepType;
 import com.waypointer.service.RouteStore;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -148,6 +150,14 @@ final class RouteEditorPanel extends JPanel
         form.add(Box.createVerticalStrut(8));
         form.add(new JLabel("In-game box text (blank = use name)"));
         form.add(boxField);
+        JTextField coordsField = null;
+        if (s.getType() == StepType.WAYPOINT)
+        {
+            coordsField = new JTextField(CoordinateText.format(s.getPackedWorldPoint()), 20);
+            form.add(Box.createVerticalStrut(8));
+            form.add(new JLabel("Coordinates (x, y or x, y, plane)"));
+            form.add(coordsField);
+        }
 
         int result = JOptionPane.showConfirmDialog(this, form, "Edit step",
             JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -155,6 +165,37 @@ final class RouteEditorPanel extends JPanel
         {
             store.updateStepText(routeId, s.getId(),
                 nameField.getText().trim(), boxField.getText().trim());
+            if (coordsField != null)
+            {
+                String error = applyStepCoordinates(store, routeId, s, coordsField.getText());
+                if (error != null)
+                {
+                    JOptionPane.showMessageDialog(this, error, "Edit step",
+                        JOptionPane.WARNING_MESSAGE);
+                }
+            }
         }
+    }
+
+    /**
+     * Moves a waypoint step to typed coordinates. Only the step changes; the saved waypoint it
+     * was copied from is left alone. Returns a message to show the user, or null on success.
+     */
+    static String applyStepCoordinates(RouteStore store, UUID routeId, RouteStep step, String text)
+    {
+        int packed;
+        try
+        {
+            packed = CoordinateText.parse(text);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            return ex.getMessage();
+        }
+        if (packed != step.getPackedWorldPoint())
+        {
+            store.updateStepWaypoint(routeId, step.getId(), packed, null);
+        }
+        return null;
     }
 }

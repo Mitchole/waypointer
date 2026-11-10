@@ -20,6 +20,8 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,10 +44,52 @@ public class WaypointerPanelTest
         assertEquals(0, panel.getMinimumSize().height);
     }
 
+    @Test
+    public void addByCoordinatesOpensCaptureFormForTypedTile()
+    {
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+        WaypointerPanel panel = newPanel(store);
+        panel.openAddByCoordinates();
+        InlineInputForm form = panel.coordinatesFormForTest();
+        assertTrue(form.isVisible());
+        assertEquals("x, y or x, y, plane", form.getPlaceholder());
+
+        form.setText("2301, 3690, 1");
+        form.clickSubmit();
+
+        assertFalse(form.isVisible());
+        assertTrue(panel.captureFormForTest().isVisible());
+        panel.captureFormForTest().clickSave();
+        com.waypointer.model.Waypoint saved = store.getWaypointsInCategory(store.getUncategorized().getId()).get(0);
+        assertEquals(com.waypointer.model.WorldPointPacker.pack(2301, 3690, 1),
+            saved.getPackedWorldPoint());
+    }
+
+    @Test
+    public void addByCoordinatesShowsInlineErrorAndStaysOpen()
+    {
+        WaypointerPanel panel = newPanel();
+        panel.openAddByCoordinates();
+        InlineInputForm form = panel.coordinatesFormForTest();
+
+        form.setText("2301");
+        form.clickSubmit();
+
+        assertTrue(form.isVisible());
+        assertEquals("Enter coordinates as x, y or x, y, plane.", form.getErrorText());
+        assertFalse(panel.captureFormForTest().isVisible());
+    }
+
     private static WaypointerPanel newPanel()
     {
         WaypointStore store = new WaypointStore();
         store.bootstrap(new Library());
+        return newPanel(store);
+    }
+
+    private static WaypointerPanel newPanel(WaypointStore store)
+    {
 
         WaypointerConfig config = mock(WaypointerConfig.class);
         when(config.categoryCollapsedJson()).thenReturn("{}");

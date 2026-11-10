@@ -1,5 +1,6 @@
 package com.waypointer.ui;
 
+import com.waypointer.codec.CoordinateText;
 import com.waypointer.model.Category;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
@@ -43,6 +44,7 @@ public class InlineEditPanel extends JPanel
     private final JTextField nameField;
     private final JTextArea notesArea;
     private final JComboBox<CategoryComboItem> categoryCombo;
+    private final JTextField coordsField;
     private boolean nameDirty = false;
     private boolean notesDirty = false;
     private boolean categoryDirty = false;
@@ -133,6 +135,16 @@ public class InlineEditPanel extends JPanel
         notesScroll.setMinimumSize(notesPref);
         g.gridx = 1; g.weightx = 1; add(notesScroll, g);
 
+        g.gridx = 0; g.gridy++; g.weightx = 0; add(Styles.fieldLabel("Coords"), g);
+        coordsField = new JTextField(CoordinateText.format(w.getPackedWorldPoint()));
+        Styles.textField(coordsField);
+        coordsField.getAccessibleContext().setAccessibleName("Coordinates");
+        coordsField.addFocusListener(new FocusAdapter()
+        {
+            @Override public void focusLost(FocusEvent e) { flushCoords(); }
+        });
+        g.gridx = 1; g.weightx = 1; add(coordsField, g);
+
         g.gridx = 0; g.gridy++; g.weightx = 0; add(Styles.fieldLabel("Tile"), g);
         JLabel showOnMap = Styles.link("Show on world map", ColorScheme.BRAND_ORANGE,
             onShowOnMap == null ? () -> {} : onShowOnMap);
@@ -184,6 +196,31 @@ public class InlineEditPanel extends JPanel
         flushName();
         flushNotes();
         flushCategory();
+        flushCoords();
+    }
+
+    // Compares against the stored tile instead of tracking a dirty flag, so reverting a bad
+    // entry (which rewrites the text) cannot re-trigger a commit.
+    private void flushCoords()
+    {
+        Waypoint cur = store.getWaypointById(waypointId);
+        if (cur == null) return;
+        int packed;
+        try
+        {
+            packed = CoordinateText.parse(coordsField.getText());
+        }
+        catch (IllegalArgumentException ex)
+        {
+            coordsField.setText(CoordinateText.format(cur.getPackedWorldPoint()));
+            toasts.show(ex.getMessage(), Toasts.Severity.WARN);
+            return;
+        }
+        coordsField.setText(CoordinateText.format(packed));
+        if (packed == cur.getPackedWorldPoint()) return;
+        String name = cur.getName();
+        store.updateWaypointPoint(waypointId, packed);
+        toasts.show("Moved '" + name + "'", "Undo", store::undoLast);
     }
 
     private void flushName()
@@ -218,6 +255,10 @@ public class InlineEditPanel extends JPanel
         flushPending();
         super.removeNotify();
     }
+
+    // test seams
+    void setCoordinatesText(String text) { coordsField.setText(text); }
+    String getCoordinatesText() { return coordsField.getText(); }
 
     // Cap vertical extent at preferred height so BoxLayout(Y_AXIS) in the parent stacks tight
     // instead of stretching us into leftover space.

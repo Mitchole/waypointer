@@ -16,7 +16,6 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import net.runelite.client.ui.ColorScheme;
 
@@ -36,7 +35,7 @@ class InlineInputForm extends JPanel
     }
 
     private final JLabel caption = new JLabel(" ");
-    private final JTextField field = new JTextField();
+    private final PlaceholderTextField field = new PlaceholderTextField("");
     private final JLabel errorLabel = Styles.errorLabel();
     private final JButton submitBtn = new JButton("Submit");
     private final JButton cancelBtn = new JButton("Cancel");
@@ -113,7 +112,14 @@ class InlineInputForm extends JPanel
     /** Configure the form for one use and show it: caption, submit-button text, submit handler. */
     void openFor(String captionText, String submitText, Submit submit)
     {
+        openFor(captionText, "", submitText, submit);
+    }
+
+    /** As {@link #openFor(String, String, Submit)}, with a hint painted in the empty field. */
+    void openFor(String captionText, String placeholder, String submitText, Submit submit)
+    {
         this.submit = submit;
+        field.setPlaceholder(placeholder);
         caption.setText(captionText);
         submitBtn.setText(submitText);
         field.setText("");
@@ -161,6 +167,7 @@ class InlineInputForm extends JPanel
 
     // ---- test seams ----
     void setText(String text) { field.setText(text); }
+    String getPlaceholder() { return field.getPlaceholder(); }
     void clickSubmit() { submitBtn.doClick(); }
     void clickCancel() { cancelBtn.doClick(); }
     String getErrorText() { return errorLabel.getText(); }
