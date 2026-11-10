@@ -30,6 +30,9 @@ import net.runelite.client.ui.ColorScheme;
  */
 final class ImportPickerDialog extends JDialog
 {
+    private static final String BAD_CODE_MESSAGE =
+        "Not a readable share code (expected WP1: or WPL1:).";
+
     private final WaypointStore store;
     private final WaypointShareCodec shareCodec;
     private final ReadableImport readableImport;
@@ -194,7 +197,7 @@ final class ImportPickerDialog extends JDialog
         DecodeReport report = decodeReportOrNull(text);
         if (report == null)
         {
-            showError("Not a readable share code (expected WP1: or WPL1:).");
+            showError(BAD_CODE_MESSAGE);
             return;
         }
         clearError();
@@ -212,7 +215,11 @@ final class ImportPickerDialog extends JDialog
         }
         catch (ReadableImport.MalformedListException ex)
         {
-            showError(ex.getMessage());
+            // One token with no spaces or line breaks is most likely a mistyped or cut-off code.
+            String trimmed = text == null ? "" : text.trim();
+            boolean oneToken = !trimmed.isEmpty()
+                && trimmed.chars().noneMatch(Character::isWhitespace);
+            showError(oneToken ? BAD_CODE_MESSAGE : ex.getMessage());
             return;
         }
         clearError();

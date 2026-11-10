@@ -203,4 +203,64 @@ public class ReadableImportTest
         assertFalse(ReadableImport.isShareCode("# x"));
         assertFalse(ReadableImport.isShareCode(null));
     }
+
+    @Test(timeout = 5000)
+    public void longSeparatorRunDoesNotHang()
+    {
+        StringBuilder huge = new StringBuilder("a");
+        for (int i = 0; i < 100_000; i++) huge.append(',');
+        huge.append("b 1 2");
+        assertRejected(importer, huge.toString(), "Line 1: too long.");
+
+        StringBuilder name = new StringBuilder();
+        for (int i = 0; i < 25; i++) name.append("abcdefghi").append(',');
+        for (int i = 0; i < 175; i++) name.append(',');
+        long start = System.nanoTime();
+        try
+        {
+            importer.parse(name + "z 1 2", new Library());
+        }
+        catch (ReadableImport.MalformedListException ignored)
+        {
+            // either outcome is fine; only the time matters
+        }
+        assertTrue(System.nanoTime() - start < 1_000_000_000L);
+    }
+
+    @Test(timeout = 5000)
+    public void hugeExponentNumberRejectedQuickly()
+    {
+        assertRejected(importer, "[{\"name\":\"A\",\"x\":1e100000000,\"y\":2}]",
+            "Entry 1: needs a name, x and y.");
+    }
+
+    @Test
+    public void zeroZeroRejectedWithLineNumber()
+    {
+        assertRejected(importer, "A 1 2\nSpot 0 0", "Line 2: x and y cannot both be 0.");
+        assertRejected(importer, "Spot 0, 0, 1", "Line 1: x and y cannot both be 0.");
+    }
+
+    @Test
+    public void zeroZeroRejectedWithEntryNumber()
+    {
+        assertRejected(importer,
+            "[{\"name\":\"A\",\"x\":1,\"y\":2},{\"name\":\"B\",\"x\":0,\"y\":0}]",
+            "Entry 2: x and y cannot both be 0.");
+    }
+
+    @Test
+    public void overlongLineRejected()
+    {
+        StringBuilder line = new StringBuilder();
+        while (line.length() < 300) line.append('x');
+        assertRejected(importer, "A 1 2\n" + line + " 1 2", "Line 2: too long.");
+        assertRejected(importer, "# " + line, "Line 1: too long.");
+    }
+
+    @Test
+    public void bracketFirstLineIsNotAValidList()
+    {
+        assertRejected(importer, "[Boat] Wreck 1 2", "That is not a valid list.");
+    }
 }

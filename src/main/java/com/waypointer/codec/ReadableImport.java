@@ -8,6 +8,7 @@ import com.google.gson.JsonPrimitive;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
+import com.waypointer.model.WorldPointPacker;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -29,7 +30,8 @@ public class ReadableImport
 {
     static final String DEFAULT_CATEGORY = "Imported";
     private static final int MAX_CHARS = 1_048_576;
-    private static final int MAX_PLANE = 3;
+    private static final int MAX_LINE = 300;
+    private static final int MAX_DIGITS = 12;
 
     private static final String NOTHING = "Nothing to import.";
     private static final String TOO_LARGE = "That list is too large.";
@@ -83,6 +85,10 @@ public class ReadableImport
         {
             String line = lines[i].trim();
             if (line.isEmpty()) continue;
+            if (line.length() > MAX_LINE)
+            {
+                throw new MalformedListException("Line " + (i + 1) + ": too long.");
+            }
             if (line.charAt(0) == '#')
             {
                 String name = line.substring(1).trim();
@@ -134,7 +140,9 @@ public class ReadableImport
             if (plane.matches("[0-3]")) k = 3;
         }
         int first = k - 1;
-        String name = line.substring(0, sepStart[first]).replaceAll("[,\\s]+$", "");
+        int nameEnd = sepStart[first];
+        while (nameEnd > 0 && isSeparator(line.charAt(nameEnd - 1))) nameEnd--;
+        String name = line.substring(0, nameEnd);
         if (name.isEmpty())
         {
             throw new MalformedListException("Line " + lineNumber
@@ -149,7 +157,16 @@ public class ReadableImport
         {
             throw new MalformedListException("Line " + lineNumber + ": " + ex.getMessage());
         }
+        if (bothZero(packed))
+        {
+            throw new MalformedListException("Line " + lineNumber + ": x and y cannot both be 0.");
+        }
         return new Entry(name, packed, category);
+    }
+
+    private static boolean bothZero(int packed)
+    {
+        return WorldPointPacker.getX(packed) == 0 && WorldPointPacker.getY(packed) == 0;
     }
 
     private static boolean isSeparator(char c)
@@ -198,7 +215,12 @@ public class ReadableImport
         }
         try
         {
-            return new Entry(name.trim(), CoordinateText.parse(x, y, plane), category);
+            int packed = CoordinateText.parse(x, y, plane);
+            if (bothZero(packed))
+            {
+                throw new MalformedListException("Entry " + index + ": x and y cannot both be 0.");
+            }
+            return new Entry(name.trim(), packed, category);
         }
         catch (IllegalArgumentException ex)
         {
@@ -218,7 +240,10 @@ public class ReadableImport
         if (e == null || !e.isJsonPrimitive() || !e.getAsJsonPrimitive().isNumber()) return null;
         try
         {
-            return new BigDecimal(e.getAsString()).toBigIntegerExact();
+            BigDecimal bd = new BigDecimal(e.getAsString());
+            // Reject huge exponents before expanding them into an integer.
+            if (bd.scale() < -MAX_DIGITS || bd.precision() - bd.scale() > MAX_DIGITS) return null;
+            return bd.toBigIntegerExact();
         }
         catch (ArithmeticException | NumberFormatException ex)
         {

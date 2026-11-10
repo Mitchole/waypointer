@@ -228,4 +228,36 @@ public class ImportPickerDialogTest
         assertEquals("1 already in your library, skipped.", ImportPickerDialog.alreadyPresentNoticeOrNull(1));
         assertNull(ImportPickerDialog.alreadyPresentNoticeOrNull(0));
     }
+
+    @Test
+    public void mistypedShareCodeShowsShareCodeError()
+    {
+        Headless.assumeDisplay();
+        StringBuilder token = new StringBuilder();
+        for (int i = 0; i < 40; i++) token.append("H4sIAAAAAAAA");
+        for (String input : new String[] {"P1:abc", "wp1:abc", token.toString()})
+        {
+            WaypointStore store = new WaypointStore();
+            store.bootstrap(new Library());
+            ImportPickerDialog d = newDialog(store);
+
+            d.loadCode(input);
+
+            assertTrue(input, d.getErrorText().contains("WP1:"));
+            assertFalse(d.hasLoadedSource());
+        }
+    }
+
+    @Test
+    public void multiWordGarbageShowsListError()
+    {
+        Headless.assumeDisplay();
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+        ImportPickerDialog d = newDialog(store);
+
+        d.loadCode("not a real code");
+
+        assertEquals("Line 1: expected a name followed by x, y.", d.getErrorText());
+    }
 }
