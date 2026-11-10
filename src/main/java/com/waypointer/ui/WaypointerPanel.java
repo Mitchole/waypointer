@@ -209,8 +209,9 @@ public class WaypointerPanel extends PluginPanel
         this.bodyScrollBar = bodyScroll.getVerticalScrollBar();
         this.toastOverlay = new ToastOverlay(bodyScroll);
         nearestLandmarkBar.setToasts(toastOverlay);
-        sailingOrchestrator.setFeedback((msg, warning) ->
-            toastOverlay.show(msg, warning ? Toasts.Severity.WARN : Toasts.Severity.SUCCESS));
+        // Journey feedback comes from the client thread; toasts belong on the EDT.
+        sailingOrchestrator.setFeedback((msg, warning) -> SwingUtilities.invokeLater(() ->
+            toastOverlay.show(msg, warning ? Toasts.Severity.WARN : Toasts.Severity.SUCCESS)));
         overflowBtn.addActionListener(e -> overflowMenu.show(overflowBtn, this, toastOverlay));
 
         this.captureForm = new CaptureForm(store, capture);
@@ -750,16 +751,20 @@ public class WaypointerPanel extends PluginPanel
                     navigator.stop();
                     break;
                 }
-                if (navigator.routerFor(packed) == Navigator.Router.SHORTEST_PATH)
+                // Without sailing routes this callback runs at once, on this thread.
+                navigator.resolveRouter(packed, router ->
                 {
-                    if (!pathfinder.isAvailable())
+                    if (router == Navigator.Router.SHORTEST_PATH)
                     {
-                        toastOverlay.show("Install the Shortest Path plugin to use Play.", Toasts.Severity.WARN);
-                        return;
+                        if (!pathfinder.isAvailable())
+                        {
+                            toastOverlay.show("Install the Shortest Path plugin to use Play.", Toasts.Severity.WARN);
+                            return;
+                        }
+                        if (!WildernessConfirmGuard.shouldProceed(w, config, wildernessGate, this, store)) return;
                     }
-                    if (!WildernessConfirmGuard.shouldProceed(w, config, wildernessGate, this, store)) return;
-                }
-                navigator.go(packed, w.getName());
+                    navigator.go(packed, w.getName(), router);
+                });
                 break;
             }
             case DELETE:

@@ -56,11 +56,13 @@ public class DeathAutoPathfinder
         WorldPoint deathLocation = playerPosition.current();
         if (deathLocation == null) return;
 
+        // Event handlers run on the client thread, so the router can be read directly.
         int target = WorldPointPacker.pack(deathLocation);
-        if (navigator.routerFor(target) == Navigator.Router.SHORTEST_PATH && !pathfinder.isAvailable()) return;
+        Navigator.Router router = navigator.routerFor(target);
+        if (router == Navigator.Router.SHORTEST_PATH && !pathfinder.isAvailable()) return;
 
         // This bypasses the wilderness-confirm gate (that lives in the panel's row handler),
         // which is the intended "auto-path anyway, no dialog" behavior on death.
-        navigator.go(target, DEATH_DESTINATION_NAME);
+        navigator.go(target, DEATH_DESTINATION_NAME, router);
     }
 }

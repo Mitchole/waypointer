@@ -278,8 +278,9 @@ public final class NearestLandmarkBar extends JPanel
 
     void onPick(LandmarkType type)
     {
-        // Landmarks are on land, so their router is known before the lookup picks one.
-        if (navigator.landRouter() == Navigator.Router.SHORTEST_PATH && !pathfinder.isAvailable())
+        // Without sailing routes every landmark goes to Shortest Path, so check before the lookup.
+        // Otherwise the check waits until the landmark's router is known.
+        if (navigator.shortestPathOnly() && !pathfinder.isAvailable())
         {
             toasts.show("Install the Shortest Path plugin to use Play.", Toasts.Severity.WARN);
             return;
@@ -302,7 +303,21 @@ public final class NearestLandmarkBar extends JPanel
             toasts.show("No " + type.displayName().toLowerCase() + " found.", Toasts.Severity.WARN);
             return;
         }
-        navigator.go(hit.packed, hit.name);
+        if (navigator.shortestPathOnly())
+        {
+            // onPick already checked that Shortest Path is installed.
+            navigator.go(hit.packed, hit.name, Navigator.Router.SHORTEST_PATH);
+            return;
+        }
+        navigator.resolveRouter(hit.packed, router ->
+        {
+            if (router == Navigator.Router.SHORTEST_PATH && !pathfinder.isAvailable())
+            {
+                toasts.show("Install the Shortest Path plugin to use Play.", Toasts.Severity.WARN);
+                return;
+            }
+            navigator.go(hit.packed, hit.name, router);
+        });
     }
 
     private static Map<LandmarkType, Integer> spriteIds()
