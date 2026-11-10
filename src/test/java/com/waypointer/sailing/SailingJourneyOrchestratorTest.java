@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import com.waypointer.model.WorldPointPacker;
@@ -65,11 +66,23 @@ public class SailingJourneyOrchestratorTest
         verify(pathfinder, never()).requestPath(anyInt(), anyString());
     }
 
+    /** One game tick with the player aboard, away from the destination. */
+    private void aboardTick()
+    {
+        lenient().when(boats.isBoarded()).thenReturn(true);
+        lenient().when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
+        lenient().when(playerPosition.isAboard()).thenReturn(true);
+        lenient().when(playerPosition.current()).thenReturn(new WorldPoint(3051, 3195, 0));
+        orch.onGameTick(new GameTick());
+    }
+
     @Test
-    public void alreadyAboardHandsOffImmediately()
+    public void alreadyAboardHandsOffOnTheNextTick()
     {
         when(boats.isBoarded()).thenReturn(true);
         orch.start(DEST, "Lunar Isle", false);
+        verify(bridge, never()).chart(anyInt(), anyInt());
+        aboardTick();
         verify(bridge).chart(2151, 3880);
         verify(pathfinder, never()).requestPath(anyInt(), anyString());
     }
@@ -120,7 +133,70 @@ public class SailingJourneyOrchestratorTest
         e.setVarbitId(VarbitID.SAILING_BOARDED_BOAT);
         orch.onVarbitChanged(e);
         verify(pathfinder).clearPath();
+        verify(bridge, never()).chart(anyInt(), anyInt());
+        aboardTick();
         verify(bridge).chart(2151, 3880);
+    }
+
+    @Test
+    public void boardedVarbitAloneSendsNoChart()
+    {
+        when(boats.isBoarded()).thenReturn(false);
+        when(boats.mooredBoats()).thenReturn(Collections.singletonList(boat(1, SailingDock.LUNAR_ISLE)));
+        orch.start(DEST, "Lunar Isle", false);
+        when(boats.isBoarded()).thenReturn(true);
+        VarbitChanged e = new VarbitChanged();
+        e.setVarbitId(VarbitID.SAILING_BOARDED_BOAT);
+        orch.onVarbitChanged(e);
+
+        verify(bridge, never()).chart(anyInt(), anyInt());
+        verify(feedback, never()).show(SailingJourneyOrchestrator.HANDOVER_NOTICE, false);
+        org.junit.Assert.assertEquals(DEST, orch.activeDestination());
+    }
+
+    @Test
+    public void chartWaitsForTheBoatWorldViewAndIsSentOnce()
+    {
+        when(boats.isBoarded()).thenReturn(true);
+        orch.start(DEST, "Lunar Isle", false);
+        when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
+        when(playerPosition.current()).thenReturn(new WorldPoint(3051, 3195, 0));
+
+        // The varbit says boarded but the world view is not the boat yet.
+        when(playerPosition.isAboard()).thenReturn(false);
+        orch.onGameTick(new GameTick());
+        verify(bridge, never()).chart(anyInt(), anyInt());
+
+        when(playerPosition.isAboard()).thenReturn(true);
+        orch.onGameTick(new GameTick());
+        orch.onGameTick(new GameTick());
+        verify(bridge, times(1)).chart(2151, 3880);
+        verify(feedback, times(1)).show(SailingJourneyOrchestrator.HANDOVER_NOTICE, false);
+    }
+
+    @Test
+    public void chartWaitsForAPosition()
+    {
+        when(boats.isBoarded()).thenReturn(true);
+        orch.start(DEST, "Lunar Isle", false);
+        when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
+        lenient().when(playerPosition.isAboard()).thenReturn(true);
+        when(playerPosition.current()).thenReturn(null);
+        orch.onGameTick(new GameTick());
+        verify(bridge, never()).chart(anyInt(), anyInt());
+    }
+
+    @Test
+    public void newTargetWhilePendingSendsOnlyTheNewTarget()
+    {
+        when(boats.isBoarded()).thenReturn(true);
+        orch.start(DEST, "Lunar Isle", false);
+        orch.start(WorldPointPacker.pack(2150, 3530, 0), "Drumstick", false);
+        aboardTick();
+        verify(bridge).chart(2150, 3530);
+        verify(bridge, never()).chart(2151, 3880);
+        verify(bridge, never()).clear();
+        org.junit.Assert.assertEquals(WorldPointPacker.pack(2150, 3530, 0), orch.activeDestination());
     }
 
     @Test
@@ -128,10 +204,12 @@ public class SailingJourneyOrchestratorTest
     {
         when(boats.isBoarded()).thenReturn(true);
         orch.start(DEST, "Lunar Isle", false); // -> SAILING
-        when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
+        aboardTick();
         when(playerPosition.current()).thenReturn(new WorldPoint(2151, 3880, 0));
         orch.onGameTick(new GameTick());
         org.junit.Assert.assertEquals(WorldPointPacker.UNDEFINED, orch.activeDestination());
+        // Chart Plotter keeps a trip until told otherwise.
+        verify(bridge).clear();
     }
 
     @Test
@@ -159,9 +237,10 @@ public class SailingJourneyOrchestratorTest
     @Test
     public void switchingTargetsClearsPriorLeg()
     {
-        // Journey A: already aboard -> SAILING (bridge.chart to A).
+        // Journey A: already aboard -> SAILING, course sent to Chart Plotter.
         when(boats.isBoarded()).thenReturn(true);
         orch.start(DEST, "Lunar Isle", false);
+        aboardTick();
         // Journey B: now on land with a moored boat.
         when(boats.isBoarded()).thenReturn(false);
         when(boats.mooredBoats()).thenReturn(java.util.Collections.singletonList(boat(1, SailingDock.LUNAR_ISLE)));
@@ -203,6 +282,7 @@ public class SailingJourneyOrchestratorTest
     {
         when(boats.isBoarded()).thenReturn(true);
         orch.start(DEST, "Lunar Isle", false); // -> SAILING
+        aboardTick();
         orch.cancel();
         verify(bridge).clear();
         org.junit.Assert.assertEquals(com.waypointer.model.WorldPointPacker.UNDEFINED, orch.activeDestination());
@@ -221,8 +301,31 @@ public class SailingJourneyOrchestratorTest
     {
         when(boats.isBoarded()).thenReturn(true);
         orch.start(DEST, "Lunar Isle", false);
+        aboardTick();
         leaveBoat();
         verify(feedback).show("Sailing cancelled - you left the boat.", true);
+        org.junit.Assert.assertEquals(WorldPointPacker.UNDEFINED, orch.activeDestination());
+    }
+
+    @Test
+    public void disembarkClearsChartPlotter()
+    {
+        // Chart Plotter pauses rather than drops a trip when you leave the boat.
+        when(boats.isBoarded()).thenReturn(true);
+        orch.start(DEST, "Lunar Isle", false);
+        aboardTick();
+        leaveBoat();
+        verify(bridge).clear();
+    }
+
+    @Test
+    public void disembarkBeforeTheChartWasSentClearsNothing()
+    {
+        when(boats.isBoarded()).thenReturn(true);
+        orch.start(DEST, "Lunar Isle", false);
+        leaveBoat();
+        verify(bridge, never()).clear();
+        verify(bridge, never()).chart(anyInt(), anyInt());
         org.junit.Assert.assertEquals(WorldPointPacker.UNDEFINED, orch.activeDestination());
     }
 
@@ -251,7 +354,7 @@ public class SailingJourneyOrchestratorTest
     {
         when(boats.isBoarded()).thenReturn(true);
         orch.start(DEST, "Lunar Isle", false);
-        when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
+        aboardTick();
         when(playerPosition.current()).thenReturn(new WorldPoint(2157, 3874, 0));
         orch.onGameTick(new GameTick());
         org.junit.Assert.assertEquals(WorldPointPacker.UNDEFINED, orch.activeDestination());

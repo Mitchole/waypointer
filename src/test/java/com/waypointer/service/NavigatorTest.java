@@ -226,20 +226,29 @@ public class NavigatorTest
         SailingBoats realBoats = mock(SailingBoats.class);
         ChartPlotterBridge realBridge = mock(ChartPlotterBridge.class);
         SailingJourneyOrchestrator.Feedback feedback = mock(SailingJourneyOrchestrator.Feedback.class);
+        Client client = mock(Client.class);
+        PlayerPosition position = mock(PlayerPosition.class);
+        when(client.getGameState()).thenReturn(net.runelite.api.GameState.LOGGED_IN);
+        when(position.isAboard()).thenReturn(true);
+        when(position.current()).thenReturn(new net.runelite.api.coords.WorldPoint(2000, 2000, 0));
         SailingJourneyOrchestrator real = new SailingJourneyOrchestrator(realBoats, realBridge,
-            mock(SailingBoatPin.class), pathfinder, mock(Client.class), mock(PlayerPosition.class));
+            mock(SailingBoatPin.class), pathfinder, client, position);
         real.setFeedback(feedback);
         when(realBridge.isAvailable()).thenReturn(true);
         when(realBoats.isBoarded()).thenReturn(true);
         Navigator nav = new Navigator(pathfinder, real, realBridge, realBoats, waterMap, config, clientThread);
 
         String toast = "Course sent to Chart Plotter. If nothing draws, turn on its charted line.";
+        // The course, and with it the toast, goes out on the next tick aboard.
         nav.go(SEA, "First");
+        real.onGameTick(new net.runelite.api.events.GameTick());
         nav.go(LAND, "Second");
+        real.onGameTick(new net.runelite.api.events.GameTick());
         verify(feedback, times(1)).show(toast, false);
 
         real.resetSession();
         nav.go(SEA, "Third");
+        real.onGameTick(new net.runelite.api.events.GameTick());
         verify(feedback, times(2)).show(toast, false);
         verify(feedback, never()).show(anyString(), eq(true));
     }

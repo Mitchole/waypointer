@@ -44,6 +44,9 @@ public class SailingJourneyOrchestrator
     private volatile String destinationName;
     private volatile boolean routeStep;
     private volatile boolean handoverNoticeShown;
+    // SAILING, but the course is not sent yet: Chart Plotter can only draw once the player's
+    // world view is the boat, which can be a tick after the boarded varbit flips.
+    private volatile boolean chartPending;
 
     @Inject
     public SailingJourneyOrchestrator(SailingBoats boats, ChartPlotterBridge bridge, SailingBoatPin pin,
@@ -80,8 +83,7 @@ public class SailingJourneyOrchestrator
             return;
         }
         // Drop any prior journey, clearing its in-flight leg, without firing yet.
-        if (state == State.WALKING_TO_DOCK) pathfinder.clearPath();
-        else if (state == State.SAILING) bridge.clear();
+        clearLeg();
         reset(false);
         destination = packed;
         destinationName = name;
@@ -131,8 +133,7 @@ public class SailingJourneyOrchestrator
 
     public void cancel()
     {
-        if (state == State.WALKING_TO_DOCK) pathfinder.clearPath();
-        else if (state == State.SAILING) bridge.clear();
+        clearLeg();
         reset(true);
     }
 
@@ -150,6 +151,9 @@ public class SailingJourneyOrchestrator
         else if (state == State.SAILING && !boarded)
         {
             boolean silent = routeStep;
+            // Chart Plotter only pauses its trip when the player leaves the boat; clear it so
+            // it does not resume on the next boarding.
+            clearLeg();
             reset(true);
             if (!silent) feedback.show("Sailing cancelled - you left the boat.", true);
         }
@@ -161,9 +165,15 @@ public class SailingJourneyOrchestrator
         if (state != State.SAILING) return;
         if (client.getGameState() != GameState.LOGGED_IN) return;
         WorldPoint loc = playerPosition.current();
+        if (chartPending)
+        {
+            if (loc == null || !boats.isBoarded() || !playerPosition.isAboard()) return;
+            sendChart();
+        }
         if (loc == null) return;
         if (WorldPointPacker.arrivedAboard(destination, loc, Navigator.ABOARD_ARRIVAL_RADIUS))
         {
+            clearLeg();
             reset(true);
         }
     }
@@ -179,11 +189,18 @@ public class SailingJourneyOrchestrator
         }
     }
 
+    /** Enters SAILING; the course goes to Chart Plotter on the next tick the player is aboard. */
     private void handoff()
     {
-        bridge.chart(WorldPointPacker.getX(destination), WorldPointPacker.getY(destination));
         state = State.SAILING;
+        chartPending = true;
         listeners.fire();
+    }
+
+    private void sendChart()
+    {
+        chartPending = false;
+        bridge.chart(WorldPointPacker.getX(destination), WorldPointPacker.getY(destination));
         if (!handoverNoticeShown)
         {
             handoverNoticeShown = true;
@@ -191,9 +208,17 @@ public class SailingJourneyOrchestrator
         }
     }
 
+    /** Stops the current leg: the land path, or the course already sent to Chart Plotter. */
+    private void clearLeg()
+    {
+        if (state == State.WALKING_TO_DOCK) pathfinder.clearPath();
+        else if (state == State.SAILING && !chartPending) bridge.clear();
+    }
+
     private void reset(boolean fire)
     {
         state = State.IDLE;
+        chartPending = false;
         destination = WorldPointPacker.UNDEFINED;
         destinationName = null;
         routeStep = false;
