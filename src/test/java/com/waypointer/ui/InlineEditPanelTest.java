@@ -75,4 +75,31 @@ public class InlineEditPanelTest
         assertEquals("x and y must be between 0 and 16383.", toasts.messages.get(0));
         assertEquals(Toasts.Severity.WARN, toasts.severities.get(0));
     }
+
+    @Test
+    public void externalMoveIsNotRevertedByUntouchedCoordsField()
+    {
+        int b = WorldPointPacker.pack(2500, 3000, 0);
+        store.updateWaypointPoint(waypoint.getId(), b);
+
+        panel.flushPending();
+
+        assertEquals(b, store.getWaypointById(waypoint.getId()).getPackedWorldPoint());
+        assertEquals(0, toasts.messages.size());
+    }
+
+    @Test
+    public void undoOfCoordinateMoveSticks()
+    {
+        int a = WorldPointPacker.pack(2301, 3690, 0);
+        panel.setCoordinatesText("2400, 3500");
+        panel.flushPending();
+        assertEquals(WorldPointPacker.pack(2400, 3500, 0),
+            store.getWaypointById(waypoint.getId()).getPackedWorldPoint());
+
+        store.undoLast();
+        panel.flushPending();
+
+        assertEquals(a, store.getWaypointById(waypoint.getId()).getPackedWorldPoint());
+    }
 }

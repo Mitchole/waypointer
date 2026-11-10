@@ -48,6 +48,8 @@ public class InlineEditPanel extends JPanel
     private boolean nameDirty = false;
     private boolean notesDirty = false;
     private boolean categoryDirty = false;
+    private boolean coordsDirty = false;
+    private boolean settingCoords = false;
 
     public InlineEditPanel(Waypoint w, WaypointStore store, WaypointCapture capture,
         SpriteManager spriteManager, IconCatalog iconCatalog, Toasts toasts,
@@ -139,6 +141,10 @@ public class InlineEditPanel extends JPanel
         coordsField = new JTextField(CoordinateText.format(w.getPackedWorldPoint()));
         Styles.textField(coordsField);
         coordsField.getAccessibleContext().setAccessibleName("Coordinates");
+        coordsField.getDocument().addDocumentListener(Styles.documentListener(() ->
+        {
+            if (!settingCoords) coordsDirty = true;
+        }));
         coordsField.addFocusListener(new FocusAdapter()
         {
             @Override public void focusLost(FocusEvent e) { flushCoords(); }
@@ -199,10 +205,13 @@ public class InlineEditPanel extends JPanel
         flushCoords();
     }
 
-    // Compares against the stored tile instead of tracking a dirty flag, so reverting a bad
-    // entry (which rewrites the text) cannot re-trigger a commit.
+    // Only acts on text the user typed. An untouched field must not write: a store change from
+    // elsewhere (Recapture, Undo) rebuilds the panel, and this panel's removeNotify flush would
+    // otherwise put its stale text back over the new tile.
     private void flushCoords()
     {
+        if (!coordsDirty) return;
+        coordsDirty = false;
         Waypoint cur = store.getWaypointById(waypointId);
         if (cur == null) return;
         int packed;
@@ -212,15 +221,22 @@ public class InlineEditPanel extends JPanel
         }
         catch (IllegalArgumentException ex)
         {
-            coordsField.setText(CoordinateText.format(cur.getPackedWorldPoint()));
+            showCoords(cur.getPackedWorldPoint());
             toasts.show(ex.getMessage(), Toasts.Severity.WARN);
             return;
         }
-        coordsField.setText(CoordinateText.format(packed));
+        showCoords(packed);
         if (packed == cur.getPackedWorldPoint()) return;
         String name = cur.getName();
         store.updateWaypointPoint(waypointId, packed);
         toasts.show("Moved '" + name + "'", "Undo", store::undoLast);
+    }
+
+    private void showCoords(int packed)
+    {
+        settingCoords = true;
+        try { coordsField.setText(CoordinateText.format(packed)); }
+        finally { settingCoords = false; }
     }
 
     private void flushName()
