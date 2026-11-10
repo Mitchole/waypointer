@@ -182,7 +182,8 @@ public class TabHostTest
             mock(ClientThread.class),
             mock(SpriteManager.class),
             config,
-            new Gson());
+            new Gson(),
+            mock(com.waypointer.service.PlayerPosition.class));
 
         SailingJourneyOrchestrator sailingOrchestrator = mock(SailingJourneyOrchestrator.class);
         when(sailingOrchestrator.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
@@ -246,7 +247,7 @@ public class TabHostTest
 
         NearestLandmarkBar nearestLandmarkBar = new NearestLandmarkBar(
             mock(BboxIndex.class), pathfinder, mock(Client.class), mock(ClientThread.class),
-            mock(SpriteManager.class), config, new Gson());
+            mock(SpriteManager.class), config, new Gson(), mock(com.waypointer.service.PlayerPosition.class));
 
         SailingJourneyOrchestrator sailingOrchestrator2 = mock(SailingJourneyOrchestrator.class);
         when(sailingOrchestrator2.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);
@@ -317,7 +318,8 @@ public class TabHostTest
             mock(ClientThread.class),
             mock(SpriteManager.class),
             config,
-            new Gson());
+            new Gson(),
+            mock(com.waypointer.service.PlayerPosition.class));
 
         SailingJourneyOrchestrator sailingOrchestratorB = mock(SailingJourneyOrchestrator.class);
         when(sailingOrchestratorB.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);

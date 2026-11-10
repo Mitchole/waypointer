@@ -38,7 +38,7 @@ public class WaypointPathfinderTest
             s.getAsBoolean();
             return null;
         }).when(clientThread).invoke(any(BooleanSupplier.class));
-        pathfinder = new WaypointPathfinder(eventBus, clientThread, client, configManager);
+        pathfinder = new WaypointPathfinder(eventBus, clientThread, client, configManager, mock(PlayerPosition.class));
     }
 
     @Test
@@ -51,7 +51,7 @@ public class WaypointPathfinderTest
     public void availableWhenConfigProbeFindsPersistedKey()
     {
         when(configManager.getConfiguration("shortestpath", "recalculateDistance")).thenReturn("true");
-        WaypointPathfinder p = new WaypointPathfinder(eventBus, clientThread, client, configManager);
+        WaypointPathfinder p = new WaypointPathfinder(eventBus, clientThread, client, configManager, mock(PlayerPosition.class));
         assertTrue(p.isAvailable());
     }
 

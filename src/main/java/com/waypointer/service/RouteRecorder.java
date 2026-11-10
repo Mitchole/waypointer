@@ -7,8 +7,6 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import net.runelite.api.Client;
-import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.callback.ClientThread;
 
@@ -29,13 +27,10 @@ public class RouteRecorder
 
     /** Production constructor: reads the player tile on the client thread, names via capture. */
     @Inject
-    public RouteRecorder(RouteStore store, Client client, ClientThread clientThread,
+    public RouteRecorder(RouteStore store, PlayerPosition playerPosition, ClientThread clientThread,
         WaypointCapture capture)
     {
-        this(store, () -> {
-            Player p = client.getLocalPlayer();
-            return p == null ? null : p.getWorldLocation();
-        }, clientThread::invoke, capture::defaultName);
+        this(store, playerPosition::current, clientThread::invoke, capture::defaultName);
     }
 
     /** Test constructor: tile and naming supplied directly, captured inline (no client thread). */

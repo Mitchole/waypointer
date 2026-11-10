@@ -5,6 +5,7 @@ import com.waypointer.WaypointerConfig;
 import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.BboxIndex;
 import com.waypointer.service.LandmarkType;
+import com.waypointer.service.PlayerPosition;
 import com.waypointer.service.WaypointPathfinder;
 import java.awt.Component;
 import java.awt.Container;
@@ -27,7 +28,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
@@ -57,6 +57,7 @@ public final class NearestLandmarkBar extends JPanel
     private final SpriteManager spriteManager;
     private final WaypointerConfig config;
     private final Gson gson;
+    private final PlayerPosition playerPosition;
 
     private LandmarkSelection selection;
     private final ConfigureLandmarksPanel picker;
@@ -78,8 +79,9 @@ public final class NearestLandmarkBar extends JPanel
     @Inject
     public NearestLandmarkBar(BboxIndex bbox, WaypointPathfinder pathfinder, Client client,
         ClientThread clientThread, SpriteManager spriteManager,
-        WaypointerConfig config, Gson gson)
+        WaypointerConfig config, Gson gson, PlayerPosition playerPosition)
     {
+        this.playerPosition = playerPosition;
         this.bbox = bbox;
         this.pathfinder = pathfinder;
         this.client = client;
@@ -280,9 +282,7 @@ public final class NearestLandmarkBar extends JPanel
         }
         clientThread.invoke(() -> {
             if (client.getGameState() != GameState.LOGGED_IN) return true;
-            Player p = client.getLocalPlayer();
-            if (p == null) return true;
-            WorldPoint loc = p.getWorldLocation();
+            WorldPoint loc = playerPosition.current();
             if (loc == null) return true;
             int fromPacked = WorldPointPacker.pack(loc);
             BboxIndex.Hit hit = bbox.nearest(type, fromPacked);

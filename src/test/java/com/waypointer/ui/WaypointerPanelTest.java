@@ -66,7 +66,8 @@ public class WaypointerPanelTest
             mock(ClientThread.class),
             mock(SpriteManager.class),
             config,
-            new Gson());
+            new Gson(),
+            mock(com.waypointer.service.PlayerPosition.class));
 
         SailingJourneyOrchestrator sailingOrchestrator = mock(SailingJourneyOrchestrator.class);
         when(sailingOrchestrator.activeDestination()).thenReturn(WorldPointPacker.UNDEFINED);

@@ -10,7 +10,6 @@ import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -41,6 +40,7 @@ public class WaypointPathfinder
     private final EventBus eventBus;
     private final ClientThread clientThread;
     private final Client client;
+    private final PlayerPosition playerPosition;
     private final ConfigManager configManager;
     private final Listeners listeners = new Listeners();
     private volatile boolean available;
@@ -49,8 +49,9 @@ public class WaypointPathfinder
 
     @Inject
     public WaypointPathfinder(EventBus eventBus, ClientThread clientThread, Client client,
-        ConfigManager configManager)
+        ConfigManager configManager, PlayerPosition playerPosition)
     {
+        this.playerPosition = playerPosition;
         this.eventBus = eventBus;
         this.clientThread = clientThread;
         this.client = client;
@@ -87,9 +88,7 @@ public class WaypointPathfinder
     {
         if (activeTarget == WorldPointPacker.UNDEFINED) return;
         if (client.getGameState() != GameState.LOGGED_IN) return;
-        Player p = client.getLocalPlayer();
-        if (p == null) return;
-        WorldPoint pp = p.getWorldLocation();
+        WorldPoint pp = playerPosition.current();
         if (pp == null) return;
         // Don't auto-clear across planes, or a 2nd-floor waypoint vanishes the moment the
         // player walks under the building - WorldPointPacker.arrived enforces same-plane.

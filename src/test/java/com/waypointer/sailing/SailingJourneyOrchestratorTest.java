@@ -38,6 +38,7 @@ public class SailingJourneyOrchestratorTest
     @Mock private SailingJourneyOrchestrator.Feedback feedback;
 
     private SailingJourneyOrchestrator orch;
+    private com.waypointer.service.PlayerPosition playerPosition;
 
     // Lunar Isle area target tile.
     private static final int DEST = WorldPointPacker.pack(2151, 3880, 0);
@@ -59,7 +60,8 @@ public class SailingJourneyOrchestratorTest
     @Before
     public void setUp()
     {
-        orch = new SailingJourneyOrchestrator(boats, bridge, pin, pathfinder, client);
+        playerPosition = org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class);
+        orch = new SailingJourneyOrchestrator(boats, bridge, pin, pathfinder, client, playerPosition);
         orch.setFeedback(feedback);
         lenient().when(bridge.isAvailable()).thenReturn(true);
         lenient().when(pin.isEnabled()).thenReturn(false);
@@ -138,9 +140,7 @@ public class SailingJourneyOrchestratorTest
         when(boats.isBoarded()).thenReturn(true);
         orch.start(waypoint()); // -> SAILING
         when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
-        Player p = org.mockito.Mockito.mock(Player.class);
-        when(client.getLocalPlayer()).thenReturn(p);
-        when(p.getWorldLocation()).thenReturn(new WorldPoint(2151, 3880, 0));
+        when(playerPosition.current()).thenReturn(new WorldPoint(2151, 3880, 0));
         orch.onGameTick(new GameTick());
         org.junit.Assert.assertEquals(WorldPointPacker.UNDEFINED, orch.activeDestination());
     }

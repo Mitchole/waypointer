@@ -19,6 +19,7 @@ public class WaypointCaptureTest
     private Client client;
     private WaypointStore store;
     private WaypointCapture capture;
+    private PlayerPosition playerPosition;
 
     @Before
     public void setUp()
@@ -29,7 +30,8 @@ public class WaypointCaptureTest
         ClientThread clientThread = mock(ClientThread.class);
         LandmarkLookup lookup = new LandmarkLookup(
             new BboxIndex(), new CacheLabelIndex());
-        capture = new WaypointCapture(client, store, clientThread, lookup);
+        playerPosition = mock(PlayerPosition.class);
+        capture = new WaypointCapture(client, store, clientThread, lookup, playerPosition);
     }
 
     /**
@@ -47,7 +49,7 @@ public class WaypointCaptureTest
     public void readReturnsNullWhenLocalPlayerMissing()
     {
         when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
-        when(client.getLocalPlayer()).thenReturn(null);
+        when(playerPosition.current()).thenReturn(null);
         assertNull(capture.readCurrentPackedPointOnClientThread());
     }
 
@@ -55,9 +57,7 @@ public class WaypointCaptureTest
     public void readReturnsPackedTileWhenLoggedIn()
     {
         when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
-        Player p = mock(Player.class);
-        when(client.getLocalPlayer()).thenReturn(p);
-        when(p.getWorldLocation()).thenReturn(new WorldPoint(3200, 3200, 0));
+        when(playerPosition.current()).thenReturn(new WorldPoint(3200, 3200, 0));
 
         Integer packed = capture.readCurrentPackedPointOnClientThread();
         assertNotNull(packed);
@@ -82,7 +82,7 @@ public class WaypointCaptureTest
         when(mockLookup.lookup(anyInt()))
             .thenReturn(new LookupHit("Lumbridge Bank", LookupHit.Tier.CURATED));
         WaypointCapture cap = new WaypointCapture(client, store,
-            mock(ClientThread.class), mockLookup);
+            mock(ClientThread.class), mockLookup, playerPosition);
 
         assertEquals("Lumbridge Bank", cap.defaultName(
             WorldPointPacker.pack(3208, 3220, 0)));
@@ -95,7 +95,7 @@ public class WaypointCaptureTest
         when(mockLookup.lookup(anyInt()))
             .thenReturn(new LookupHit("Bank", LookupHit.Tier.POI));
         WaypointCapture cap = new WaypointCapture(client, store,
-            mock(ClientThread.class), mockLookup);
+            mock(ClientThread.class), mockLookup, playerPosition);
 
         assertEquals("Bank", cap.defaultName(
             WorldPointPacker.pack(3208, 3220, 0)));
@@ -108,7 +108,7 @@ public class WaypointCaptureTest
         when(mockLookup.lookup(anyInt()))
             .thenReturn(new LookupHit("Grand Exchange", LookupHit.Tier.SUB_AREA));
         WaypointCapture cap = new WaypointCapture(client, store,
-            mock(ClientThread.class), mockLookup);
+            mock(ClientThread.class), mockLookup, playerPosition);
 
         assertEquals("Grand Exchange (3164, 3486)", cap.defaultName(
             WorldPointPacker.pack(3164, 3486, 0)));
@@ -121,7 +121,7 @@ public class WaypointCaptureTest
         when(mockLookup.lookup(anyInt()))
             .thenReturn(new LookupHit("Varrock", LookupHit.Tier.CITY));
         WaypointCapture cap = new WaypointCapture(client, store,
-            mock(ClientThread.class), mockLookup);
+            mock(ClientThread.class), mockLookup, playerPosition);
 
         assertEquals("Varrock (3210, 3422)", cap.defaultName(
             WorldPointPacker.pack(3210, 3422, 0)));

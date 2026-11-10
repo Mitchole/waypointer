@@ -10,7 +10,6 @@ import javax.inject.Singleton;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.callback.ClientThread;
 
@@ -29,11 +28,13 @@ public class WaypointCapture
     private final WaypointStore store;
     private final ClientThread clientThread;
     private final LandmarkLookup landmarkLookup;
+    private final PlayerPosition playerPosition;
 
     @Inject
     public WaypointCapture(Client client, WaypointStore store, ClientThread clientThread,
-        LandmarkLookup landmarkLookup)
+        LandmarkLookup landmarkLookup, PlayerPosition playerPosition)
     {
+        this.playerPosition = playerPosition;
         this.client = client;
         this.store = store;
         this.clientThread = clientThread;
@@ -110,9 +111,7 @@ public class WaypointCapture
     Integer readCurrentPackedPointOnClientThread()
     {
         if (client.getGameState() != GameState.LOGGED_IN) return null;
-        Player p = client.getLocalPlayer();
-        if (p == null) return null;
-        WorldPoint wp = p.getWorldLocation();
+        WorldPoint wp = playerPosition.current();
         if (wp == null) return null;
         return WorldPointPacker.pack(wp);
     }

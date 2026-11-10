@@ -2,6 +2,7 @@ package com.waypointer.sailing;
 
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
+import com.waypointer.service.PlayerPosition;
 import com.waypointer.service.WaypointPathfinder;
 import com.waypointer.util.Listeners;
 import java.util.List;
@@ -10,7 +11,6 @@ import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -32,6 +32,7 @@ public class SailingJourneyOrchestrator
     private final SailingBoatPin pin;
     private final WaypointPathfinder pathfinder;
     private final Client client;
+    private final PlayerPosition playerPosition;
     private final Listeners listeners = new Listeners();
 
     private volatile Feedback feedback = (m, w) -> { };
@@ -41,13 +42,14 @@ public class SailingJourneyOrchestrator
 
     @Inject
     public SailingJourneyOrchestrator(SailingBoats boats, ChartPlotterBridge bridge, SailingBoatPin pin,
-        WaypointPathfinder pathfinder, Client client)
+        WaypointPathfinder pathfinder, Client client, PlayerPosition playerPosition)
     {
         this.boats = boats;
         this.bridge = bridge;
         this.pin = pin;
         this.pathfinder = pathfinder;
         this.client = client;
+        this.playerPosition = playerPosition;
     }
 
     public void setFeedback(Feedback f) { this.feedback = f == null ? (m, w) -> { } : f; }
@@ -150,9 +152,7 @@ public class SailingJourneyOrchestrator
     {
         if (state != State.SAILING) return;
         if (client.getGameState() != GameState.LOGGED_IN) return;
-        Player p = client.getLocalPlayer();
-        if (p == null) return;
-        WorldPoint loc = p.getWorldLocation();
+        WorldPoint loc = playerPosition.current();
         if (loc == null) return;
         if (WorldPointPacker.arrived(destination, loc, SAILING_ARRIVAL_RADIUS))
         {

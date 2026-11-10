@@ -11,7 +11,6 @@ import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -34,6 +33,7 @@ public class RoutePlaybackEngine
 
     private final WaypointPathfinder pathfinder;
     private final RouteStore store;
+    private final PlayerPosition playerPosition;
     private final Listeners listeners = new Listeners();
     @Nullable private volatile Client client;
     private Listeners.Subscription storeSub;
@@ -49,8 +49,10 @@ public class RoutePlaybackEngine
     private volatile int lap;
 
     @Inject
-    public RoutePlaybackEngine(WaypointPathfinder pathfinder, RouteStore store)
+    public RoutePlaybackEngine(WaypointPathfinder pathfinder, RouteStore store,
+        PlayerPosition playerPosition)
     {
+        this.playerPosition = playerPosition;
         this.pathfinder = pathfinder;
         this.store = store;
     }
@@ -185,9 +187,9 @@ public class RoutePlaybackEngine
     {
         if (active == null || client == null) return;
         if (client.getGameState() != GameState.LOGGED_IN) return;
-        Player p = client.getLocalPlayer();
-        if (p == null) return;
-        handleTick(p.getWorldLocation());
+        WorldPoint loc = playerPosition.current();
+        if (loc == null) return;
+        handleTick(loc);
     }
 
     @Subscribe

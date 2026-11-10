@@ -23,6 +23,7 @@ public class RoutePlaybackEngineTest
 {
     @Mock private WaypointPathfinder pathfinder;
     @Mock private RouteStore store;
+    @Mock private PlayerPosition playerPosition;
 
     private RoutePlaybackEngine engine;
 
@@ -32,7 +33,7 @@ public class RoutePlaybackEngineTest
     @Before
     public void setUp()
     {
-        engine = new RoutePlaybackEngine(pathfinder, store);
+        engine = new RoutePlaybackEngine(pathfinder, store, playerPosition);
     }
 
     private Route route(boolean repeating, RouteStep... steps)

@@ -24,10 +24,13 @@ public class DeathAutoPathfinder
     private final Client client;
     private final WaypointPathfinder pathfinder;
     private final WaypointerConfig config;
+    private final PlayerPosition playerPosition;
 
     @Inject
-    public DeathAutoPathfinder(Client client, WaypointPathfinder pathfinder, WaypointerConfig config)
+    public DeathAutoPathfinder(Client client, WaypointPathfinder pathfinder, WaypointerConfig config,
+        PlayerPosition playerPosition)
     {
+        this.playerPosition = playerPosition;
         this.client = client;
         this.pathfinder = pathfinder;
         this.config = config;
@@ -49,7 +52,7 @@ public class DeathAutoPathfinder
         WorldView worldView = client.getTopLevelWorldView();
         if (worldView != null && worldView.isInstance()) return;
 
-        WorldPoint deathLocation = local.getWorldLocation();
+        WorldPoint deathLocation = playerPosition.current();
         if (deathLocation == null) return;
 
         // requestPath bypasses the wilderness-confirm gate (that lives in the panel's row

@@ -24,6 +24,7 @@ public class DeathAutoPathfinderTest
     private WaypointPathfinder pathfinder;
     private WaypointerConfig config;
     private Player localPlayer;
+    private PlayerPosition playerPosition;
     private WorldView worldView;
     private DeathAutoPathfinder subject;
 
@@ -34,6 +35,7 @@ public class DeathAutoPathfinderTest
         pathfinder = mock(WaypointPathfinder.class);
         config = mock(WaypointerConfig.class);
         localPlayer = mock(Player.class);
+        playerPosition = mock(PlayerPosition.class);
 
         // Default "happy" wiring; individual tests override what they need.
         when(config.autoPathOnDeath()).thenReturn(true);
@@ -42,9 +44,9 @@ public class DeathAutoPathfinderTest
         when(client.getTopLevelWorldView()).thenReturn(worldView);
         when(worldView.isInstance()).thenReturn(false);
         when(client.getLocalPlayer()).thenReturn(localPlayer);
-        when(localPlayer.getWorldLocation()).thenReturn(new WorldPoint(3200, 3200, 0));
+        when(playerPosition.current()).thenReturn(new WorldPoint(3200, 3200, 0));
 
-        subject = new DeathAutoPathfinder(client, pathfinder, config);
+        subject = new DeathAutoPathfinder(client, pathfinder, config, playerPosition);
     }
 
     @Test
@@ -99,7 +101,7 @@ public class DeathAutoPathfinderTest
     @Test
     public void doesNothingWhenWorldLocationNull()
     {
-        when(localPlayer.getWorldLocation()).thenReturn(null);
+        when(playerPosition.current()).thenReturn(null);
         subject.onActorDeath(new ActorDeath(localPlayer));
         verify(pathfinder, never()).requestPath(anyInt(), anyString());
     }
