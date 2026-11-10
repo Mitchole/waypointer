@@ -284,3 +284,5 @@ Ocean pathing reuses data and code from these BSD 2-Clause projects:
 - Water/land collision map and reader: from Chart Plotter (Copyright (c) 2026, Dazuzi).
 - Sailing dock locations and boat names: from "Dude, Where's My Boat?" (Copyright (c) 2025,
   ArchRBX, Logical-sh; dock table Copyright (c) 2025, nucleon, Cooper Morris, AtchRBX).
+
+Logo art by Matilda W.
