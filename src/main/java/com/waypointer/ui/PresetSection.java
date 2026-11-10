@@ -152,20 +152,22 @@ class PresetSection extends JPanel
         name.setForeground(Color.WHITE);
         name.setFont(FontManager.getRunescapeBoldFont());
 
-        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        left.setOpaque(false);
         if (preset.getIcon() != null)
         {
             JLabel icon = new JLabel();
             SpriteIcons.apply(icon, preset.getIcon(), spriteManager);
-            left.add(icon);
+            header.add(icon, BorderLayout.WEST);
         }
-        left.add(name);
+        // The name takes whatever the count and chevron leave, and is cut with an ellipsis
+        // when a long one ("God Wars Dungeon Bosses") does not fit.
+        header.add(name, BorderLayout.CENTER);
         JLabel count = Styles.pill(countText());
         if (count.getText().indexOf('/') >= 0) count.setForeground(ColorScheme.PROGRESS_COMPLETE_COLOR);
-        left.add(count);
-        header.add(left, BorderLayout.CENTER);
-        header.add(chevron, BorderLayout.EAST);
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        right.setOpaque(false);
+        right.add(count);
+        right.add(chevron);
+        header.add(right, BorderLayout.EAST);
 
         header.addMouseListener(new MouseAdapter()
         {
