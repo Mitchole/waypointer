@@ -217,7 +217,7 @@ final class ImportPickerDialog extends JDialog
         {
             // One token with no spaces or line breaks is most likely a mistyped or cut-off code.
             String trimmed = text == null ? "" : text.trim();
-            boolean oneToken = !trimmed.isEmpty()
+            boolean oneToken = !trimmed.isEmpty() && trimmed.charAt(0) != '['
                 && trimmed.chars().noneMatch(Character::isWhitespace);
             showError(oneToken ? BAD_CODE_MESSAGE : ex.getMessage());
             return;

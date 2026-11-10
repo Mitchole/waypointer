@@ -249,6 +249,19 @@ public class ImportPickerDialogTest
     }
 
     @Test
+    public void malformedCompactJsonShowsListError()
+    {
+        Headless.assumeDisplay();
+        WaypointStore store = new WaypointStore();
+        store.bootstrap(new Library());
+        ImportPickerDialog d = newDialog(store);
+
+        d.loadCode("[{\"name\":\"A\",\"x\":1}]");
+
+        assertEquals("Entry 1: needs a name, x and y.", d.getErrorText());
+    }
+
+    @Test
     public void multiWordGarbageShowsListError()
     {
         Headless.assumeDisplay();

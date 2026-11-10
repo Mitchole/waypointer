@@ -9,7 +9,6 @@ import com.waypointer.model.Category;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
 import com.waypointer.model.WorldPointPacker;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -18,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import javax.inject.Inject;
 
 /**
@@ -32,6 +32,7 @@ public class ReadableImport
     private static final int MAX_CHARS = 1_048_576;
     private static final int MAX_LINE = 300;
     private static final int MAX_DIGITS = 12;
+    private static final Pattern PLAIN_INTEGER = Pattern.compile("-?[0-9]{1,12}");
 
     private static final String NOTHING = "Nothing to import.";
     private static final String TOO_LARGE = "That list is too large.";
@@ -238,17 +239,9 @@ public class ReadableImport
     private static BigInteger integerOrNull(JsonElement e)
     {
         if (e == null || !e.isJsonPrimitive() || !e.getAsJsonPrimitive().isNumber()) return null;
-        try
-        {
-            BigDecimal bd = new BigDecimal(e.getAsString());
-            // Reject huge exponents before expanding them into an integer.
-            if (bd.scale() < -MAX_DIGITS || bd.precision() - bd.scale() > MAX_DIGITS) return null;
-            return bd.toBigIntegerExact();
-        }
-        catch (ArithmeticException | NumberFormatException ex)
-        {
-            return null;
-        }
+        String raw = e.getAsString();
+        if (raw.length() > MAX_DIGITS + 1 || !PLAIN_INTEGER.matcher(raw).matches()) return null;
+        return new BigInteger(raw);
     }
 
     // ---- assembly ----

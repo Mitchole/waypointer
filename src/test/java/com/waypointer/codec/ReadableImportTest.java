@@ -263,4 +263,47 @@ public class ReadableImportTest
     {
         assertRejected(importer, "[Boat] Wreck 1 2", "That is not a valid list.");
     }
+
+    private static final String NEEDS = "Entry 1: needs a name, x and y.";
+
+    private static String withX(String x)
+    {
+        return "[{\"name\":\"A\",\"x\":" + x + ",\"y\":2}]";
+    }
+
+    @Test(timeout = 2000)
+    public void hugeNegativeExponentRejectedQuickly()
+    {
+        assertRejected(importer, withX("1e-100000000"), NEEDS);
+    }
+
+    @Test(timeout = 2000)
+    public void fractionalNumberRejected()
+    {
+        assertRejected(importer, withX("1.5"), NEEDS);
+        assertRejected(importer, withX("1.0"), NEEDS);
+    }
+
+    @Test(timeout = 2000)
+    public void exponentFormRejected()
+    {
+        assertRejected(importer, withX("1e3"), NEEDS);
+    }
+
+    @Test(timeout = 2000)
+    public void veryLongDigitRunRejectedQuickly()
+    {
+        StringBuilder digits = new StringBuilder();
+        for (int i = 0; i < 100_000; i++) digits.append('1');
+        assertRejected(importer, withX(digits.toString()), NEEDS);
+    }
+
+    @Test(timeout = 2000)
+    public void plainIntegersStillAccepted()
+    {
+        Library lib = importer.parse(
+            "[{\"name\":\"A\",\"x\":2301,\"y\":3690,\"plane\":1}]", new Library()).library;
+        assertEquals(WorldPointPacker.pack(2301, 3690, 1), lib.getWaypoints().get(0).getPackedWorldPoint());
+        assertRejected(importer, "[{\"name\":\"A\",\"x\":\"12\",\"y\":2}]", NEEDS);
+    }
 }
