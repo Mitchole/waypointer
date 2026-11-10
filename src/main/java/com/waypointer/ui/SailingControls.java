@@ -21,7 +21,7 @@ public class SailingControls extends JPanel
     private final SailingBoatPin pin;
     private final ClientThread clientThread;
 
-    private final JCheckBox useSpecific = new JCheckBox("Always use a specific boat");
+    final JCheckBox useSpecific = new JCheckBox("Always use a specific boat");
     private final JComboBox<BoatChoice> combo = new JComboBox<>();
 
     private boolean updating;
@@ -60,7 +60,7 @@ public class SailingControls extends JPanel
         });
     }
 
-    private void render(List<SailingBoats.BoatInfo> moored, boolean enabled, int savedSlot)
+    void render(List<SailingBoats.BoatInfo> moored, boolean enabled, int savedSlot)
     {
         updating = true;
         try
@@ -69,7 +69,7 @@ public class SailingControls extends JPanel
             BoatChoice toSelect = null;
             for (SailingBoats.BoatInfo b : moored)
             {
-                BoatChoice c = new BoatChoice(b.slot, b.name + " . " + b.dock.getDockName());
+                BoatChoice c = new BoatChoice(b.slot, b.name, b.name + " . " + b.dock.getDockName());
                 model.addElement(c);
                 if (b.slot == savedSlot) toSelect = c;
             }
@@ -89,15 +89,17 @@ public class SailingControls extends JPanel
         if (updating) return;
         BoatChoice c = (BoatChoice) combo.getSelectedItem();
         int slot = c == null ? -1 : c.slot;
-        String name = c == null ? "" : c.label;
+        String name = c == null ? "" : c.name;
         pin.set(useSpecific.isSelected(), slot, name);
     }
 
     private static final class BoatChoice
     {
         final int slot;
+        /** The bare boat name, as the journey compares it. */
+        final String name;
         final String label;
-        BoatChoice(int slot, String label) { this.slot = slot; this.label = label; }
+        BoatChoice(int slot, String name, String label) { this.slot = slot; this.name = name; this.label = label; }
         @Override public String toString() { return label; }
     }
 }

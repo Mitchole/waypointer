@@ -185,6 +185,20 @@ public class SailingJourneyOrchestratorTest
     }
 
     @Test
+    public void pinnedBoatWithMatchingNameStartsTheJourney()
+    {
+        when(boats.isBoarded()).thenReturn(false);
+        when(pin.isEnabled()).thenReturn(true);
+        when(pin.slot()).thenReturn(3);
+        when(pin.name()).thenReturn("Boat 3");
+        when(boats.boat(3)).thenReturn(boat(3, SailingDock.PORT_SARIM));
+        orch.start(DEST, "Lunar Isle", false);
+        verify(feedback, never()).show(anyString(), eq(true));
+        verify(pathfinder).requestPath(eq(WorldPointPacker.pack(SailingDock.PORT_SARIM.getNavigationLocation())), anyString());
+        org.junit.Assert.assertEquals(DEST, orch.activeDestination());
+    }
+
+    @Test
     public void cancelWhileSailingClearsChart()
     {
         when(boats.isBoarded()).thenReturn(true);
