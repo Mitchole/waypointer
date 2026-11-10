@@ -33,7 +33,7 @@ public class PinnedSection extends CollapsibleSection
         Function<Waypoint, Category> categoryLookup)
     {
         super(collapsed, onCollapseChange);
-        setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
+        setBorder(BorderFactory.createEmptyBorder(0, 3, 2, 0));
 
         JPanel headerRow = buildHeaderRow(pinned.size());
         add(headerRow, BorderLayout.NORTH);

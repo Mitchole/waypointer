@@ -64,6 +64,15 @@ final class OverflowMenu
         JMenuItem expandToggle = new JMenuItem(expandLabel ? "Expand all" : "Collapse all");
         expandToggle.addActionListener(e -> panel.setAllSectionsExpanded(expandLabel));
         menu.add(expandToggle);
+
+        if (panel.landmarkBarShown())
+        {
+            JMenuItem landmarks = new JMenuItem("Customise landmark bar");
+            landmarks.addActionListener(e -> panel.toggleLandmarkPicker());
+            menu.add(landmarks);
+        }
+        javax.swing.JMenu boat = panel.boatMenu();
+        if (boat != null) menu.add(boat);
         menu.addSeparator();
 
         JMenuItem exportItem = new JMenuItem("Export...");

@@ -5,17 +5,18 @@ import javax.swing.JButton;
 import net.runelite.client.ui.ColorScheme;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 
 public class PlayButtonTest
 {
     @Test
-    public void playIconButtonResting_setsDarkerGrayBackground()
+    public void playIconButtonResting_isAGreyGlyphWithNoFill()
     {
         JButton b = new JButton("▶");
         PlayButton.style(b, false);
-        assertSame(ColorScheme.DARKER_GRAY_COLOR, b.getBackground());
-        assertSame(ColorScheme.BRAND_ORANGE, b.getForeground());
+        assertSame(Styles.MUTED_TEXT, b.getForeground());
+        assertFalse(b.isContentAreaFilled());
     }
 
     @Test

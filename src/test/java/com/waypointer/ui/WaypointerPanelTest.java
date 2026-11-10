@@ -121,6 +121,38 @@ public class WaypointerPanelTest
         assertTrue(panel.sailingControlsForTest().isVisible());
     }
 
+    @Test
+    public void pinnedWaypointOpensOneEditor()
+    {
+        WaypointStore store = emptyStore();
+        com.waypointer.model.Waypoint w = store.createWaypoint(
+            com.waypointer.model.WorldPointPacker.pack(3164, 3487, 0), "Grand Exchange",
+            store.getUncategorized().getId());
+        store.setWaypointPinned(w.getId(), true);
+        Navigator navigator = mock(Navigator.class);
+        when(navigator.shortestPathOnly()).thenReturn(true);
+        when(navigator.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        WaypointerPanel panel = newPanel(store, baseConfig(), navigator, mock(Client.class),
+            mock(ClientThread.class));
+
+        panel.expandForTest(store.getWaypointById(w.getId()));
+
+        // The waypoint has a row under Pinned and one in its category; only one gets the form.
+        assertEquals(2, count(panel, WaypointRow.class));
+        assertEquals(1, count(panel, InlineEditPanel.class));
+    }
+
+    private static int count(java.awt.Container parent, Class<?> type)
+    {
+        int n = 0;
+        for (java.awt.Component c : parent.getComponents())
+        {
+            if (type.isInstance(c)) n++;
+            if (c instanceof java.awt.Container) n += count((java.awt.Container) c, type);
+        }
+        return n;
+    }
+
     private static WaypointStore emptyStore()
     {
         WaypointStore store = new WaypointStore();

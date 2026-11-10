@@ -73,7 +73,7 @@ public class NearestLandmarkBarTest
     }
 
     @Test
-    public void barHasFourDefaultButtonsPlusOverflow()
+    public void barHasFourDefaultButtons()
     {
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
@@ -83,8 +83,7 @@ public class NearestLandmarkBarTest
         {
             if (c instanceof JButton) buttonCount++;
         }
-        // 4 default-selected type buttons + 1 overflow button.
-        assertEquals(5, buttonCount);
+        assertEquals(4, buttonCount);
     }
 
     @Test
@@ -166,7 +165,7 @@ public class NearestLandmarkBarTest
     }
 
     @Test
-    public void barWithEmptySelection_showsOnlyOverflowButton()
+    public void barWithEmptySelection_showsNoButtons()
     {
         // Stub config to return a valid JSON with empty selection (all unchecked).
         com.google.gson.Gson realGson = new com.google.gson.Gson();
@@ -186,17 +185,30 @@ public class NearestLandmarkBarTest
         {
             if (c instanceof JButton) buttonCount++;
         }
-        assertEquals("expected only the overflow button when nothing is selected", 1, buttonCount);
+        assertEquals(0, buttonCount);
+    }
+
+    @Test
+    public void togglePickerOpensAndClosesIt()
+    {
+        NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
+        Component picker = bar.getComponent(1);
+        assertFalse(picker.isVisible());
+
+        bar.togglePicker();
+        assertTrue(picker.isVisible());
+
+        bar.togglePicker();
+        assertFalse(picker.isVisible());
     }
 
     @Test
     public void iconRowPreferredHeightFitsEveryButtonWhenWrapped()
     {
-        // Select every landmark type so the icon row (one 34 px button per type plus the
-        // overflow toggle) cannot fit on a single row at the panel width. The row must report
-        // a preferred height tall enough for the wrapped rows; otherwise the parent BoxLayout
-        // allocates only one row's worth of height and the wrapped buttons -- including the
-        // overflow toggle -- are clipped out of view and become unclickable.
+        // Select every landmark type so the icon row (one 28 px button per type) cannot fit
+        // on a single row at the panel width. The row must report a preferred height tall
+        // enough for the wrapped rows; otherwise the parent BoxLayout allocates only one
+        // row's worth of height and the wrapped buttons are clipped out of view.
         com.google.gson.Gson realGson = new com.google.gson.Gson();
         LandmarkSelection all = LandmarkSelection.canonicalDefault();
         for (LandmarkType t : LandmarkType.values())
@@ -222,7 +234,7 @@ public class NearestLandmarkBarTest
             buttonCount++;
             maxBottom = Math.max(maxBottom, c.getY() + c.getHeight());
         }
-        assertEquals("expected 11 type buttons + overflow", 12, buttonCount);
+        assertEquals("expected 11 type buttons", 11, buttonCount);
         assertTrue("buttons must have wrapped past one row for this test to be meaningful",
             maxBottom > 34);
         assertTrue("icon row preferred height (" + iconRow.getPreferredSize().height

@@ -32,9 +32,9 @@ import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 
 // Collapsible section: chevron header + body of WaypointRows. Header is a BorderLayout with
-// up to three children: optional 16x16 icon on the left, title label in the center (click
-// target for collapse, drag source for reorder), and a vertical ellipsis menu trigger on
-// the right (rename / delete / set-icon).
+// the title label in the center (click target for collapse, drag source for reorder),
+// an optional 16x16 icon after it, and a vertical ellipsis menu trigger on the right
+// (rename / delete / set-icon).
 public class CategorySection extends CollapsibleSection
 {
     private static final int COLOUR_STRIPE_WIDTH = 3;
@@ -107,13 +107,13 @@ public class CategorySection extends CollapsibleSection
         {
             setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, COLOUR_STRIPE_WIDTH, 0, 0, new Color(accent)),
-                BorderFactory.createEmptyBorder(4, 0, 4, 0)));
+                BorderFactory.createEmptyBorder(0, 0, 2, 0)));
         }
         else
         {
             // Reserve the stripe width even when uncoloured so rows don't shift when a colour
             // is set or cleared.
-            setBorder(BorderFactory.createEmptyBorder(4, COLOUR_STRIPE_WIDTH, 4, 0));
+            setBorder(BorderFactory.createEmptyBorder(0, COLOUR_STRIPE_WIDTH, 2, 0));
         }
 
         JPanel headerRow = buildHeaderRow(waypoints.size());
@@ -126,14 +126,15 @@ public class CategorySection extends CollapsibleSection
             DropIndicators.apply(headerRow, mode, restingHeaderBorder, restingHeaderBg);
         if (dnd != null) dnd.attachCategoryHeader(headerLabel, headerIndicator, category.getId(), this, headerRow);
 
-        // Optional icon on the LEFT of the header row.
+        // Optional icon beside the category name.
         if (!selectMode && category.getIconId() != null && spriteManager != null)
         {
             JLabel iconLabel = new JLabel();
             iconLabel.setPreferredSize(new Dimension(16, 16));
             iconLabel.setOpaque(false);
             SpriteIcons.apply(iconLabel, category.getIconId(), spriteManager);
-            headerRow.add(iconLabel, BorderLayout.WEST);
+            // After the name, so every category name starts in the same column.
+            ((JPanel) headerLabel.getParent()).add(iconLabel, 1);
         }
 
         // Select-mode tri-state checkbox at the header's left edge. Clicking it selects or
@@ -201,9 +202,9 @@ public class CategorySection extends CollapsibleSection
             headerLabel.setComponentPopupMenu(menu);
 
             JLabel menuTrigger = new JLabel("⋮"); // U+22EE vertical ellipsis
-            menuTrigger.setForeground(Color.LIGHT_GRAY);
+            menuTrigger.setForeground(Styles.MUTED_TEXT);
             menuTrigger.setFont(menuTrigger.getFont().deriveFont(Font.BOLD));
-            menuTrigger.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 6));
+            menuTrigger.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 6));
             menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             menuTrigger.getAccessibleContext().setAccessibleName("Category options");
             HoverHint.shared().attach(menuTrigger, () -> "Category options");

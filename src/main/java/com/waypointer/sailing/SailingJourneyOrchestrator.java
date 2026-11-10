@@ -108,7 +108,7 @@ public class SailingJourneyOrchestrator
             String pinned = pin.name();
             if (pinned != null && !pinned.isEmpty() && !pinned.equals(chosen.name))
             {
-                feedback.show("Your pinned boat changed - re-pick it in the panel.", true);
+                feedback.show("Your pinned boat changed - re-pick it in the panel menu.", true);
                 reset(true);
                 return;
             }

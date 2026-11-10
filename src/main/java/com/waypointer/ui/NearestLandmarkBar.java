@@ -38,13 +38,13 @@ import net.runelite.client.ui.PluginPanel;
 /**
  * Row of clickable landmark icons in the panel header. Each button pathfinds to the nearest
  * landmark of its type from the player's current tile. The user-selected subset and order
- * is controlled by {@link LandmarkSelection}; the trailing {@code ⋮} button toggles the
- * inline {@link ConfigureLandmarksPanel} picker.
+ * is controlled by {@link LandmarkSelection}; the panel menu's "Customise landmark bar"
+ * entry toggles the inline {@link ConfigureLandmarksPanel} picker.
  */
 @Singleton
 public final class NearestLandmarkBar extends JPanel
 {
-    private static final int BUTTON_SIZE = 34;
+    private static final int BUTTON_SIZE = 28;
     // Cap icon dimension so MINIMAP_BOAT_SLOOP and other oversized sprites match the
     // MAP_ICON_* set, which tops out around 16x16. Smaller sprites render unscaled.
     private static final int MAX_ICON_PX = 18;
@@ -65,7 +65,6 @@ public final class NearestLandmarkBar extends JPanel
     private final ConfigureLandmarksPanel picker;
     private final JPanel iconRow;
     private final Map<LandmarkType, JButton> primaryButtons = new EnumMap<>(LandmarkType.class);
-    private JButton overflowBtn;
     private boolean loggedIn;
     private Toasts toasts = Toasts.NO_OP;
     // Fires when dev-mode landmark overrides reload BboxIndex; rebuilds the row so button
@@ -106,9 +105,8 @@ public final class NearestLandmarkBar extends JPanel
         setAlignmentX(LEFT_ALIGNMENT);
 
         // WrapLayout (not stock FlowLayout) so the row reports a tall-enough preferred height
-        // when the selected icons plus the overflow toggle spill onto a second row. With plain
-        // FlowLayout the parent BoxLayout sizes the row for one row only and clips the wrapped
-        // buttons -- including the overflow toggle, leaving the picker with no close affordance.
+        // when the selected icons spill onto a second row. With plain FlowLayout the parent
+        // BoxLayout sizes the row for one row only and clips the wrapped buttons.
         iconRow = new JPanel(new WrapLayout(FlowLayout.CENTER, 2, 0));
         iconRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
         iconRow.setAlignmentX(LEFT_ALIGNMENT);
@@ -162,23 +160,20 @@ public final class NearestLandmarkBar extends JPanel
             HoverHint.shared().attach(b, () -> type.displayName());
         }
 
-        overflowBtn = makeButton();
-        overflowBtn.setText("⋮"); // U+22EE vertical ellipsis
-        overflowBtn.getAccessibleContext().setAccessibleName("Customise landmark bar");
-        overflowBtn.addActionListener(e -> {
-            picker.setVisible(!picker.isVisible());
-            revalidate();
-            repaint();
-        });
-        iconRow.add(overflowBtn);
-        HoverHint.shared().attach(overflowBtn, () -> "Customise");
-
         applyEnabledState();
         iconRow.revalidate();
         iconRow.repaint();
     }
 
-    // Closes the inline picker (the X in its header, or the overflow toggle).
+    /** Opens or closes the inline picker. Called from the panel menu. */
+    void togglePicker()
+    {
+        picker.setVisible(!picker.isVisible());
+        revalidate();
+        repaint();
+    }
+
+    // Closes the inline picker (the X in its header).
     private void hidePicker()
     {
         picker.setVisible(false);
@@ -228,6 +223,7 @@ public final class NearestLandmarkBar extends JPanel
         b.setPreferredSize(d);
         b.setMinimumSize(d);
         b.setMaximumSize(d);
+        b.setBorder(BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1));
         return b;
     }
 
@@ -237,8 +233,6 @@ public final class NearestLandmarkBar extends JPanel
         // which is the only visible signal we need. Tooltips were replaced by the
         // immediate hover hint in rebuildBar.
         for (JButton b : primaryButtons.values()) b.setEnabled(loggedIn);
-        // The customize button stays enabled regardless of login state.
-        if (overflowBtn != null) overflowBtn.setEnabled(true);
     }
 
     public void setLoggedIn(boolean loggedIn)

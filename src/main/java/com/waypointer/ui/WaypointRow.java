@@ -7,7 +7,6 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
@@ -24,7 +23,7 @@ import net.runelite.client.ui.ColorScheme;
 /**
  * A single waypoint row, rendered as a clickable card. Click body -> expand inline edit.
  * Drag handle on the left initiates drag (not part of click hit region). Icon-only Play
- * button on the right (dark at rest, brand orange on hover or when this row is the active
+ * button on the right (grey at rest, brand orange on hover or when this row is the active
  * path target). Custom sprite icons (when set) attach to the name label so icon + text
  * share JLabel's built-in vertical centering and align with the Play button.
  *
@@ -91,8 +90,8 @@ public class WaypointRow extends JPanel implements DropIndicatable
     private WaypointRow(Spec s)
     {
         this.waypoint = s.waypoint;
-        setLayout(new BorderLayout(8, 0));
-        setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        setLayout(new BorderLayout(4, 0));
+        setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 4));
         setOpaque(true);
 
         // Body click: in select mode toggle selection (shift = range); otherwise expand inline.
@@ -166,9 +165,9 @@ public class WaypointRow extends JPanel implements DropIndicatable
         else if (!s.dragDisabled)
         {
             dragHandle = new JLabel("⠿"); // braille pattern dots-123456
-            dragHandle.setForeground(new Color(120, 120, 120));
+            dragHandle.setForeground(Styles.FAINT_TEXT);
             dragHandle.setOpaque(false);
-            dragHandle.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 6));
+            dragHandle.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 2));
             dragHandle.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
             dragHandle.getAccessibleContext().setAccessibleName("Reorder waypoint");
             HoverHint.shared().attach(dragHandle, () -> "Drag to reorder");
@@ -195,7 +194,6 @@ public class WaypointRow extends JPanel implements DropIndicatable
         JLabel name = new JLabel(displayName);
         name.setToolTipText(buildHoverTooltip(s.waypoint, s.originCategoryName));
         name.setForeground(s.isWilderness ? new Color(220, 130, 130) : Color.WHITE);
-        name.setFont(name.getFont().deriveFont(Font.BOLD));
         name.getAccessibleContext().setAccessibleName(
             accessibleName(s.waypoint.getName(), s.isWilderness, s.isPinned));
         if (s.waypoint.getIconId() != null && s.spriteManager != null)

@@ -133,10 +133,11 @@ How `Play` behaves depends on where the waypoint is and where you are:
 A waypoint counts as at sea when it is on the open sea, or on a blocked tile such as a wreck
 that is mostly surrounded by it. Inland lakes and rivers do not count.
 
-When sailing is on and Chart Plotter is running, the panel shows an **Always use a specific
-boat** box and a list of your moored boats. Leave it unticked and Waypointer uses the boat
-whose dock is nearest the waypoint. Tick it to pin one boat. If that boat is no longer moored, or the boats have been
-reshuffled, you get a message and have to pick again.
+When sailing is on and Chart Plotter is running, the panel's `⋮` menu has a **Boat for sea
+trips** entry listing your moored boats. Leave it on **Nearest to the waypoint** and
+Waypointer uses the boat whose dock is nearest. Pick a boat to always use that one. If that
+boat is no longer moored, or the boats have been reshuffled, you get a message and have to
+pick again.
 
 Turn the feature off with **Sail to ocean waypoints** in [Settings](#settings). Every
 waypoint then goes to Shortest Path.
@@ -145,8 +146,8 @@ waypoint then goes to Shortest Path.
 
 Across the top of the panel is a row of landmark buttons: bank, altar, anvil, and the like.
 Click one and Waypointer paths to the nearest landmark of that type from wherever you are
-standing, no saved waypoint needed. The `⋮` button on the bar lets you choose which landmark
-types show and in what order. Hide the whole bar from [Settings](#settings) if you would
+standing, no saved waypoint needed. **Customise landmark bar** in the panel's `⋮` menu lets
+you choose which landmark types show and in what order. Hide the whole bar from [Settings](#settings) if you would
 rather not have it.
 
 ## Routes

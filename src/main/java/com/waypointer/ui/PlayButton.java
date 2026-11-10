@@ -9,7 +9,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import net.runelite.client.ui.ColorScheme;
 
-/** Per-row Play button styling: dark at rest, brand-orange on hover, locked orange when active. */
+/** Per-row Play button styling: a grey glyph at rest, orange on hover, filled orange when active. */
 final class PlayButton
 {
     private PlayButton() {}
@@ -30,13 +30,13 @@ final class PlayButton
 
         // U+25A0 is metrically smaller than the triangle at a given size, so the stop square gets
         // a larger point size to match the play arrow's visual weight.
-        b.setFont(b.getFont().deriveFont(Font.BOLD, active ? 20f : 14f));
-        Dimension size = new Dimension(36, 32);
+        b.setFont(b.getFont().deriveFont(Font.BOLD, active ? 16f : 11f));
+        Dimension size = new Dimension(26, 22);
         b.setPreferredSize(size);
         b.setMinimumSize(size);
         b.setFocusPainted(false);
-        b.setOpaque(true);
-        b.setBorderPainted(true);
+        b.setBorderPainted(false);
+        b.setMargin(new java.awt.Insets(0, 0, 0, 0));
 
         applyResting(b, active);
 
@@ -63,30 +63,24 @@ final class PlayButton
 
     private static void applyResting(JButton b, boolean active)
     {
+        b.setBorder(BorderFactory.createEmptyBorder());
+        // Orange is kept for the row being pathed to; a resting row shows a plain grey glyph.
+        b.setContentAreaFilled(active);
+        b.setOpaque(active);
         if (active)
         {
             b.setBackground(ColorScheme.BRAND_ORANGE);
             b.setForeground(Color.BLACK);
-            b.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ColorScheme.BRAND_ORANGE.darker(), 1),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         }
         else
         {
             b.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-            b.setForeground(ColorScheme.BRAND_ORANGE);
-            b.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
+            b.setForeground(Styles.MUTED_TEXT);
         }
     }
 
     private static void applyHover(JButton b)
     {
-        b.setBackground(ColorScheme.BRAND_ORANGE);
-        b.setForeground(Color.BLACK);
-        b.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.BRAND_ORANGE.darker(), 1),
-            BorderFactory.createEmptyBorder(4, 8, 4, 8)));
+        b.setForeground(ColorScheme.BRAND_ORANGE);
     }
 }

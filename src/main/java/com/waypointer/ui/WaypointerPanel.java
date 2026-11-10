@@ -89,6 +89,9 @@ public class WaypointerPanel extends PluginPanel
     private final JButton markBtn = new JButton("Mark current location");
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
+    // Waypoints whose editor is already on screen in this rebuild. A pinned waypoint has two
+    // rows (Pinned and its own category); only the first one gets the editor.
+    private final Set<UUID> editorsShown = new HashSet<>();
 
     // Sentinel UUID used as the key into collapsedByCategory for the synthetic Pinned section.
     // Real categories use UUID.randomUUID(); collision probability is 1 in 2^122.
@@ -146,6 +149,7 @@ public class WaypointerPanel extends PluginPanel
         header.setBackground(ColorScheme.DARK_GRAY_COLOR);
         markBtn.addActionListener(e -> onMarkClicked());
         Styles.primaryButton(markBtn);
+        Styles.slim(markBtn);
 
         JPanel markRow = new JPanel(new BorderLayout(4, 0));
         markRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -154,6 +158,7 @@ public class WaypointerPanel extends PluginPanel
         overflowBtn.getAccessibleContext().setAccessibleName("More options");
         HoverHint.shared().attach(overflowBtn, () -> "More");
         Styles.secondaryButton(overflowBtn);
+        Styles.slim(overflowBtn);
         Dimension overflowSize = new Dimension(30, markBtn.getPreferredSize().height);
         overflowBtn.setPreferredSize(overflowSize);
         overflowBtn.setMinimumSize(overflowSize);
@@ -168,15 +173,13 @@ public class WaypointerPanel extends PluginPanel
         JPanel topStack = new JPanel();
         topStack.setLayout(new BoxLayout(topStack, BoxLayout.Y_AXIS));
         topStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        topStack.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        topStack.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
         topStack.setAlignmentX(LEFT_ALIGNMENT);
         header.setAlignmentX(LEFT_ALIGNMENT);
         topStack.add(header);
         nearestLandmarkBar.setAlignmentX(LEFT_ALIGNMENT);
         nearestLandmarkBar.setVisible(config.showNearestLandmarkBar());
         topStack.add(nearestLandmarkBar);
-        sailingControls.setAlignmentX(LEFT_ALIGNMENT);
-        topStack.add(sailingControls);
         JComponent searchBar = buildSearchBar();
         searchBar.setAlignmentX(LEFT_ALIGNMENT);
         topStack.add(searchBar);
@@ -337,7 +340,22 @@ public class WaypointerPanel extends PluginPanel
 
     InlineInputForm coordinatesFormForTest() { return coordinatesForm; }
     CaptureForm captureFormForTest() { return captureForm; }
+    void expandForTest(Waypoint w) { expandedWaypoints.add(w.getId()); rebuild(); }
     SailingControls sailingControlsForTest() { return sailingControls; }
+
+    /** The boat submenu for the panel menu, or null when sea trips cannot run. */
+    javax.swing.JMenu boatMenu()
+    {
+        return sailingControls.isVisible() ? sailingControls.buildMenu() : null;
+    }
+
+    /** Opens or closes the landmark bar's picker. */
+    void toggleLandmarkPicker()
+    {
+        nearestLandmarkBar.togglePicker();
+    }
+
+    boolean landmarkBarShown() { return nearestLandmarkBar.isVisible(); }
 
     /**
      * Show the inline capture form for an externally-supplied tile (right-click capture). Used by
@@ -368,7 +386,7 @@ public class WaypointerPanel extends PluginPanel
     {
         JPanel container = new JPanel(new BorderLayout(0, 0));
         container.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        container.setBorder(BorderFactory.createEmptyBorder(8, 0, 0, 0));
+        container.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
 
         searchField.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         searchField.setForeground(Color.WHITE);
@@ -488,7 +506,7 @@ public class WaypointerPanel extends PluginPanel
         }
     }
 
-    /** Chart Plotter starting or stopping shows or hides the boat picker. */
+    /** Chart Plotter starting or stopping adds or removes the boat choice. */
     @Subscribe
     public void onPluginChanged(PluginChanged e)
     {
@@ -542,13 +560,14 @@ public class WaypointerPanel extends PluginPanel
     public void rebuild()
     {
         body.removeAll();
+        editorsShown.clear();
         String loweredFilter = currentFilter.toLowerCase(Locale.ROOT);
         boolean isFiltering = !loweredFilter.isEmpty();
         List<UUID> visibleIds = new ArrayList<>();
 
         addBanners();
-        // The boat picker only matters when sea targets can be routed: sailing on and Chart
-        // Plotter running.
+        // The boat choice only matters when sea targets can be routed: sailing on and Chart
+        // Plotter running. It is offered from the panel menu.
         boolean sailing = !navigator.shortestPathOnly();
         sailingControls.setVisible(sailing);
         if (sailing) sailingControls.refresh();
@@ -777,6 +796,7 @@ public class WaypointerPanel extends PluginPanel
     private Component inlineProviderFor(Waypoint w)
     {
         if (!expandedWaypoints.contains(w.getId())) return null;
+        if (!editorsShown.add(w.getId())) return null;
         return new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
             () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
             () -> focusWorldMap(w.getPackedWorldPoint()));
