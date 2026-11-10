@@ -86,17 +86,16 @@ public class WaypointerPanel extends PluginPanel
     private final JPanel body = new JPanel();
     private final JScrollBar bodyScrollBar;
     private final ToastOverlay toastOverlay;
-    private final JButton markBtn = new JButton("Mark current location");
+    private final JButton markBtn = Styles.roundButton("Mark spot", true);
+    private final JLabel nearestCaption = Styles.caption("Nearest");
+    // Pinned waypoints whose editor was opened from their tile, so it shows under the tiles
+    // and not under the row in their category.
+    private final Set<UUID> pinnedEditors = new HashSet<>();
     private final Map<UUID, Boolean> collapsedByCategory;
     private final Set<UUID> expandedWaypoints = new HashSet<>();
     // Waypoints whose editor is already on screen in this rebuild. A pinned waypoint has two
     // rows (Pinned and its own category); only the first one gets the editor.
     private final Set<UUID> editorsShown = new HashSet<>();
-
-    // Sentinel UUID used as the key into collapsedByCategory for the synthetic Pinned section.
-    // Real categories use UUID.randomUUID(); collision probability is 1 in 2^122.
-    private static final UUID PINNED_COLLAPSE_KEY =
-        UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final ClearableTextField searchField = new ClearableTextField("Search waypoints...");
     private String currentFilter = "";
@@ -143,52 +142,48 @@ public class WaypointerPanel extends PluginPanel
         this.navigator = navigator;
         this.sailingControls = new SailingControls(sailingBoats, sailingBoatPin, client, clientThread);
 
-        // Build the panel header: Mark current location with the overflow trigger pinned
-        // to its right, then the nearest-landmark bar, then the search bar.
-        JPanel header = new JPanel(new DynamicGridLayout(0, 1, 0, 4));
-        header.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        // Header: the search field with the panel menu beside it, then the nearest-landmark
+        // tiles. Marking a spot is the floating button over the list (see below).
+        markBtn.setIcon(Glyphs.of(Glyphs.Shape.PLUS, Color.BLACK));
+        markBtn.setIconTextGap(6);
+        markBtn.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 14));
+        markBtn.putClientProperty(Styles.CP_ARC, 34);
+        markBtn.getAccessibleContext().setAccessibleName("Mark current location");
+        HoverHint.shared().attach(markBtn, () -> "Save where you are standing");
         markBtn.addActionListener(e -> onMarkClicked());
-        Styles.primaryButton(markBtn);
-        Styles.slim(markBtn);
 
-        JPanel markRow = new JPanel(new BorderLayout(4, 0));
-        markRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        markRow.add(markBtn, BorderLayout.CENTER);
-        JButton overflowBtn = new JButton("⋮"); // U+22EE vertical ellipsis
+        JButton overflowBtn = Styles.roundButton("", false);
+        overflowBtn.setIcon(Glyphs.of(Glyphs.Shape.MENU, Styles.MUTED_TEXT));
+        overflowBtn.setBackground(Styles.CARD_BG);
+        overflowBtn.setBorder(BorderFactory.createEmptyBorder(6, 5, 6, 5));
         overflowBtn.getAccessibleContext().setAccessibleName("More options");
         HoverHint.shared().attach(overflowBtn, () -> "More");
-        Styles.secondaryButton(overflowBtn);
-        Styles.slim(overflowBtn);
-        Dimension overflowSize = new Dimension(30, markBtn.getPreferredSize().height);
-        overflowBtn.setPreferredSize(overflowSize);
-        overflowBtn.setMinimumSize(overflowSize);
-        overflowBtn.setMaximumSize(overflowSize);
-        markRow.add(overflowBtn, BorderLayout.EAST);
-        header.add(markRow);
 
-        // Stack header + search bar in NORTH so the search field sits between
-        // the action buttons and the body category list. The 8-px horizontal inset on
-        // topStack replaces the panel-level border (removed below so the body can reach
-        // the full PANEL_WIDTH after the scrollbar).
+        JPanel searchRow = new JPanel(new BorderLayout(4, 0));
+        searchRow.setOpaque(false);
+        searchRow.setAlignmentX(LEFT_ALIGNMENT);
+        searchRow.add(buildSearchBar(), BorderLayout.CENTER);
+        searchRow.add(overflowBtn, BorderLayout.EAST);
+
         JPanel topStack = new JPanel();
         topStack.setLayout(new BoxLayout(topStack, BoxLayout.Y_AXIS));
         topStack.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        topStack.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        topStack.setBorder(BorderFactory.createEmptyBorder(
+            Styles.CARD_GAP, Styles.SIDE_PAD, Styles.CARD_GAP, Styles.SIDE_PAD));
         topStack.setAlignmentX(LEFT_ALIGNMENT);
-        header.setAlignmentX(LEFT_ALIGNMENT);
-        topStack.add(header);
+        topStack.add(searchRow);
+        nearestCaption.setBorder(BorderFactory.createEmptyBorder(6, 2, 3, 0));
+        topStack.add(nearestCaption);
         nearestLandmarkBar.setAlignmentX(LEFT_ALIGNMENT);
-        nearestLandmarkBar.setVisible(config.showNearestLandmarkBar());
         topStack.add(nearestLandmarkBar);
-        JComponent searchBar = buildSearchBar();
-        searchBar.setAlignmentX(LEFT_ALIGNMENT);
-        topStack.add(searchBar);
+        setLandmarkBarVisible(config.showNearestLandmarkBar());
 
         // BoxLayout(Y_AXIS) so children stack at their preferred heights. DynamicGridLayout
         // gave each row equal height, leaving large gaps inside sections in a tall sidebar.
         // A trailing vertical glue (added in rebuild()) absorbs leftover space.
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        body.setBorder(BorderFactory.createEmptyBorder(0, Styles.SIDE_PAD, 0, Styles.SIDE_PAD - 2));
 
         // Body lives inside a vertical scroll pane so an expanded category list cannot push
         // the panel's preferred height up to ClientUI. (Without it, PluginPanel passes the
@@ -215,6 +210,8 @@ public class WaypointerPanel extends PluginPanel
         JScrollPane bodyScroll = Styles.pinnedScrollPane(bodyHolder);
         this.bodyScrollBar = bodyScroll.getVerticalScrollBar();
         this.toastOverlay = new ToastOverlay(bodyScroll);
+        // The Mark button floats over the list's bottom-right corner, clear of the scrollbar.
+        toastOverlay.setFloating(markBtn, Styles.SIDE_PAD + 4);
         nearestLandmarkBar.setToasts(toastOverlay);
         // Journey feedback comes from the client thread; toasts belong on the EDT.
         sailingOrchestrator.setFeedback((msg, warning) -> SwingUtilities.invokeLater(() ->
@@ -223,6 +220,7 @@ public class WaypointerPanel extends PluginPanel
 
         this.captureForm = new CaptureForm(store, capture);
         captureForm.setAlignmentX(LEFT_ALIGNMENT);
+        captureForm.setOnShownChange(shown -> updateMarkButton());
 
         JPanel northStack = new JPanel();
         northStack.setLayout(new BoxLayout(northStack, BoxLayout.Y_AXIS));
@@ -340,8 +338,9 @@ public class WaypointerPanel extends PluginPanel
 
     InlineInputForm coordinatesFormForTest() { return coordinatesForm; }
     CaptureForm captureFormForTest() { return captureForm; }
-    void expandForTest(Waypoint w) { expandedWaypoints.add(w.getId()); rebuild(); }
+    void expandForTest(Waypoint w) { if (w != null) expandedWaypoints.add(w.getId()); rebuild(); }
     SailingControls sailingControlsForTest() { return sailingControls; }
+    JButton markButtonForTest() { return markBtn; }
 
     /** The boat submenu for the panel menu, or null when sea trips cannot run. */
     javax.swing.JMenu boatMenu()
@@ -356,6 +355,20 @@ public class WaypointerPanel extends PluginPanel
     }
 
     boolean landmarkBarShown() { return nearestLandmarkBar.isVisible(); }
+
+    void enterSelectMode() { bulkSelect.enterSelectMode(); }
+
+    // The Mark button steps aside while the form it opens is showing and during bulk select.
+    private void updateMarkButton()
+    {
+        markBtn.setVisible(!captureForm.isVisible() && (bulkSelect == null || !bulkSelect.isSelectMode()));
+    }
+
+    private void setLandmarkBarVisible(boolean visible)
+    {
+        nearestCaption.setVisible(visible);
+        nearestLandmarkBar.setVisible(visible);
+    }
 
     /**
      * Show the inline capture form for an externally-supplied tile (right-click capture). Used by
@@ -384,18 +397,17 @@ public class WaypointerPanel extends PluginPanel
 
     private JComponent buildSearchBar()
     {
-        JPanel container = new JPanel(new BorderLayout(0, 0));
-        container.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        container.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
+        CardPanel container = new CardPanel(new BorderLayout(4, 0));
+        container.setOutline(new Color(70, 70, 70));
+        container.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+        container.add(new JLabel(Glyphs.of(Glyphs.Shape.SEARCH, Styles.FAINT_TEXT)), BorderLayout.WEST);
 
-        searchField.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        searchField.setOpaque(false);
         searchField.setForeground(Color.WHITE);
         searchField.setCaretColor(Color.WHITE);
         // Right inset is widened to make room for the field's own clear-glyph paint.
         // ClearableTextField derives its hit zone from getInsets(), so the two stay in sync.
-        searchField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR, 1),
-            BorderFactory.createEmptyBorder(4, 6, 4, 22)));
+        searchField.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 22));
         HoverHint.shared().attach(searchField, () -> "Search waypoints");
         searchField.getAccessibleContext().setAccessibleName("Search waypoints");
         // One reusable debounce timer; restarted per keystroke rather than reallocated. Reads the
@@ -464,9 +476,9 @@ public class WaypointerPanel extends PluginPanel
     {
         for (Component child : parent.getComponents())
         {
-            if (child instanceof WaypointRow)
+            if (child instanceof PathTarget)
             {
-                WaypointRow row = (WaypointRow) child;
+                PathTarget row = (PathTarget) child;
                 row.setActive(row.getPackedWorldPoint() == target
                     && target != WorldPointPacker.UNDEFINED);
             }
@@ -493,7 +505,7 @@ public class WaypointerPanel extends PluginPanel
         if ("showNearestLandmarkBar".equals(e.getKey()))
         {
             SwingUtilities.invokeLater(() -> {
-                nearestLandmarkBar.setVisible(config.showNearestLandmarkBar());
+                setLandmarkBarVisible(config.showNearestLandmarkBar());
                 revalidate();
                 repaint();
             });
@@ -514,7 +526,7 @@ public class WaypointerPanel extends PluginPanel
     }
 
     /**
-     * Flips every collapsible body section (Pinned + real categories) to {@code expanded},
+     * Flips every category card to {@code expanded},
      * persists the new collapse map, and rebuilds. Powers the overflow menu's
      * Expand all / Collapse all toggle.
      */
@@ -524,7 +536,6 @@ public class WaypointerPanel extends PluginPanel
         {
             collapsedByCategory.put(c.getId(), !expanded);
         }
-        collapsedByCategory.put(PINNED_COLLAPSE_KEY, !expanded);
         config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
         scheduleRebuild();
     }
@@ -538,11 +549,6 @@ public class WaypointerPanel extends PluginPanel
     {
         int collapsed = 0;
         int total = 0;
-        if (!store.getPinnedWaypoints(config.newestPinAtTop()).isEmpty())
-        {
-            total++;
-            if (collapsedByCategory.getOrDefault(PINNED_COLLAPSE_KEY, false)) collapsed++;
-        }
         for (Category c : store.getCategoriesOrdered())
         {
             if (c.isUncategorized() && store.getWaypointsInCategory(c.getId()).isEmpty()) continue;
@@ -561,6 +567,7 @@ public class WaypointerPanel extends PluginPanel
     {
         body.removeAll();
         editorsShown.clear();
+        updateMarkButton();
         String loweredFilter = currentFilter.toLowerCase(Locale.ROOT);
         boolean isFiltering = !loweredFilter.isEmpty();
         List<UUID> visibleIds = new ArrayList<>();
@@ -595,10 +602,12 @@ public class WaypointerPanel extends PluginPanel
         if (!pathfinder.isAvailable() && !config.shortestPathBannerDismissed())
         {
             body.add(PanelBanners.shortestPathMissing(config, this::scheduleRebuild));
+            body.add(Styles.gap(Styles.CARD_GAP));
         }
         if (persistence.isRefusingSaves())
         {
             body.add(PanelBanners.loadFailedReset(persistence, store, this));
+            body.add(Styles.gap(Styles.CARD_GAP));
         }
     }
 
@@ -626,23 +635,14 @@ public class WaypointerPanel extends PluginPanel
                 }
             }
         }
-        if (!visiblePinned.isEmpty())
+        if (!visiblePinned.isEmpty() && !bulkSelect.isSelectMode())
         {
-            boolean pinnedCollapsed = isFiltering ? false
-                : collapsedByCategory.getOrDefault(PINNED_COLLAPSE_KEY, false);
-            PinnedSection pinnedSec = new PinnedSection(
+            body.add(new PinnedSection(
                 visiblePinned,
                 navigator.activeTarget(),
-                pinnedCollapsed,
-                isCollapsed -> {
-                    collapsedByCategory.put(PINNED_COLLAPSE_KEY, isCollapsed);
-                    config.setCategoryCollapsedJson(collapseCodec.encode(collapsedByCategory));
-                },
                 this::handleRowAction,
-                this::inlineProviderFor,
-                spriteManager,
-                w -> store.getCategoryById(w.getCategoryId()));
-            body.add(pinnedSec);
+                w -> pinnedEditors.contains(w.getId()) ? inlineProviderFor(w) : null,
+                spriteManager));
             return true;
         }
         return false;
@@ -705,7 +705,7 @@ public class WaypointerPanel extends PluginPanel
                     .onRowSelectClick(bulkSelect::onRowSelectClicked)
                     .onHeaderSelectToggle(bulkSelect::onHeaderSelectToggle)
                     .build();
-                if (prevWasSection) body.add(buildSectionDivider());
+                if (prevWasSection) body.add(Styles.gap(Styles.CARD_GAP));
                 body.add(section);
                 result.rendered = true;
                 result.shownCategoryCount++;
@@ -726,11 +726,10 @@ public class WaypointerPanel extends PluginPanel
 
     private void addFooter(boolean filtering, int shownWaypoints, CategoryRender cat)
     {
-        // Push remaining vertical space to the bottom so sections stack tight at the top.
+        // Push remaining vertical space to the bottom so cards stack tight at the top. The
+        // footer (#23) sits below the glue: pinned to the viewport bottom on a short list,
+        // scrolled in after the last card on a long one.
         body.add(Box.createVerticalGlue());
-        // Footer (#23) sits below the glue: pinned to the viewport bottom on a short list,
-        // scrolls in after the last section on a long one. Divider separates it from the list.
-        body.add(buildSectionDivider());
         if (filtering)
         {
             footer.refreshFiltered(shownWaypoints, cat.totalWaypoints, cat.shownCategoryCount);
@@ -740,6 +739,8 @@ public class WaypointerPanel extends PluginPanel
             footer.refresh(cat.totalWaypoints, cat.nonEmptyCategoryCount);
         }
         body.add(footer);
+        // Room to scroll the last row clear of the floating Mark button.
+        body.add(Styles.gap(markBtn.getPreferredSize().height + 6));
     }
 
     private List<Waypoint> filterWaypoints(Category c, List<Waypoint> all, String loweredFilter)
@@ -757,37 +758,21 @@ public class WaypointerPanel extends PluginPanel
     private void renderEmpty()
     {
         JPanel wrap = Styles.cappedHeightPanel(new BorderLayout());
-        wrap.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        wrap.setOpaque(false);
         wrap.setAlignmentX(Component.LEFT_ALIGNMENT);
+        wrap.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createDashedBorder(Styles.FAINT_TEXT, 4f, 4f),
+            BorderFactory.createEmptyBorder(18, 10, 18, 10)));
 
-        // Faint up-arrow (#24) at the top of the body, aimed up past the search bar at the orange
-        // Mark button. Only painted here, so it vanishes the moment the first waypoint exists.
-        JLabel arrow = new JLabel("↑", SwingConstants.CENTER);
-        arrow.setForeground(Styles.FAINT_TEXT);
-        arrow.setFont(arrow.getFont().deriveFont(28f));
-        arrow.setBorder(BorderFactory.createEmptyBorder(12, 0, 0, 0));
-        wrap.add(arrow, BorderLayout.NORTH);
-
-        JLabel empty = new JLabel("<html><div style='text-align:center;padding:8px 12px 8px;"
-            + "color:" + Styles.MUTED_HEX + ";'>No waypoints yet.<br>Use 'Mark current location' above to "
-            + "save one, or open 'Presets' for premade waypoints.</div></html>", SwingConstants.CENTER);
-        empty.setForeground(Color.LIGHT_GRAY);
+        JLabel empty = new JLabel("<html><div style='text-align:center;'>"
+            + "<b>No waypoints yet</b><br><br>"
+            + "<span style='color:" + Styles.MUTED_HEX + ";'>Stand somewhere you want to come back to "
+            + "and press Mark spot, or open Presets for premade waypoints.</span></div></html>",
+            SwingConstants.CENTER);
+        empty.setForeground(Color.WHITE);
         wrap.add(empty, BorderLayout.CENTER);
 
         body.add(wrap);
-    }
-
-    // 1-px DARKER_GRAY divider between adjacent section blocks. Pinned by both max and
-    // preferred size so BoxLayout(Y_AXIS) doesn't stretch it vertically.
-    private static JComponent buildSectionDivider()
-    {
-        JPanel divider = new JPanel();
-        divider.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        divider.setOpaque(true);
-        divider.setPreferredSize(new Dimension(0, 1));
-        divider.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        divider.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return divider;
     }
 
     // Shared inline-edit provider used by Pinned and real-category sections.
@@ -798,7 +783,7 @@ public class WaypointerPanel extends PluginPanel
         if (!expandedWaypoints.contains(w.getId())) return null;
         if (!editorsShown.add(w.getId())) return null;
         return new InlineEditPanel(w, store, capture, spriteManager, iconCatalog, toastOverlay,
-            () -> { expandedWaypoints.remove(w.getId()); scheduleRebuild(); },
+            () -> { expandedWaypoints.remove(w.getId()); pinnedEditors.remove(w.getId()); scheduleRebuild(); },
             () -> focusWorldMap(w.getPackedWorldPoint()));
     }
 
@@ -837,7 +822,14 @@ public class WaypointerPanel extends PluginPanel
                 softDeleteWithUndo(store, w, toastOverlay);
                 break;
             case EXPAND:
+                pinnedEditors.remove(w.getId());
                 if (!expandedWaypoints.add(w.getId())) expandedWaypoints.remove(w.getId());
+                scheduleRebuild();
+                break;
+            case EXPAND_PINNED:
+                // From a pinned tile: the editor opens under the tiles, or closes if it is there.
+                if (pinnedEditors.remove(w.getId())) expandedWaypoints.remove(w.getId());
+                else { pinnedEditors.add(w.getId()); expandedWaypoints.add(w.getId()); }
                 scheduleRebuild();
                 break;
             case TOGGLE_PIN:

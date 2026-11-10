@@ -29,6 +29,10 @@ abstract class CollapsibleSection extends JPanel
 {
     protected final JPanel body = new JPanel();
     protected JLabel headerLabel;
+    // The flow of title, count and any extras; and the right-hand cluster ending in the chevron.
+    protected JPanel headerCenter;
+    protected JPanel headerEast;
+    private JLabel chevron;
     protected boolean collapsed;
     private final Consumer<Boolean> onCollapseChange;
 
@@ -37,13 +41,15 @@ abstract class CollapsibleSection extends JPanel
         this.collapsed = collapsed;
         this.onCollapseChange = onCollapseChange;
         setLayout(new BorderLayout());
+        setOpaque(false);
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         // BoxLayout in the parent horizontal-stretches us to the column width but must not
         // centre us. Pin to the left edge.
         setAlignmentX(LEFT_ALIGNMENT);
 
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        body.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        body.setOpaque(false);
+        body.setBorder(BorderFactory.createEmptyBorder(0, 0, 2, 0));
         body.setAlignmentX(LEFT_ALIGNMENT);
     }
 
@@ -54,9 +60,17 @@ abstract class CollapsibleSection extends JPanel
     // it depends on must be set before calling this).
     protected JPanel buildHeaderRow(int count)
     {
-        JPanel headerRow = new JPanel(new BorderLayout(4, 0));
-        headerRow.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        headerRow.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+        // Paints a rounded tint when a drag hovers it; otherwise the card shows through.
+        JPanel headerRow = new JPanel(new BorderLayout(4, 0))
+        {
+            @Override protected void paintComponent(java.awt.Graphics g)
+            {
+                if (!getBackground().equals(Styles.CARD_BG)) CardPanel.paintCard(g, this, Styles.ROW_HOVER, null);
+            }
+        };
+        headerRow.setOpaque(false);
+        headerRow.setBackground(Styles.CARD_BG);
+        headerRow.setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 6));
         headerRow.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         MouseAdapter collapseOnClick = new MouseAdapter()
@@ -67,23 +81,40 @@ abstract class CollapsibleSection extends JPanel
 
         headerLabel = new JLabel(headerText());
         headerLabel.setForeground(Color.WHITE);
-        headerLabel.setFont(headerLabel.getFont().deriveFont(Font.BOLD));
+        headerLabel.setFont(FontManager.getRunescapeBoldFont());
         headerLabel.setOpaque(false);
         headerLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         headerLabel.addMouseListener(collapseOnClick);
 
-        JLabel countLabel = new JLabel("(" + count + ")");
-        countLabel.setForeground(Color.LIGHT_GRAY);
-        countLabel.setFont(FontManager.getRunescapeSmallFont());
+        JLabel countLabel = Styles.pill(String.valueOf(count));
         countLabel.addMouseListener(collapseOnClick);
 
-        JPanel centerWrap = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        centerWrap.setOpaque(false);
-        centerWrap.addMouseListener(collapseOnClick);
-        centerWrap.add(headerLabel);
-        centerWrap.add(countLabel);
-        headerRow.add(centerWrap, BorderLayout.CENTER);
+        headerCenter = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        headerCenter.setOpaque(false);
+        headerCenter.addMouseListener(collapseOnClick);
+        headerCenter.add(headerLabel);
+        headerCenter.add(countLabel);
+        headerRow.add(headerCenter, BorderLayout.CENTER);
+
+        chevron = new JLabel(chevronIcon());
+        chevron.addMouseListener(collapseOnClick);
+        headerEast = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0));
+        headerEast.setOpaque(false);
+        headerEast.addMouseListener(collapseOnClick);
+        headerEast.add(chevron);
+        headerRow.add(headerEast, BorderLayout.EAST);
         return headerRow;
+    }
+
+    private javax.swing.Icon chevronIcon()
+    {
+        return Glyphs.of(collapsed ? Glyphs.Shape.CHEVRON_RIGHT : Glyphs.Shape.CHEVRON_DOWN, Styles.FAINT_TEXT);
+    }
+
+    @Override
+    protected void paintComponent(java.awt.Graphics g)
+    {
+        CardPanel.paintCard(g, this, Styles.CARD_BG, null);
     }
 
     // Places the (already-populated) body to CENTER, honouring the current collapse state.
@@ -102,6 +133,7 @@ abstract class CollapsibleSection extends JPanel
         collapsed = !collapsed;
         body.setVisible(!collapsed);
         headerLabel.setText(headerText());
+        chevron.setIcon(chevronIcon());
         revalidate();
         repaint();
         onCollapseChange.accept(collapsed);
@@ -147,6 +179,7 @@ abstract class CollapsibleSection extends JPanel
         collapsed = !expanded;
         body.setVisible(expanded);
         headerLabel.setText(headerText());
+        chevron.setIcon(chevronIcon());
         revalidate();
         repaint();
     }

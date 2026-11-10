@@ -34,12 +34,10 @@ final class PanelBanners
      */
     static JComponent shortestPathMissing(WaypointerConfig config, Runnable onDismiss)
     {
-        JPanel p = Styles.cappedHeightPanel(new BorderLayout(4, 4));
-        p.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        CardPanel p = new CardPanel(new BorderLayout(4, 4));
         p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(140, 100, 0)),
-            BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+        p.setOutline(new Color(140, 100, 0));
+        p.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
         JLabel msg = new JLabel("<html>Install the Shortest Path plugin to use Play.</html>");
         msg.setForeground(Color.WHITE);
         p.add(msg, BorderLayout.CENTER);
@@ -59,12 +57,10 @@ final class PanelBanners
     static JComponent loadFailedReset(WaypointStorePersistence persistence, WaypointStore store,
         Component dialogParent)
     {
-        JPanel p = Styles.cappedHeightPanel(new BorderLayout(4, 4));
-        p.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        CardPanel p = new CardPanel(new BorderLayout(4, 4));
         p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(180, 40, 40)),
-            BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+        p.setOutline(new Color(180, 40, 40));
+        p.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
         JLabel resetMsg = new JLabel("<html>Saved waypoints could not be read.<br>"
             + "Click Reset to start fresh.</html>");
         resetMsg.setForeground(Color.WHITE);
@@ -96,12 +92,10 @@ final class PanelBanners
     static JComponent routeLoadFailedReset(RouteStorePersistence persistence, RouteStore store,
         Component dialogParent)
     {
-        JPanel p = Styles.cappedHeightPanel(new BorderLayout(4, 4));
-        p.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        CardPanel p = new CardPanel(new BorderLayout(4, 4));
         p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(180, 40, 40)),
-            BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+        p.setOutline(new Color(180, 40, 40));
+        p.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
         JLabel resetMsg = new JLabel("<html>Saved routes could not be read.<br>"
             + "Click Reset to start fresh.</html>");
         resetMsg.setForeground(Color.WHITE);

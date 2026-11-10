@@ -4,7 +4,6 @@ import com.waypointer.model.Category;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -36,17 +35,14 @@ final class BulkActionBar extends JPanel
         Runnable onDelete, Runnable onExport)
     {
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
-        setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        setOpaque(true);
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, ColorScheme.DARK_GRAY_COLOR),
-            BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+        setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(12, 18, 14, 18));
 
         // Row 1: "N selected" on the left, Done on the right. Both stay enabled regardless of
         // how many rows are selected, so they sit together apart from the action buttons. Done
         // exits select mode -- the counterpart to the right-click "Select multiple" entry.
         countLabel.setForeground(Color.WHITE);
-        countLabel.setFont(FontManager.getRunescapeSmallFont());
+        countLabel.setFont(FontManager.getRunescapeBoldFont());
         Styles.secondaryButton(doneBtn);
         doneBtn.addActionListener(e -> onDone.run());
 
@@ -59,11 +55,13 @@ final class BulkActionBar extends JPanel
 
         add(javax.swing.Box.createVerticalStrut(4));
 
-        // Row 2: the three actions, disabled while the selection is empty. At a narrow sidebar
-        // width all three fit on their own row where a single five-control row would overlap.
-        Styles.secondaryButton(moveBtn);
-        Styles.secondaryButton(deleteBtn);
-        Styles.secondaryButton(exportBtn);
+        // Row 2: the three actions, disabled while the selection is empty. They share the row
+        // in equal thirds; sized by their text, the last one ran off the sidebar's edge.
+        for (JButton b : new JButton[] { moveBtn, deleteBtn, exportBtn })
+        {
+            Styles.secondaryButton(b);
+            b.setBorder(BorderFactory.createEmptyBorder(6, 2, 6, 2));
+        }
 
         moveBtn.addActionListener(e -> {
             JPopupMenu menu = new JPopupMenu();
@@ -79,7 +77,7 @@ final class BulkActionBar extends JPanel
         deleteBtn.addActionListener(e -> onDelete.run());
         exportBtn.addActionListener(e -> onExport.run());
 
-        JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        JPanel actionRow = new JPanel(new java.awt.GridLayout(1, 3, 4, 0));
         actionRow.setOpaque(false);
         actionRow.setAlignmentX(LEFT_ALIGNMENT);
         actionRow.add(moveBtn);
@@ -88,6 +86,14 @@ final class BulkActionBar extends JPanel
         add(actionRow);
 
         setActionsEnabled(false);
+    }
+
+    // A card with an orange outline docked under the list.
+    @Override
+    protected void paintComponent(java.awt.Graphics g)
+    {
+        Styles.paintInsetCard(g, this, Styles.SIDE_PAD, Styles.CARD_GAP, Styles.SIDE_PAD, Styles.SIDE_PAD,
+            ColorScheme.BRAND_ORANGE);
     }
 
     void setCount(int n)

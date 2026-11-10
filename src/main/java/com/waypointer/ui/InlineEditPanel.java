@@ -59,8 +59,8 @@ public class InlineEditPanel extends JPanel
         this.waypointId = w.getId();
         this.toasts = toasts;
         setLayout(new GridBagLayout());
-        setBorder(BorderFactory.createEmptyBorder(4, 24, 4, 4));
-        setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        setOpaque(false);
         GridBagConstraints g = new GridBagConstraints();
         g.fill = GridBagConstraints.HORIZONTAL;
         g.insets = new Insets(2, 2, 2, 2);
@@ -284,10 +284,18 @@ public class InlineEditPanel extends JPanel
         return Styles.capHeight(this);
     }
 
+    // An outlined card marks the waypoint being edited, whether it sits in a category card or
+    // under the pinned tiles.
+    @Override
+    protected void paintComponent(java.awt.Graphics g)
+    {
+        Styles.paintInsetCard(g, this, 4, 2, 4, 2, ColorScheme.BRAND_ORANGE);
+    }
+
     private static JPanel makeDivider()
     {
         JPanel d = new JPanel();
-        d.setBackground(ColorScheme.LIGHT_GRAY_COLOR);
+        d.setBackground(Styles.ROW_LINE);
         Dimension dim = new Dimension(0, 1);
         d.setPreferredSize(dim);
         d.setMinimumSize(dim);

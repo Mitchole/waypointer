@@ -60,7 +60,7 @@ public class TabHost extends PluginPanel
         this.routesPanel = routesPanel;
         this.config = config;
         this.clientToolbar = clientToolbar;
-        this.banner = new ActivePathBanner(navigator, config, store::hasWaypointAt);
+        this.banner = new ActivePathBanner(navigator, config);
 
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);

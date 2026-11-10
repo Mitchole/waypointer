@@ -57,21 +57,21 @@ class CaptureForm extends JPanel
         this.capture = capture;
 
         setLayout(new BorderLayout(0, 4));
-        setBackground(ColorScheme.DARK_GRAY_COLOR);
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1),
-            BorderFactory.createEmptyBorder(6, 6, 6, 6)));
+        setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(8, 18, 14, 18));
 
         stack.setLayout(new BoxLayout(stack, BoxLayout.Y_AXIS));
-        stack.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        stack.setOpaque(false);
 
-        JLabel caption = new JLabel("Save waypoint");
-        caption.setForeground(java.awt.Color.WHITE);
+        JLabel caption = new JLabel("NEW WAYPOINT");
+        caption.setForeground(ColorScheme.BRAND_ORANGE);
+        caption.setFont(net.runelite.client.ui.FontManager.getRunescapeSmallFont());
+        caption.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
         caption.setAlignmentX(Component.LEFT_ALIGNMENT);
         stack.add(caption);
 
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        form.setOpaque(false);
         form.setAlignmentX(Component.LEFT_ALIGNMENT);
         GridBagConstraints g = new GridBagConstraints();
         g.fill = GridBagConstraints.HORIZONTAL;
@@ -92,7 +92,7 @@ class CaptureForm extends JPanel
 
         stack.add(form);
 
-        newCategoryRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        newCategoryRow.setOpaque(false);
         newCategoryRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         newCategoryRow.setVisible(false);
         Styles.textField(newCategoryName);
@@ -117,7 +117,7 @@ class CaptureForm extends JPanel
         add(stack, BorderLayout.CENTER);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
-        buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        buttons.setOpaque(false);
         Styles.secondaryButton(cancelBtn);
         cancelBtn.addActionListener(e -> dismiss());
         Styles.primaryButton(saveBtn);
@@ -151,6 +151,28 @@ class CaptureForm extends JPanel
         super.addNotify();
         JRootPane root = getRootPane();
         if (root != null) root.setDefaultButton(saveBtn);
+    }
+
+    // The form is a card with an orange outline, inset from the panel edge.
+    @Override
+    protected void paintComponent(java.awt.Graphics g)
+    {
+        Styles.paintInsetCard(g, this, Styles.SIDE_PAD, 0, Styles.SIDE_PAD, Styles.CARD_GAP, ColorScheme.BRAND_ORANGE);
+    }
+
+    private java.util.function.Consumer<Boolean> onShownChange;
+
+    /** Tells the panel when the form opens or closes, so the Mark button can step aside. */
+    void setOnShownChange(java.util.function.Consumer<Boolean> listener)
+    {
+        this.onShownChange = listener;
+    }
+
+    @Override
+    public void setVisible(boolean visible)
+    {
+        super.setVisible(visible);
+        if (onShownChange != null) onShownChange.accept(visible);
     }
 
     void show(int packed)

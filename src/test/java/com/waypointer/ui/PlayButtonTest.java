@@ -1,6 +1,5 @@
 package com.waypointer.ui;
 
-import java.awt.Color;
 import javax.swing.JButton;
 import net.runelite.client.ui.ColorScheme;
 import org.junit.Test;
@@ -20,12 +19,13 @@ public class PlayButtonTest
     }
 
     @Test
-    public void playIconButtonActive_setsBrandOrangeBackground()
+    public void playIconButtonActive_isAnOrangeStopSquareWithNoFill()
     {
         JButton b = new JButton("▶");
         PlayButton.style(b, true);
-        assertSame(ColorScheme.BRAND_ORANGE, b.getBackground());
-        assertSame(Color.BLACK, b.getForeground());
+        assertSame(ColorScheme.BRAND_ORANGE, b.getForeground());
+        assertEquals("■", b.getText());
+        assertFalse(b.isContentAreaFilled());
     }
 
     @Test

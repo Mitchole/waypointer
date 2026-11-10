@@ -31,13 +31,28 @@ import javax.swing.border.Border;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 
-// Collapsible section: chevron header + body of WaypointRows. Header is a BorderLayout with
-// the title label in the center (click target for collapse, drag source for reorder),
-// an optional 16x16 icon after it, and a vertical ellipsis menu trigger on the right
-// (rename / delete / set-icon).
+// One category as a card: header + body of WaypointRows. The header carries the colour dot, the
+// title (click target for collapse, drag source for reorder), an optional 16x16 icon, the count,
+// and on the right the menu trigger (rename / delete / set-icon) and the chevron.
 public class CategorySection extends CollapsibleSection
 {
-    private static final int COLOUR_STRIPE_WIDTH = 3;
+    private static javax.swing.Icon colourDot(Color color)
+    {
+        return new javax.swing.Icon()
+        {
+            @Override public int getIconWidth() { return 8; }
+            @Override public int getIconHeight() { return 8; }
+            @Override public void paintIcon(Component c, java.awt.Graphics g, int x, int y)
+            {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(color);
+                g2.fillOval(x, y, 8, 8);
+                g2.dispose();
+            }
+        };
+    }
 
     private final Category category;
 
@@ -102,21 +117,13 @@ public class CategorySection extends CollapsibleSection
         BulkSelection selection = s.selection;
         BiConsumer<Waypoint, Boolean> onRowSelectClick = s.onRowSelectClick;
         BiConsumer<List<UUID>, Boolean> onHeaderSelectToggle = s.onHeaderSelectToggle;
-        Integer accent = category.getColor();
-        if (accent != null)
-        {
-            setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, COLOUR_STRIPE_WIDTH, 0, 0, new Color(accent)),
-                BorderFactory.createEmptyBorder(0, 0, 2, 0)));
-        }
-        else
-        {
-            // Reserve the stripe width even when uncoloured so rows don't shift when a colour
-            // is set or cleared.
-            setBorder(BorderFactory.createEmptyBorder(0, COLOUR_STRIPE_WIDTH, 2, 0));
-        }
-
         JPanel headerRow = buildHeaderRow(waypoints.size());
+        // The category colour shows as a dot before the name; uncoloured ones get a grey dot so
+        // every name starts in the same column.
+        Integer accent = category.getColor();
+        JLabel dot = new JLabel(colourDot(accent == null ? Styles.FAINT_TEXT : new Color(accent)));
+        dot.addMouseListener(headerLabel.getMouseListeners()[0]);
+        headerCenter.add(dot, 0);
         final Border restingHeaderBorder = headerRow.getBorder();
         final Color restingHeaderBg = headerRow.getBackground();
 
@@ -134,7 +141,7 @@ public class CategorySection extends CollapsibleSection
             iconLabel.setOpaque(false);
             SpriteIcons.apply(iconLabel, category.getIconId(), spriteManager);
             // After the name, so every category name starts in the same column.
-            ((JPanel) headerLabel.getParent()).add(iconLabel, 1);
+            headerCenter.add(iconLabel, 2);
         }
 
         // Select-mode tri-state checkbox at the header's left edge. Clicking it selects or
@@ -201,20 +208,11 @@ public class CategorySection extends CollapsibleSection
             // Right-click on the label still opens the popup (legacy discoverability).
             headerLabel.setComponentPopupMenu(menu);
 
-            JLabel menuTrigger = new JLabel("⋮"); // U+22EE vertical ellipsis
-            menuTrigger.setForeground(Styles.MUTED_TEXT);
-            menuTrigger.setFont(menuTrigger.getFont().deriveFont(Font.BOLD));
-            menuTrigger.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 6));
-            menuTrigger.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            menuTrigger.getAccessibleContext().setAccessibleName("Category options");
+            javax.swing.JButton menuTrigger = Styles.iconButton(
+                Glyphs.of(Glyphs.Shape.MENU, Styles.FAINT_TEXT), "Category options");
             HoverHint.shared().attach(menuTrigger, () -> "Category options");
-            menuTrigger.addMouseListener(new MouseAdapter() {
-                @Override public void mouseClicked(MouseEvent e)
-                {
-                    menu.show(menuTrigger, 0, menuTrigger.getHeight());
-                }
-            });
-            headerRow.add(menuTrigger, BorderLayout.EAST);
+            menuTrigger.addActionListener(e -> menu.show(menuTrigger, 0, menuTrigger.getHeight()));
+            headerEast.add(menuTrigger, 0);
         }
 
         add(headerRow, BorderLayout.NORTH);
@@ -268,8 +266,7 @@ public class CategorySection extends CollapsibleSection
     @Override
     protected String headerText()
     {
-        String chevron = collapsed ? "▶" : "▼";
-        return chevron + " " + category.getName();
+        return category.getName();
     }
 
     public UUID getCategoryId()
@@ -290,7 +287,7 @@ public class CategorySection extends CollapsibleSection
     }
 
     /** Row-level user actions plumbed up from {@link WaypointRow} to the panel. */
-    public enum RowAction { PLAY, EXPAND, DELETE, TOGGLE_PIN, ENTER_SELECT }
+    public enum RowAction { PLAY, EXPAND, EXPAND_PINNED, DELETE, TOGGLE_PIN, ENTER_SELECT }
 
     /** The category-level menu actions, bundled so the constructor stays readable. */
     public static final class Actions
@@ -334,7 +331,7 @@ public class CategorySection extends CollapsibleSection
             setAlignmentX(LEFT_ALIGNMENT);
             setPreferredSize(new Dimension(0, HEIGHT));
             setMaximumSize(new Dimension(Integer.MAX_VALUE, HEIGHT));
-            resting = BorderFactory.createEmptyBorder();
+            resting = BorderFactory.createEmptyBorder(0, 8, 0, 8);
             setBorder(resting);
         }
 

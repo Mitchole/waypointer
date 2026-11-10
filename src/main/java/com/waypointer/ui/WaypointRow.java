@@ -21,20 +21,26 @@ import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 
 /**
- * A single waypoint row, rendered as a clickable card. Click body -> expand inline edit.
- * Drag handle on the left initiates drag (not part of click hit region). Icon-only Play
- * button on the right (grey at rest, brand orange on hover or when this row is the active
- * path target). Custom sprite icons (when set) attach to the name label so icon + text
- * share JLabel's built-in vertical centering and align with the Play button.
+ * A single waypoint row inside a category card. Click body -> expand inline edit. Dragging
+ * the name reorders. Icon-only Play button on the right (grey at rest, orange on hover or
+ * when this row is the active path target); pin and menu buttons join it while the pointer is
+ * over the row. Custom sprite icons (when set) attach to the name label so icon + text share
+ * JLabel's built-in vertical centering and align with the Play button.
  *
- * In select mode the left edge shows a checkbox instead of the drag handle, the right-side
- * Play button is hidden, and a body click toggles selection (shift = range) instead of
- * expanding the inline editor.
+ * In select mode the left edge shows a checkbox, the right-side buttons are hidden, and a
+ * body click toggles selection (shift = range) instead of expanding the inline editor.
  */
-public class WaypointRow extends JPanel implements DropIndicatable
+public class WaypointRow extends JPanel implements DropIndicatable, PathTarget
 {
     private final Waypoint waypoint;
+    static final int ROW_HEIGHT = 24;
+
     private final JLabel dragHandle;
+    private final JLabel name;
+    private final boolean wilderness;
+    private final MouseAdapter hover;
+    private JPanel hoverControls;
+    private boolean hovered;
     private final java.awt.Color restingBackground;
     private Border prevBorder;
     // Non-null only outside select mode (select mode hides the Play button). Held so the panel can
@@ -90,48 +96,43 @@ public class WaypointRow extends JPanel implements DropIndicatable
     private WaypointRow(Spec s)
     {
         this.waypoint = s.waypoint;
+        this.wilderness = s.isWilderness;
         setLayout(new BorderLayout(4, 0));
-        setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 4));
-        setOpaque(true);
+        setBorder(BorderFactory.createEmptyBorder(1, 10, 0, 6));
+        setOpaque(false);
+        setBackground(Styles.CARD_BG);
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        // Body click: in select mode toggle selection (shift = range); otherwise expand inline.
-        final MouseAdapter ma;
-        if (s.selectMode)
+        // Hover is tracked on the row and on every child, since a child with its own listener
+        // swallows the events. The exit point arrives in the child's coordinate space, so it is
+        // converted before the bounds test.
+        hover = new MouseAdapter()
         {
-            setBackground(ColorScheme.DARKER_GRAY_COLOR);
-            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            ma = new MouseAdapter()
+            @Override public void mouseEntered(MouseEvent e) { setHovered(true); }
+            @Override public void mouseExited(MouseEvent e)
             {
-                @Override public void mouseEntered(MouseEvent e)
-                {
-                    setBackground(ColorScheme.DARK_GRAY_HOVER_COLOR);
-                }
-                @Override public void mouseExited(MouseEvent e)
-                {
-                    // ma is also attached to child components (checkbox, name label), so the
-                    // event point is in the child's coordinate space. Convert to the row's
-                    // space before the bounds test, or exiting via the small checkbox leaves
-                    // the hover tint stuck.
-                    java.awt.Point p = SwingUtilities.convertPoint(
-                        e.getComponent(), e.getPoint(), WaypointRow.this);
-                    if (contains(p)) return;
-                    setBackground(ColorScheme.DARKER_GRAY_COLOR);
-                }
-                @Override public void mouseClicked(MouseEvent e)
-                {
-                    if (SwingUtilities.isLeftMouseButton(e)) s.onSelectClick.accept(e.isShiftDown());
-                }
-            };
-            addMouseListener(ma);
-        }
-        else
+                java.awt.Point p = SwingUtilities.convertPoint(
+                    e.getComponent(), e.getPoint(), WaypointRow.this);
+                if (contains(p)) return;
+                setHovered(false);
+            }
+        };
+        // Body click: in select mode toggle selection (shift = range); otherwise expand inline.
+        final MouseAdapter ma = new MouseAdapter()
         {
-            ma = Cards.clickable(this, s.onClickBody);
-        }
+            @Override public void mouseEntered(MouseEvent e) { hover.mouseEntered(e); }
+            @Override public void mouseExited(MouseEvent e) { hover.mouseExited(e); }
+            @Override public void mouseClicked(MouseEvent e)
+            {
+                if (!SwingUtilities.isLeftMouseButton(e)) return;
+                if (s.selectMode) s.onSelectClick.accept(e.isShiftDown());
+                else s.onClickBody.run();
+            }
+        };
+        addMouseListener(ma);
 
         // Right-click popup (pin / delete) stays available in both modes. Outside select mode it
-        // also offers "Select multiple" -- the entry point for bulk selection now that the toolbar
-        // toggle button is gone.
+        // also offers "Select multiple", the way into bulk selection.
         JPopupMenu popup = new JPopupMenu();
         if (!s.selectMode)
         {
@@ -149,7 +150,6 @@ public class WaypointRow extends JPanel implements DropIndicatable
         popup.add(deleteItem);
         setComponentPopupMenu(popup);
 
-        // WEST: checkbox in select mode; drag handle otherwise (when draggable).
         if (s.selectMode)
         {
             TriStateBox box = new TriStateBox();
@@ -160,69 +160,123 @@ public class WaypointRow extends JPanel implements DropIndicatable
             west.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
             west.add(box);
             add(west, BorderLayout.WEST);
-            dragHandle = null;
-        }
-        else if (!s.dragDisabled)
-        {
-            dragHandle = new JLabel("⠿"); // braille pattern dots-123456
-            dragHandle.setForeground(Styles.FAINT_TEXT);
-            dragHandle.setOpaque(false);
-            dragHandle.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 2));
-            dragHandle.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
-            dragHandle.getAccessibleContext().setAccessibleName("Reorder waypoint");
-            HoverHint.shared().attach(dragHandle, () -> "Drag to reorder");
-            add(dragHandle, BorderLayout.WEST);
-        }
-        else
-        {
-            dragHandle = null;
         }
 
-        // CENTER: bold name label, optionally prefixed with a 16x16 custom sprite.
-        JLabel name = buildNameLabel(s, ma);
+        // CENTER: the name, optionally prefixed with a 16x16 custom sprite. Outside select mode
+        // it doubles as the drag handle, so a row is picked up by its name.
+        name = buildNameLabel(s, ma);
         add(name, BorderLayout.CENTER);
+        dragHandle = s.selectMode || s.dragDisabled ? null : name;
 
         this.restingBackground = getBackground();
+        this.activePathState = s.active;
+        applyNameColour();
 
-        // EAST: Play button, hidden in select mode. Pin / Delete are reached via right-click.
-        buildEastControls(s);
+        buildEastControls(s, popup);
     }
 
     private JLabel buildNameLabel(Spec s, MouseAdapter ma)
     {
         String displayName = (s.isWilderness ? "☠ " : "") + s.waypoint.getName();
-        JLabel name = new JLabel(displayName);
-        name.setToolTipText(buildHoverTooltip(s.waypoint, s.originCategoryName));
-        name.setForeground(s.isWilderness ? new Color(220, 130, 130) : Color.WHITE);
-        name.getAccessibleContext().setAccessibleName(
+        JLabel label = new JLabel(displayName);
+        label.setToolTipText(buildHoverTooltip(s.waypoint, s.originCategoryName));
+        label.getAccessibleContext().setAccessibleName(
             accessibleName(s.waypoint.getName(), s.isWilderness, s.isPinned));
         if (s.waypoint.getIconId() != null && s.spriteManager != null)
         {
-            name.setIconTextGap(6);
-            SpriteIcons.apply(name, s.waypoint.getIconId(), s.spriteManager);
+            label.setIconTextGap(6);
+            SpriteIcons.apply(label, s.waypoint.getIconId(), s.spriteManager);
         }
-        name.addMouseListener(ma);
-        return name;
+        label.addMouseListener(ma);
+        return label;
     }
 
-    private void buildEastControls(Spec s)
+    // EAST: pin and menu (shown only under the pointer) and the Play button. All hidden in
+    // select mode.
+    private void buildEastControls(Spec s, JPopupMenu popup)
     {
         if (s.selectMode) return;
+        JButton pin = Styles.iconButton(
+            Glyphs.of(s.isPinned ? Glyphs.Shape.STAR : Glyphs.Shape.STAR_OUTLINE,
+                s.isPinned ? ColorScheme.BRAND_ORANGE : Styles.MUTED_TEXT),
+            s.isPinned ? "Unpin" : "Pin to top");
+        HoverHint.shared().attach(pin, () -> s.isPinned ? "Unpin" : "Pin to top");
+        pin.addActionListener(e -> s.onTogglePin.run());
+
+        JButton menu = Styles.iconButton(Glyphs.of(Glyphs.Shape.MENU, Styles.MUTED_TEXT), "Waypoint options");
+        menu.addActionListener(e -> popup.show(menu, 0, menu.getHeight()));
+
         JButton play = new JButton("▶"); // black right-pointing triangle
         this.playButton = play;
-        this.activePathState = s.active;
         PlayButton.style(play, s.active);
         HoverHint.shared().attach(play, () -> activePathState ? "Stop pathing here" : "Path to here");
         play.getAccessibleContext().setAccessibleName(playAccessibleName(s.active));
         play.addActionListener(e -> s.onPlay.run());
 
+        hoverControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        hoverControls.setOpaque(false);
+        hoverControls.add(pin);
+        hoverControls.add(menu);
+        hoverControls.setVisible(false);
+
         JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         eastPanel.setOpaque(false);
+        eastPanel.add(hoverControls);
         eastPanel.add(play);
+        for (java.awt.Component c : new java.awt.Component[]{pin, menu, play, hoverControls, eastPanel})
+        {
+            c.addMouseListener(hover);
+        }
         add(eastPanel, BorderLayout.EAST);
     }
 
+    private void setHovered(boolean on)
+    {
+        if (hovered == on) return;
+        hovered = on;
+        if (hoverControls != null)
+        {
+            hoverControls.setVisible(on);
+            revalidate();
+        }
+        repaint();
+    }
+
+    private void applyNameColour()
+    {
+        name.setForeground(activePathState ? ColorScheme.BRAND_ORANGE
+            : wilderness ? new Color(220, 130, 130) : Color.WHITE);
+    }
+
+    // The card behind the row supplies the background; the row adds the divider above it and
+    // a rounded tint while hovered, dragged over, or being pathed to.
+    @Override
+    protected void paintComponent(java.awt.Graphics g)
+    {
+        java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+        g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+            java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(Styles.ROW_LINE);
+        g2.fillRect(8, 0, getWidth() - 16, 1);
+        Color fill = null;
+        if (activePathState) fill = Styles.ACTIVE_TINT;
+        else if (hovered || !getBackground().equals(restingBackground)) fill = Styles.ROW_HOVER;
+        if (fill != null)
+        {
+            g2.setColor(fill);
+            g2.fillRoundRect(2, 1, getWidth() - 4, getHeight() - 1, 8, 8);
+        }
+        g2.dispose();
+    }
+
+    @Override
+    public Dimension getPreferredSize()
+    {
+        return new Dimension(super.getPreferredSize().width, ROW_HEIGHT);
+    }
+
     /** Packed world point this row represents; used by the panel to find the active row. */
+    @Override
     public int getPackedWorldPoint()
     {
         return waypoint.getPackedWorldPoint();
@@ -233,10 +287,13 @@ public class WaypointRow extends JPanel implements DropIndicatable
      * No-op in select mode, where the Play button is hidden. Lets the panel respond to a
      * path-target change without rebuilding the body tree (#67).
      */
+    @Override
     public void setActive(boolean active)
     {
-        if (playButton == null) return;
         activePathState = active;
+        applyNameColour();
+        repaint();
+        if (playButton == null) return;
         PlayButton.style(playButton, active);
         playButton.getAccessibleContext().setAccessibleName(playAccessibleName(active));
         playButton.repaint();

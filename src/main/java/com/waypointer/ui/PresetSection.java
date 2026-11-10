@@ -29,21 +29,17 @@ import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
-// One curated set, drawn as a collapsible section: a clickable header that toggles a
+// One curated set, drawn as a collapsible card: a clickable header that toggles a
 // stack of waypoint rows. Starts collapsed; rows are built lazily on first expand.
 class PresetSection extends JPanel
 {
-    // U+25B8 right-pointing triangle (collapsed), U+25BE down-pointing triangle (expanded).
-    private static final String CHEVRON_COLLAPSED = "▸";
-    private static final String CHEVRON_EXPANDED = "▾";
-
     // Historical fallback width for the row label: used until componentResized fires with a
     // real container width. Derived from the old constant kept as a safety value for tests /
     // very early paint passes when getWidth() is still zero.
     private static final int FALLBACK_LABEL_WIDTH_PX = 107;
-    // Row chrome reserved on either side of the label: border left (22) + border right (8)
+    // Row chrome reserved on either side of the label: border left (10) + border right (6)
     // + BorderLayout hgap (8) + AddRemoveToggle button (~23) + a small margin (6).
-    private static final int ROW_RESERVED_PX = 22 + 8 + 8 + 23 + 6;
+    private static final int ROW_RESERVED_PX = 10 + 6 + 8 + 23 + 6;
     private static final int MIN_LABEL_WIDTH_PX = 60;
 
     private final Preset preset;
@@ -52,7 +48,7 @@ class PresetSection extends JPanel
     private final Function<PresetWaypoint, UUID> onAdd;
     private final Consumer<UUID> onRemove;
     private final JPanel rows = new JPanel();
-    private final JLabel chevron = new JLabel(CHEVRON_COLLAPSED);
+    private final JLabel chevron = new JLabel();
     private final List<JLabel> rowLabels = new ArrayList<>();
     private int labelWidthPx;
     private boolean expanded;
@@ -67,12 +63,15 @@ class PresetSection extends JPanel
         this.onRemove = onRemove;
 
         setLayout(new BorderLayout());
-        setBackground(ColorScheme.DARK_GRAY_COLOR);
+        setOpaque(false);
+        // The bottom inset is the gap to the next card; see paintComponent.
+        setBorder(BorderFactory.createEmptyBorder(0, 0, Styles.CARD_GAP, 0));
 
         add(buildHeader(), BorderLayout.NORTH);
 
         rows.setLayout(new BoxLayout(rows, BoxLayout.Y_AXIS));
-        rows.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        rows.setOpaque(false);
+        rows.setBorder(BorderFactory.createEmptyBorder(0, 0, 2, 0));
         rows.setVisible(false);
         add(rows, BorderLayout.CENTER);
 
@@ -117,22 +116,44 @@ class PresetSection extends JPanel
         return Styles.capHeight(this);
     }
 
+    @Override
+    protected void paintComponent(java.awt.Graphics g)
+    {
+        Styles.paintInsetCard(g, this, 0, 0, 0, Styles.CARD_GAP, null);
+    }
+
+    private javax.swing.Icon chevronIcon()
+    {
+        return Glyphs.of(expanded ? Glyphs.Shape.CHEVRON_DOWN : Glyphs.Shape.CHEVRON_RIGHT, Styles.FAINT_TEXT);
+    }
+
+    // "2 / 8" once any of the pack is in the library, otherwise just the size.
+    private String countText()
+    {
+        int have = 0;
+        for (PresetWaypoint wp : preset.getWaypoints())
+        {
+            if (existingIdByPacked.containsKey(WorldPointPacker.pack(wp.getX(), wp.getY(), wp.getPlane()))) have++;
+        }
+        int total = preset.getWaypoints().size();
+        return have == 0 ? String.valueOf(total) : have + " / " + total;
+    }
+
     private JPanel buildHeader()
     {
         JPanel header = new JPanel(new BorderLayout(6, 0));
-        header.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        header.setBorder(BorderFactory.createEmptyBorder(4, 9, 4, 9));
+        header.setOpaque(false);
+        header.setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
         header.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        chevron.setForeground(Color.LIGHT_GRAY);
+        chevron.setIcon(chevronIcon());
 
         JLabel name = new JLabel(preset.getCategory());
         name.setForeground(Color.WHITE);
         name.setFont(FontManager.getRunescapeBoldFont());
 
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        left.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        left.add(chevron);
+        left.setOpaque(false);
         if (preset.getIcon() != null)
         {
             JLabel icon = new JLabel();
@@ -140,12 +161,11 @@ class PresetSection extends JPanel
             left.add(icon);
         }
         left.add(name);
+        JLabel count = Styles.pill(countText());
+        if (count.getText().indexOf('/') >= 0) count.setForeground(ColorScheme.PROGRESS_COMPLETE_COLOR);
+        left.add(count);
         header.add(left, BorderLayout.CENTER);
-
-        JLabel count = new JLabel(String.valueOf(preset.getWaypoints().size()));
-        count.setForeground(Color.LIGHT_GRAY);
-        count.setFont(FontManager.getRunescapeSmallFont());
-        header.add(count, BorderLayout.EAST);
+        header.add(chevron, BorderLayout.EAST);
 
         header.addMouseListener(new MouseAdapter()
         {
@@ -166,7 +186,7 @@ class PresetSection extends JPanel
 
     private void applyExpandedState()
     {
-        chevron.setText(expanded ? CHEVRON_EXPANDED : CHEVRON_COLLAPSED);
+        chevron.setIcon(chevronIcon());
         if (expanded && rows.getComponentCount() == 0)
         {
             buildRows();
@@ -194,7 +214,7 @@ class PresetSection extends JPanel
         String desc = preset.getDescription();
         if (desc != null && !desc.trim().isEmpty())
         {
-            JLabel descLabel = new JLabel("<html><div style='padding:4px 9px 4px 22px;'>"
+            JLabel descLabel = new JLabel("<html><div style='padding:2px 9px 4px 10px;'>"
                 + Text.escapeHtml(desc) + "</div></html>");
             descLabel.setForeground(Styles.MUTED_TEXT);
             descLabel.setFont(FontManager.getRunescapeSmallFont());
@@ -218,9 +238,16 @@ class PresetSection extends JPanel
             {
                 return Styles.capHeight(this);
             }
+
+            @Override
+            protected void paintComponent(java.awt.Graphics g)
+            {
+                g.setColor(Styles.ROW_LINE);
+                g.fillRect(8, 0, getWidth() - 16, 1);
+            }
         };
-        row.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        row.setBorder(BorderFactory.createEmptyBorder(2, 22, 2, 8));
+        row.setOpaque(false);
+        row.setBorder(BorderFactory.createEmptyBorder(3, 10, 2, 6));
 
         String descHtml = wp.getDescription() == null || wp.getDescription().trim().isEmpty()
             ? ""

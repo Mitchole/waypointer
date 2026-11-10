@@ -71,11 +71,35 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         card.setVisible(false);
     }
 
+    // A control that floats over the bottom-right corner of the content (the Mark button).
+    // Toasts land above it.
+    private JComponent floating;
+    private int floatingRightInset;
+
+    void setFloating(JComponent c, int rightInset)
+    {
+        floating = c;
+        floatingRightInset = rightInset;
+        add(c, JLayeredPane.PALETTE_LAYER);
+        revalidate();
+    }
+
+    private int floatingReserve()
+    {
+        return floating != null && floating.isVisible() ? floating.getPreferredSize().height + MARGIN_PX : 0;
+    }
+
     @Override
     public void doLayout()
     {
         Dimension size = getSize();
         content.setBounds(0, 0, size.width, size.height);
+        if (floating != null)
+        {
+            Dimension f = floating.getPreferredSize();
+            floating.setBounds(size.width - f.width - floatingRightInset, size.height - f.height - MARGIN_PX,
+                f.width, f.height);
+        }
         if (card.isVisible()) positionCard();
     }
 
@@ -88,7 +112,7 @@ public final class ToastOverlay extends JLayeredPane implements Toasts
         if (size.width <= 0 || size.height <= 0) return;
         Dimension pref = card.getPreferredSize();
         int cardWidth = Math.max(0, size.width - 2 * MARGIN_PX);
-        entryTargetY = Math.max(0, size.height - pref.height - MARGIN_PX);
+        entryTargetY = Math.max(0, size.height - pref.height - MARGIN_PX - floatingReserve());
         if (currentCardY < 0) currentCardY = entryTargetY;
         card.setBounds(MARGIN_PX, currentCardY, cardWidth, pref.height);
     }

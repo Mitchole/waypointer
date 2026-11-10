@@ -45,23 +45,23 @@ class InlineInputForm extends JPanel
     InlineInputForm()
     {
         setLayout(new BorderLayout(0, 4));
-        setBackground(ColorScheme.DARK_GRAY_COLOR);
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1),
-            BorderFactory.createEmptyBorder(6, 6, 6, 6)));
+        setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(8, 18, 14, 18));
 
         JPanel stack = new JPanel();
         stack.setLayout(new BoxLayout(stack, BoxLayout.Y_AXIS));
-        stack.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        stack.setOpaque(false);
 
-        caption.setForeground(Color.WHITE);
+        caption.setForeground(ColorScheme.BRAND_ORANGE);
+        caption.setFont(net.runelite.client.ui.FontManager.getRunescapeSmallFont());
+        caption.setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
         caption.setAlignmentX(Component.LEFT_ALIGNMENT);
         stack.add(caption);
 
         // Field sits in a one-cell GridBag so it fills the width but keeps its preferred height,
         // instead of stretching vertically the way a bare component does inside BoxLayout(Y_AXIS).
         JPanel fieldRow = new JPanel(new GridBagLayout());
-        fieldRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        fieldRow.setOpaque(false);
         fieldRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         GridBagConstraints g = new GridBagConstraints();
         g.fill = GridBagConstraints.HORIZONTAL;
@@ -77,7 +77,7 @@ class InlineInputForm extends JPanel
         add(stack, BorderLayout.CENTER);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
-        buttons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        buttons.setOpaque(false);
         Styles.secondaryButton(cancelBtn);
         Styles.primaryButton(submitBtn);
         cancelBtn.addActionListener(e -> dismiss());
@@ -172,4 +172,11 @@ class InlineInputForm extends JPanel
     void clickCancel() { cancelBtn.doClick(); }
     String getErrorText() { return errorLabel.getText(); }
     boolean isSubmitEnabled() { return submitBtn.isEnabled(); }
+
+    // A card with an orange outline, inset from the panel edge, like the capture form.
+    @Override
+    protected void paintComponent(java.awt.Graphics g)
+    {
+        Styles.paintInsetCard(g, this, Styles.SIDE_PAD, 0, Styles.SIDE_PAD, Styles.CARD_GAP, ColorScheme.BRAND_ORANGE);
+    }
 }

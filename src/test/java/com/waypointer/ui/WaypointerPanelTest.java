@@ -122,24 +122,104 @@ public class WaypointerPanelTest
     }
 
     @Test
-    public void pinnedWaypointOpensOneEditor()
+    public void pinnedWaypointShowsAsTileAndAsRow()
     {
         WaypointStore store = emptyStore();
-        com.waypointer.model.Waypoint w = store.createWaypoint(
-            com.waypointer.model.WorldPointPacker.pack(3164, 3487, 0), "Grand Exchange",
-            store.getUncategorized().getId());
-        store.setWaypointPinned(w.getId(), true);
-        Navigator navigator = mock(Navigator.class);
-        when(navigator.shortestPathOnly()).thenReturn(true);
-        when(navigator.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
-        WaypointerPanel panel = newPanel(store, baseConfig(), navigator, mock(Client.class),
+        com.waypointer.model.Waypoint w = pinnedGrandExchange(store);
+        WaypointerPanel panel = newPanel(store, baseConfig(), landNavigator(), mock(Client.class),
             mock(ClientThread.class));
 
         panel.expandForTest(store.getWaypointById(w.getId()));
 
-        // The waypoint has a row under Pinned and one in its category; only one gets the form.
-        assertEquals(2, count(panel, WaypointRow.class));
+        // Opened from the row, so the form sits under the row and not under the tiles.
+        assertEquals(1, count(panel, PinnedSection.Tile.class));
+        assertEquals(1, count(panel, WaypointRow.class));
         assertEquals(1, count(panel, InlineEditPanel.class));
+        assertEquals(0, count(find(panel, PinnedSection.class), InlineEditPanel.class));
+    }
+
+    @Test
+    public void editFromPinnedTileOpensEditorUnderTheTiles() throws Exception
+    {
+        WaypointStore store = emptyStore();
+        pinnedGrandExchange(store);
+        WaypointerPanel panel = newPanel(store, baseConfig(), landNavigator(), mock(Client.class),
+            mock(ClientThread.class));
+        panel.expandForTest(null);
+
+        PinnedSection.Tile tile = find(panel, PinnedSection.Tile.class);
+        ((javax.swing.JMenuItem) tile.getComponentPopupMenu().getComponent(0)).doClick();
+        javax.swing.SwingUtilities.invokeAndWait(() -> { });
+
+        assertEquals(1, count(panel, InlineEditPanel.class));
+        assertEquals(1, count(find(panel, PinnedSection.class), InlineEditPanel.class));
+    }
+
+    @Test
+    public void selectModeHidesMarkButtonAndPinnedTiles() throws Exception
+    {
+        WaypointStore store = emptyStore();
+        pinnedGrandExchange(store);
+        WaypointerPanel panel = newPanel(store, baseConfig(), landNavigator(), mock(Client.class),
+            mock(ClientThread.class));
+        panel.expandForTest(null);
+        assertTrue(panel.markButtonForTest().isVisible());
+        assertEquals(1, count(panel, PinnedSection.class));
+
+        // Entering select mode queues its own rebuild on the EDT; wait for that one.
+        panel.enterSelectMode();
+        javax.swing.SwingUtilities.invokeAndWait(() -> { });
+
+        assertFalse(panel.markButtonForTest().isVisible());
+        assertEquals(0, count(panel, PinnedSection.class));
+        assertEquals(1, count(panel, WaypointRow.class));
+    }
+
+    @Test
+    public void markButtonStepsAsideWhileCaptureFormIsOpen()
+    {
+        WaypointStore store = emptyStore();
+        WaypointerPanel panel = newPanel(store);
+        assertTrue(panel.markButtonForTest().isVisible());
+
+        panel.openAddByCoordinates();
+        panel.coordinatesFormForTest().setText("2301, 3690, 1");
+        panel.coordinatesFormForTest().clickSubmit();
+        assertFalse(panel.markButtonForTest().isVisible());
+
+        panel.captureFormForTest().clickSave();
+        assertTrue(panel.markButtonForTest().isVisible());
+    }
+
+    private static com.waypointer.model.Waypoint pinnedGrandExchange(WaypointStore store)
+    {
+        com.waypointer.model.Waypoint w = store.createWaypoint(
+            com.waypointer.model.WorldPointPacker.pack(3164, 3487, 0), "Grand Exchange",
+            store.getUncategorized().getId());
+        store.setWaypointPinned(w.getId(), true);
+        return w;
+    }
+
+    private static Navigator landNavigator()
+    {
+        Navigator navigator = mock(Navigator.class);
+        when(navigator.shortestPathOnly()).thenReturn(true);
+        when(navigator.subscribe(any())).thenReturn(mock(Listeners.Subscription.class));
+        return navigator;
+    }
+
+    private static <T> T find(java.awt.Container parent, Class<T> type)
+    {
+        for (java.awt.Component c : parent.getComponents())
+        {
+            if (type.isInstance(c)) return type.cast(c);
+            if (c instanceof java.awt.Container)
+            {
+                T hit = find((java.awt.Container) c, type);
+                if (hit != null) return hit;
+            }
+        }
+        return null;
     }
 
     private static int count(java.awt.Container parent, Class<?> type)

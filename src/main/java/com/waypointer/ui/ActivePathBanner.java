@@ -5,50 +5,63 @@ import com.waypointer.model.WorldPointPacker;
 import com.waypointer.service.Navigator;
 import com.waypointer.util.Text;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 
 /**
- * Slim status strip across the top of the tab host. Shows "Pathing to <name>" plus a Stop
- * button while a path is active, and hides itself otherwise. Suppressed for targets that have
- * a saved-waypoint row -- that row's Stop square is the indicator there -- so the banner only
- * surfaces for rowless paths (landmark bar, presets, routes, death auto-path). Pure projection
- * of {@link Navigator} state, the {@code showPathingBanner} config toggle, and the
- * "target has a row" predicate.
+ * The trip card at the top of the tab host. Shows where the active path leads plus a Stop
+ * button, and hides itself when nothing is being pathed to. Pure projection of
+ * {@link Navigator} state and the {@code showPathingBanner} config toggle.
  */
 final class ActivePathBanner extends JPanel
 {
-    private static final String ARROW_HEX = "#FF9040";
-
     private final Navigator navigator;
     private final WaypointerConfig config;
-    private final java.util.function.IntPredicate targetHasRow;
     private final JLabel label = new JLabel();
-    private final JButton stop = new JButton("✕ Stop");
+    private final JButton stop = Styles.roundButton("", true);
 
-    ActivePathBanner(Navigator navigator, WaypointerConfig config,
-        java.util.function.IntPredicate targetHasRow)
+    ActivePathBanner(Navigator navigator, WaypointerConfig config)
     {
         this.navigator = navigator;
         this.config = config;
-        this.targetHasRow = targetHasRow;
 
-        setLayout(new BorderLayout(6, 0));
+        setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        setBorder(BorderFactory.createEmptyBorder(Styles.CARD_GAP, Styles.SIDE_PAD, 0, Styles.SIDE_PAD));
         setAlignmentX(LEFT_ALIGNMENT);
 
-        label.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        add(label, BorderLayout.CENTER);
+        CardPanel card = new CardPanel(new BorderLayout(6, 0));
+        card.setBackground(Styles.ACTIVE_TINT);
+        card.setOutline(ColorScheme.BRAND_ORANGE);
+        card.setBorder(BorderFactory.createEmptyBorder(5, 10, 6, 8));
 
-        Styles.compactSecondaryButton(stop);
+        JLabel caption = new JLabel("HEADING TO");
+        caption.setFont(FontManager.getRunescapeSmallFont());
+        caption.setForeground(ColorScheme.BRAND_ORANGE);
+        label.setForeground(Color.WHITE);
+        label.setFont(FontManager.getRunescapeBoldFont());
+        JPanel text = new JPanel(new BorderLayout(0, 2));
+        text.setOpaque(false);
+        text.add(caption, BorderLayout.NORTH);
+        text.add(label, BorderLayout.CENTER);
+        card.add(text, BorderLayout.CENTER);
+
+        stop.setIcon(Glyphs.of(Glyphs.Shape.STOP, Color.BLACK));
+        stop.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
         stop.getAccessibleContext().setAccessibleName("Stop pathing");
+        HoverHint.shared().attach(stop, () -> "Stop");
         stop.addActionListener(e -> navigator.stop());
-        add(stop, BorderLayout.EAST);
+        JPanel east = new JPanel(new java.awt.GridBagLayout());
+        east.setOpaque(false);
+        east.add(stop);
+        card.add(east, BorderLayout.EAST);
+        add(card, BorderLayout.CENTER);
 
         setVisible(false);
     }
@@ -59,14 +72,10 @@ final class ActivePathBanner extends JPanel
         int target = navigator.activeTarget();
         boolean active = target != WorldPointPacker.UNDEFINED;
         boolean enabled = config.showPathingBanner();
-        // A saved-waypoint target shows its own Stop square on the row, so the banner stands down
-        // and only covers rowless paths (landmark bar, presets, routes, death auto-path).
-        boolean visible = active && enabled && !targetHasRow.test(target);
+        boolean visible = active && enabled;
         if (visible)
         {
-            String name = navigator.activeName();
-            label.setText("<html><font color='" + ARROW_HEX + "'>→</font> "
-                + "Pathing to " + Text.escapeHtml(name) + "</html>");
+            label.setText("<html>" + Text.escapeHtml(navigator.activeName()) + "</html>");
         }
         setVisible(visible);
     }

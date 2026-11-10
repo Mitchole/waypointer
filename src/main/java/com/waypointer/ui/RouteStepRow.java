@@ -39,13 +39,13 @@ final class RouteStepRow extends JPanel
         RouteStepDragHandler dragHandler)
     {
         setLayout(new BorderLayout(6, 0));
-        setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 4));
+        setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(4, 8, 3, 4));
 
         // Grip handle (west): dragging it past the threshold starts a reorder.
         JLabel grip = new JLabel(GLYPH_GRIP);
         grip.setFont(FontManager.getRunescapeSmallFont());
-        grip.setForeground(ColorScheme.LIGHT_GRAY_COLOR.darker());
+        grip.setForeground(Styles.FAINT_TEXT);
         grip.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
         grip.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 4));
         add(grip, BorderLayout.WEST);
@@ -82,7 +82,7 @@ final class RouteStepRow extends JPanel
 
         // East: edit (pencil) then delete (x). Pencil is the primary, visible edit affordance.
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        actions.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        actions.setOpaque(false);
 
         JButton edit = new JButton(GLYPH_EDIT);
         Styles.glyphButton(edit);
@@ -99,6 +99,14 @@ final class RouteStepRow extends JPanel
         add(actions, BorderLayout.EAST);
 
         dragHandler.attach(this, grip, step.getId());
+    }
+
+    // The step card behind the rows supplies the background; each row draws the line above it.
+    @Override
+    protected void paintComponent(java.awt.Graphics g)
+    {
+        g.setColor(Styles.ROW_LINE);
+        g.fillRect(8, 0, getWidth() - 16, 1);
     }
 
     static String stepGlyph(StepType type)

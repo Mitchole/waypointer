@@ -72,8 +72,15 @@ final class RouteEditorPanel extends JPanel
         add(top, BorderLayout.NORTH);
 
         stepList.setLayout(new BoxLayout(stepList, BoxLayout.Y_AXIS));
-        stepList.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        add(Styles.pinnedScrollPane(Styles.sidebarWidthHolder(stepList)), BorderLayout.CENTER);
+        stepList.setOpaque(false);
+        // All steps share one card, padded off the panel edges.
+        CardPanel stepCard = new CardPanel(new BorderLayout());
+        stepCard.add(stepList, BorderLayout.CENTER);
+        JPanel padded = new JPanel(new BorderLayout());
+        padded.setOpaque(false);
+        padded.setBorder(BorderFactory.createEmptyBorder(0, Styles.SIDE_PAD, Styles.SIDE_PAD, Styles.SIDE_PAD - 2));
+        padded.add(stepCard, BorderLayout.CENTER);
+        add(Styles.pinnedScrollPane(Styles.sidebarWidthHolder(padded)), BorderLayout.CENTER);
 
         rebuild();
     }
@@ -90,7 +97,7 @@ final class RouteEditorPanel extends JPanel
 
         Route r = store.getRouteById(routeId);
         JCheckBox repeating = new JCheckBox("Repeating", r != null && r.isRepeating());
-        repeating.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        repeating.setOpaque(false);
         repeating.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         repeating.addActionListener(e -> store.setRepeating(routeId, repeating.isSelected()));
         header.add(repeating);
@@ -102,7 +109,7 @@ final class RouteEditorPanel extends JPanel
         JPanel bar = new JPanel();
         bar.setLayout(new BoxLayout(bar, BoxLayout.Y_AXIS));
         bar.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        bar.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
+        bar.setBorder(BorderFactory.createEmptyBorder(4, Styles.SIDE_PAD, 4, Styles.SIDE_PAD));
 
         // ◉ = waypoint glyph; capture the player's current tile as a step
         bar.add(fullWidthButton("◉ Mark location", e -> onMarkCurrentLocation.run()));

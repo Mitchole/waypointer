@@ -65,7 +65,8 @@ to waypoints out at sea.
 
 Five ways to capture a tile:
 
-- **Mark current location** saves the tile your character is standing on.
+- **Mark spot**, the orange button at the bottom of the list, saves the tile your character
+  is standing on.
 - **Right-click the world map** and choose `Save as Waypoint`.
 - **Shift right-click a tile in the 3D world** and choose `Save as Waypoint`.
 - **Right-click an NPC or object** and choose `Save as Waypoint`. The name and tile at the
@@ -87,9 +88,10 @@ landmark, and the name is filled in for you.
 
 - Sort waypoints into **categories** you name yourself. A fixed `Uncategorized` bucket holds
   anything you have not filed.
-- **Pin** a waypoint to lift it into a section at the very top of the panel, above the
-  categories, for the handful you path to constantly.
-- Drag the `⠿` handle on a row to reorder a waypoint, or to move it into another category.
+- **Pin** a waypoint with the star that shows when you hover its row. Pinned waypoints get a
+  tile at the top of the panel, above the categories, for the handful you path to constantly.
+  Click a tile to path there; right-click it to edit, unpin, or delete.
+- Drag a row by its name to reorder a waypoint, or to move it into another category.
 - Drag a category header to reorder the categories.
 - Give any category or waypoint an **icon** from the in-game sprite picker.
 - Hover a row to read the first line of its notes without opening it.
@@ -104,8 +106,8 @@ landmark, and the name is filled in for you.
 ## Travelling to a waypoint
 
 Click `Play` on a waypoint. Waypointer hands the tile to Shortest Path, which draws the route
-on the world map and minimap. While a path is active, a **Pathing to** strip sits at the top of
-the panel; clear it with **Stop pathing** in the overflow (`⋮`) menu.
+on the world map and minimap. While a path is active, a **Heading to** card sits at the top of
+the panel with the destination's name; press its stop button to clear the path.
 
 A couple of safety nets, both on by default and both toggleable in [Settings](#settings):
 
@@ -144,9 +146,9 @@ waypoint then goes to Shortest Path.
 
 ## The nearest-landmark bar
 
-Across the top of the panel is a row of landmark buttons: bank, altar, anvil, and the like.
+Under the search box is a row of landmark buttons: bank, altar, anvil, and the like.
 Click one and Waypointer paths to the nearest landmark of that type from wherever you are
-standing, no saved waypoint needed. **Customise landmark bar** in the panel's `⋮` menu lets
+standing, no saved waypoint needed. **Choose nearest buttons** in the panel's `⋮` menu lets
 you choose which landmark types show and in what order. Hide the whole bar from [Settings](#settings) if you would
 rather not have it.
 
@@ -241,7 +243,7 @@ goes back to how you left it.
 | Right-click tiles to save | Off | Adds `Save as Waypoint` to the Shift right-click menu on tiles in the 3D world. |
 | Right-click NPCs and objects to save | Off | Adds `Save as Waypoint` to the right-click menu on NPCs and objects. |
 | Show 'nearest landmark' bar | On | Shows the one-click row of nearest-landmark shortcuts at the top of the panel. |
-| Show 'Pathing to' banner | On | Shows a status strip at the top of the panel while a path is active. |
+| Show 'Heading to' card | On | Shows the destination at the top of the panel while a path is active. |
 | Confirm before pathing into Wilderness | On | Asks before Playing a waypoint whose tile is in the Wilderness. |
 | Show wilderness skull on row | On | Marks rows whose destination is in the Wilderness with a skull. |
 | Auto-path to death location | Off | Starts a path back to your death tile when you die. Needs Shortest Path. |

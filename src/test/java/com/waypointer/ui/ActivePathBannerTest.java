@@ -18,7 +18,6 @@ public class ActivePathBannerTest
     private ActivePathBanner banner;
     // Flipped by tests that exercise the saved-waypoint suppression branch. Default false so the
     // existing rowless-path assertions (landmark/preset/route) keep showing the banner.
-    private boolean targetHasRow;
 
     @Before
     public void setUp()
@@ -27,8 +26,7 @@ public class ActivePathBannerTest
         config = mock(WaypointerConfig.class);
         when(config.showPathingBanner()).thenReturn(true);
         when(pathfinder.getActiveTarget()).thenReturn(WorldPointPacker.UNDEFINED);
-        targetHasRow = false;
-        banner = new ActivePathBanner(com.waypointer.service.LandNavigator.over(pathfinder), config, packed -> targetHasRow);
+        banner = new ActivePathBanner(com.waypointer.service.LandNavigator.over(pathfinder), config);
     }
 
     @Test
@@ -81,16 +79,6 @@ public class ActivePathBannerTest
         banner.refresh();
         banner.clickStopForTest();
         verify(pathfinder).clearPath();
-    }
-
-    @Test
-    public void hiddenWhenTargetHasSavedWaypointRow()
-    {
-        when(pathfinder.getActiveTarget()).thenReturn(WorldPointPacker.pack(3162, 3486, 0));
-        when(pathfinder.getActiveName()).thenReturn("Vorkath");
-        targetHasRow = true; // the row's Stop square covers this target
-        banner.refresh();
-        assertFalse(banner.isVisible());
     }
 
     @Test

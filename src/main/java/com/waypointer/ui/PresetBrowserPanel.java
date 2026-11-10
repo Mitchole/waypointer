@@ -68,6 +68,7 @@ public class PresetBrowserPanel extends PluginPanel
 
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        body.setBorder(BorderFactory.createEmptyBorder(0, Styles.SIDE_PAD, 0, Styles.SIDE_PAD - 2));
 
         // Width-pinned so a long preset name cannot push the count and the add buttons past
         // the right edge.
@@ -119,12 +120,8 @@ public class PresetBrowserPanel extends PluginPanel
     {
         JPanel header = new JPanel(new BorderLayout(8, 0));
         header.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        header.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-
-        JLabel title = new JLabel("Preset waypoints");
-        title.setForeground(Color.WHITE);
-        title.setFont(FontManager.getRunescapeBoldFont());
-        header.add(title, BorderLayout.EAST);
+        header.setBorder(BorderFactory.createEmptyBorder(Styles.CARD_GAP, Styles.SIDE_PAD, 0, Styles.SIDE_PAD));
+        header.add(Styles.caption("Press + to copy one into your list"), BorderLayout.WEST);
 
         return header;
     }

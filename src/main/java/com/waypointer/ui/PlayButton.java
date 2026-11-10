@@ -9,7 +9,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import net.runelite.client.ui.ColorScheme;
 
-/** Per-row Play button styling: a grey glyph at rest, orange on hover, filled orange when active. */
+/** Per-row Play button styling: a grey glyph at rest, orange on hover, an orange stop square when active. */
 final class PlayButton
 {
     private PlayButton() {}
@@ -65,18 +65,10 @@ final class PlayButton
     {
         b.setBorder(BorderFactory.createEmptyBorder());
         // Orange is kept for the row being pathed to; a resting row shows a plain grey glyph.
-        b.setContentAreaFilled(active);
-        b.setOpaque(active);
-        if (active)
-        {
-            b.setBackground(ColorScheme.BRAND_ORANGE);
-            b.setForeground(Color.BLACK);
-        }
-        else
-        {
-            b.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-            b.setForeground(Styles.MUTED_TEXT);
-        }
+        // The row paints the tint behind an active button, so the button itself never fills.
+        b.setContentAreaFilled(false);
+        b.setOpaque(false);
+        b.setForeground(active ? ColorScheme.BRAND_ORANGE : Styles.MUTED_TEXT);
     }
 
     private static void applyHover(JButton b)

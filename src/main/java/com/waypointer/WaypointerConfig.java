@@ -46,8 +46,8 @@ public interface WaypointerConfig extends Config
 
     @ConfigItem(
         keyName = "showPathingBanner",
-        name = "Show 'Pathing to' banner",
-        description = "Show a status strip at the top of the panel while a path is active.",
+        name = "Show 'Heading to' card",
+        description = "Show the destination at the top of the panel while a path is active.",
         position = 20
     )
     default boolean showPathingBanner() { return true; }

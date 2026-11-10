@@ -51,24 +51,142 @@ final class Styles
     static final String MUTED_HEX  = "#9b9b9b";
     static final String FAINT_HEX  = "#6e6e6e";
 
+    // The card look. Cards are DARKER_GRAY blocks with rounded corners on the DARK_GRAY panel;
+    // RAISED is for controls sitting on a card, ROW_HOVER and ACTIVE_TINT for row states.
+    static final Color CARD_BG = ColorScheme.DARKER_GRAY_COLOR;
+    static final Color RAISED = new Color(52, 52, 52);
+    static final Color ROW_HOVER = new Color(58, 58, 58);
+    static final Color ROW_LINE = new Color(56, 56, 56);
+    static final Color ACTIVE_TINT = new Color(70, 50, 18);
+    static final int CARD_ARC = 12;
+    static final int CARD_GAP = 6;
+    static final int SIDE_PAD = 8;
+
+    // Fixed vertical space between cards. Left-aligned, unlike a Box strut, so it does not pull
+    // a BoxLayout column off its left edge.
+    static JPanel gap(int height)
+    {
+        JPanel p = new JPanel();
+        p.setOpaque(false);
+        Dimension d = new Dimension(0, height);
+        p.setPreferredSize(d);
+        p.setMinimumSize(d);
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
+        p.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return p;
+    }
+
+    // Small capital label above a group of cards ("NEAREST", "PINNED").
+    static JLabel caption(String text)
+    {
+        JLabel l = new JLabel(text.toUpperCase(java.util.Locale.ROOT));
+        l.setFont(FontManager.getRunescapeSmallFont());
+        l.setForeground(FAINT_TEXT);
+        l.setBorder(BorderFactory.createEmptyBorder(2, 2, 3, 0));
+        l.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return l;
+    }
+
+    // A count in a rounded pill, as shown beside a card title.
+    static JLabel pill(String text)
+    {
+        JLabel l = new JLabel(text)
+        {
+            @Override protected void paintComponent(java.awt.Graphics g)
+            {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(RAISED);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), getHeight(), getHeight());
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        l.setFont(FontManager.getRunescapeSmallFont());
+        l.setForeground(MUTED_TEXT);
+        l.setBorder(BorderFactory.createEmptyBorder(1, 5, 1, 5));
+        return l;
+    }
+
+    // Client property: corner diameter for a rounded button (default 8). The Mark button sets
+    // it to its own height to become a pill.
+    static final String CP_ARC = "waypointer.arc";
+
+    // Paints a button as a rounded block of its background colour. Set on the button directly,
+    // so it does not depend on which look and feel was live when the panel was built.
+    private static final class RoundButtonUI extends javax.swing.plaf.basic.BasicButtonUI
+    {
+        @Override public void paint(java.awt.Graphics g, javax.swing.JComponent c)
+        {
+            javax.swing.AbstractButton b = (javax.swing.AbstractButton) c;
+            Color fill = b.getBackground();
+            if (!b.isEnabled()) fill = blend(fill, ColorScheme.DARK_GRAY_COLOR);
+            else if (b.getModel().isPressed()) fill = fill.darker();
+            else if (b.getModel().isRollover()) fill = fill.brighter();
+            Object arc = b.getClientProperty(CP_ARC);
+            int a = arc instanceof Integer ? (Integer) arc : 8;
+            java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+            g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(fill);
+            g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), a, a);
+            g2.dispose();
+            super.paint(g, c);
+        }
+
+        private static Color blend(Color a, Color b)
+        {
+            return new Color((a.getRed() + b.getRed()) / 2, (a.getGreen() + b.getGreen()) / 2,
+                (a.getBlue() + b.getBlue()) / 2);
+        }
+    }
+
+    private static void round(JButton b, Color bg, Color fg, int padV, int padH)
+    {
+        b.setUI(new RoundButtonUI());
+        b.setContentAreaFilled(false);
+        b.setOpaque(false);
+        b.setFocusPainted(false);
+        b.setBorderPainted(false);
+        b.setRolloverEnabled(true);
+        b.setBackground(bg);
+        b.setForeground(fg);
+        b.setBorder(BorderFactory.createEmptyBorder(padV, padH, padV, padH));
+    }
+
+    // Rounded button for use on or between cards.
+    static JButton roundButton(String text, boolean primary)
+    {
+        JButton b = new JButton(text);
+        round(b, primary ? ColorScheme.BRAND_ORANGE : RAISED, primary ? Color.BLACK : Color.WHITE, 4, 10);
+        b.setFont(primary ? FontManager.getRunescapeBoldFont() : FontManager.getRunescapeFont());
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return b;
+    }
+
+    // Icon-only button with no chrome, for the controls at the end of a row.
+    static JButton iconButton(javax.swing.Icon icon, String accessibleName)
+    {
+        JButton b = new JButton(icon);
+        b.setFocusPainted(false);
+        b.setContentAreaFilled(false);
+        b.setBorderPainted(false);
+        b.setOpaque(false);
+        b.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.getAccessibleContext().setAccessibleName(accessibleName);
+        return b;
+    }
+
     static void secondaryButton(JButton b)
     {
-        b.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        b.setForeground(Color.WHITE);
-        b.setFocusPainted(false);
-        b.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+        round(b, RAISED, Color.WHITE, 6, 12);
     }
 
     static void compactSecondaryButton(JButton b)
     {
-        b.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        b.setForeground(Color.WHITE);
-        b.setFocusPainted(false);
-        b.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1),
-            BorderFactory.createEmptyBorder(2, 6, 2, 6)));
+        round(b, RAISED, Color.WHITE, 2, 6);
     }
 
     // Borderless glyph button for row actions: grey at rest, white under the pointer. Keeps
@@ -118,21 +236,37 @@ final class Styles
 
     static void primaryButton(JButton b)
     {
-        b.setBackground(ColorScheme.BRAND_ORANGE);
-        b.setForeground(Color.BLACK);
-        b.setFocusPainted(false);
-        b.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.BRAND_ORANGE.darker(), 1),
-            BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+        round(b, ColorScheme.BRAND_ORANGE, Color.BLACK, 6, 12);
         b.setFont(b.getFont().deriveFont(Font.BOLD));
     }
 
-    // Tightens a styled button's padding for the panel header, keeping its line border.
+    // Tightens a styled button's padding for the panel header.
     static void slim(JButton b)
     {
-        javax.swing.border.Border line = ((javax.swing.border.CompoundBorder) b.getBorder()).getOutsideBorder();
-        b.setBorder(BorderFactory.createCompoundBorder(line, BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+        b.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
     }
+
+    // Paints a rounded card inside `c`, inset from its edges, for the forms that are panels in
+    // their own right. The caller keeps `c` non-opaque and pads its border by the same insets.
+    static void paintInsetCard(java.awt.Graphics g, Component c, int left, int top, int right, int bottom,
+        Color outline)
+    {
+        java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+        g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+            java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+        int w = c.getWidth() - left - right;
+        int h = c.getHeight() - top - bottom;
+        g2.setColor(CARD_BG);
+        g2.fillRoundRect(left, top, w, h, CARD_ARC, CARD_ARC);
+        if (outline != null)
+        {
+            g2.setColor(outline);
+            g2.drawRoundRect(left, top, w - 1, h - 1, CARD_ARC, CARD_ARC);
+        }
+        g2.dispose();
+    }
+
+    static final Color FIELD_LINE = new Color(80, 80, 80);
 
     static void textField(JTextField f)
     {
@@ -140,7 +274,7 @@ final class Styles
         f.setForeground(Color.WHITE);
         f.setCaretColor(Color.WHITE);
         f.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR, 1),
+            BorderFactory.createLineBorder(FIELD_LINE, 1),
             BorderFactory.createEmptyBorder(2, 4, 2, 4)));
     }
 
@@ -149,7 +283,7 @@ final class Styles
         a.setBackground(ColorScheme.DARK_GRAY_COLOR);
         a.setForeground(Color.WHITE);
         a.setCaretColor(Color.WHITE);
-        a.setBorder(BorderFactory.createLineBorder(ColorScheme.LIGHT_GRAY_COLOR, 1));
+        a.setBorder(BorderFactory.createLineBorder(FIELD_LINE, 1));
     }
 
     static void combo(JComboBox<?> c)

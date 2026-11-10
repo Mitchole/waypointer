@@ -40,6 +40,10 @@ final class OverflowMenu
         Component anchor = panel;
         JPopupMenu menu = new JPopupMenu();
 
+        JMenuItem select = new JMenuItem("Select waypoints");
+        select.addActionListener(e -> panel.enterSelectMode());
+        menu.add(select);
+
         JMenuItem newCategory = new JMenuItem("New category...");
         newCategory.addActionListener(e -> {
             String name = JOptionPane.showInputDialog(anchor, "Category name:", "New category",
@@ -67,7 +71,7 @@ final class OverflowMenu
 
         if (panel.landmarkBarShown())
         {
-            JMenuItem landmarks = new JMenuItem("Customise landmark bar");
+            JMenuItem landmarks = new JMenuItem("Choose nearest buttons");
             landmarks.addActionListener(e -> panel.toggleLandmarkPicker());
             menu.add(landmarks);
         }

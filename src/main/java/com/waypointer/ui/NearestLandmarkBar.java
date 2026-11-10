@@ -9,11 +9,9 @@ import com.waypointer.service.Navigator;
 import com.waypointer.service.PlayerPosition;
 import com.waypointer.service.WaypointPathfinder;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.Image;
-import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.util.EnumMap;
 import java.util.Map;
@@ -33,10 +31,9 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.SpriteManager;
 import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.PluginPanel;
 
 /**
- * Row of clickable landmark icons in the panel header. Each button pathfinds to the nearest
+ * Grid of labelled landmark tiles in the panel header. Each button pathfinds to the nearest
  * landmark of its type from the player's current tile. The user-selected subset and order
  * is controlled by {@link LandmarkSelection}; the panel menu's "Customise landmark bar"
  * entry toggles the inline {@link ConfigureLandmarksPanel} picker.
@@ -44,7 +41,8 @@ import net.runelite.client.ui.PluginPanel;
 @Singleton
 public final class NearestLandmarkBar extends JPanel
 {
-    private static final int BUTTON_SIZE = 28;
+    private static final int TILES_PER_ROW = 4;
+    private static final int TILE_HEIGHT = 38;
     // Cap icon dimension so MINIMAP_BOAT_SLOOP and other oversized sprites match the
     // MAP_ICON_* set, which tops out around 16x16. Smaller sprites render unscaled.
     private static final int MAX_ICON_PX = 18;
@@ -101,13 +99,12 @@ public final class NearestLandmarkBar extends JPanel
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+        setBorder(BorderFactory.createEmptyBorder());
         setAlignmentX(LEFT_ALIGNMENT);
 
-        // WrapLayout (not stock FlowLayout) so the row reports a tall-enough preferred height
-        // when the selected icons spill onto a second row. With plain FlowLayout the parent
-        // BoxLayout sizes the row for one row only and clips the wrapped buttons.
-        iconRow = new JPanel(new WrapLayout(FlowLayout.CENTER, 2, 0));
+        // Four tiles to a line. A grid sizes itself from the tile count alone, so the height
+        // never depends on a width that is still settling during the first layout passes.
+        iconRow = new JPanel(new GridLayout(0, TILES_PER_ROW, Styles.CARD_GAP, Styles.CARD_GAP));
         iconRow.setBackground(ColorScheme.DARK_GRAY_COLOR);
         iconRow.setAlignmentX(LEFT_ALIGNMENT);
         add(iconRow);
@@ -151,7 +148,7 @@ public final class NearestLandmarkBar extends JPanel
 
         for (LandmarkType type : selection.selectedInBarOrder())
         {
-            JButton b = makeButton();
+            JButton b = makeButton(type);
             b.addActionListener(e -> onPick(type));
             b.getAccessibleContext().setAccessibleName("Path to nearest " + type.displayName());
             applySprite(b, type);
@@ -181,21 +178,6 @@ public final class NearestLandmarkBar extends JPanel
         repaint();
     }
 
-    // The first layout computes the icon row's WrapLayout preferred height before the row has a
-    // real width, so the icons can wrap to a phantom second row and leave a tall gap above the
-    // search field. Once the row has bounds, a deferred revalidate recomputes against the true
-    // width and collapses it back to a single row -- the same effect the user got by toggling the
-    // picker open and closed. Runs each time the bar joins a displayable hierarchy.
-    @Override
-    public void addNotify()
-    {
-        super.addNotify();
-        SwingUtilities.invokeLater(() -> {
-            revalidate();
-            repaint();
-        });
-    }
-
     private void onPickerToggle(LandmarkType type, boolean include)
     {
         applySelection(selection.withSelected(type, include));
@@ -215,16 +197,33 @@ public final class NearestLandmarkBar extends JPanel
         picker.setSelection(selection);
     }
 
-    private JButton makeButton()
+    private JButton makeButton(LandmarkType type)
     {
-        JButton b = new JButton();
-        Styles.secondaryButton(b);
-        Dimension d = new Dimension(BUTTON_SIZE, BUTTON_SIZE);
+        JButton b = Styles.roundButton(shortName(type), false);
+        b.setBackground(Styles.CARD_BG);
+        b.setForeground(Styles.MUTED_TEXT);
+        b.setFont(net.runelite.client.ui.FontManager.getRunescapeSmallFont());
+        b.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        b.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        b.setIconTextGap(2);
+        b.setBorder(BorderFactory.createEmptyBorder(4, 0, 3, 0));
+        Dimension d = new Dimension(0, TILE_HEIGHT);
         b.setPreferredSize(d);
         b.setMinimumSize(d);
-        b.setMaximumSize(d);
-        b.setBorder(BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1));
         return b;
+    }
+
+    // Tile labels have about 50 px, so the longer names are cut to one word.
+    static String shortName(LandmarkType type)
+    {
+        switch (type)
+        {
+            case SPINNING_WHEEL: return "Wheel";
+            case SPIRIT_TREE:    return "Spirit tree";
+            case CHARTER_SHIP:   return "Charter";
+            case SLAYER_MASTER:  return "Slayer";
+            default:             return type.displayName();
+        }
     }
 
     private void applyEnabledState()
@@ -333,81 +332,5 @@ public final class NearestLandmarkBar extends JPanel
         m.put(LandmarkType.FAIRY_RING,     1504);  // MAP_ICON_TRANSPORTATION
         m.put(LandmarkType.SLAYER_MASTER,  1499);  // MAP_ICON_SLAYER_MASTER
         return m;
-    }
-
-    /**
-     * FlowLayout that measures every wrapped row instead of assuming a single one. Stock
-     * FlowLayout lays out wrapped rows in {@code layoutContainer} but still reports a one-row
-     * preferred height, so a {@code BoxLayout} parent allocates one row and clips the rest.
-     */
-    private static final class WrapLayout extends FlowLayout
-    {
-        WrapLayout(int align, int hgap, int vgap)
-        {
-            super(align, hgap, vgap);
-        }
-
-        @Override
-        public Dimension preferredLayoutSize(Container target)
-        {
-            return wrappedSize(target, true);
-        }
-
-        @Override
-        public Dimension minimumLayoutSize(Container target)
-        {
-            return wrappedSize(target, false);
-        }
-
-        private Dimension wrappedSize(Container target, boolean preferred)
-        {
-            synchronized (target.getTreeLock())
-            {
-                Insets insets = target.getInsets();
-                int maxRowWidth = availableWidth(target)
-                    - insets.left - insets.right - getHgap() * 2;
-                if (maxRowWidth <= 0) maxRowWidth = Integer.MAX_VALUE;
-
-                int widest = 0;
-                int totalHeight = 0;
-                int rowWidth = 0;
-                int rowHeight = 0;
-                for (Component c : target.getComponents())
-                {
-                    if (!c.isVisible()) continue;
-                    Dimension d = preferred ? c.getPreferredSize() : c.getMinimumSize();
-                    if (rowWidth > 0 && rowWidth + getHgap() + d.width > maxRowWidth)
-                    {
-                        widest = Math.max(widest, rowWidth);
-                        totalHeight += rowHeight + getVgap();
-                        rowWidth = 0;
-                        rowHeight = 0;
-                    }
-                    rowWidth += (rowWidth == 0 ? 0 : getHgap()) + d.width;
-                    rowHeight = Math.max(rowHeight, d.height);
-                }
-                widest = Math.max(widest, rowWidth);
-                totalHeight += rowHeight;
-
-                return new Dimension(
-                    widest + insets.left + insets.right + getHgap() * 2,
-                    totalHeight + insets.top + insets.bottom + getVgap() * 2);
-            }
-        }
-
-        // Width available to the row. The bar only ever renders in the fixed-width RuneLite
-        // sidebar, so the row's real width is always close to PANEL_WIDTH (less the surrounding
-        // 8 px panel insets). During early or transient layout passes the live width can briefly
-        // collapse toward a single button; honouring that would wrap every icon onto its own row
-        // and report a tall preferred height. The narrow row then drives a narrow preferred
-        // *width*, which feeds back into an ever-narrower row -- a stuck state a later revalidate
-        // cannot break, leaving a tall gap above the search field until the picker is toggled.
-        // Trust the live width only once it is near the real sidebar width; otherwise fall back to
-        // PANEL_WIDTH so the row stays a single line and the bar can grow back to full width.
-        private static int availableWidth(Container target)
-        {
-            int live = target.getWidth();
-            return live >= PluginPanel.PANEL_WIDTH - 32 ? live : PluginPanel.PANEL_WIDTH;
-        }
     }
 }

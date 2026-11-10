@@ -36,12 +36,10 @@ final class AddRemoveToggle extends JLabel
         this.currentId = initialId;
 
         setOpaque(true);
-        setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        setBackground(Styles.RAISED);
         setFont(getFont().deriveFont(Font.BOLD, 14f));
         setHorizontalAlignment(SwingConstants.CENTER);
-        setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR.darker(), 1),
-            BorderFactory.createEmptyBorder(4, 7, 4, 7)));
+        setBorder(BorderFactory.createEmptyBorder(3, 7, 3, 7));
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         applyState(false);
         HoverHint.shared().attach(this, () -> currentId == null ? "Add waypoint" : "Remove waypoint");

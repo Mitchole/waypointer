@@ -203,12 +203,10 @@ public class NearestLandmarkBarTest
     }
 
     @Test
-    public void iconRowPreferredHeightFitsEveryButtonWhenWrapped()
+    public void tileGridGrowsARowForEveryFourTiles()
     {
-        // Select every landmark type so the icon row (one 28 px button per type) cannot fit
-        // on a single row at the panel width. The row must report a preferred height tall
-        // enough for the wrapped rows; otherwise the parent BoxLayout allocates only one
-        // row's worth of height and the wrapped buttons are clipped out of view.
+        // Every landmark type selected: more tiles than one line holds. The grid must report a
+        // height covering all its lines, or the header clips the lower ones.
         com.google.gson.Gson realGson = new com.google.gson.Gson();
         LandmarkSelection all = LandmarkSelection.canonicalDefault();
         for (LandmarkType t : LandmarkType.values())
@@ -218,47 +216,36 @@ public class NearestLandmarkBarTest
         when(config.landmarkSelectionJson()).thenReturn(all.toJson(realGson));
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, realGson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
-        bar.setSize(net.runelite.client.ui.PluginPanel.PANEL_WIDTH, 600);
-        bar.doLayout(); // BoxLayout sizes the icon row to the bar width
-
         Container iconRow = (Container) bar.getComponent(0);
-        iconRow.doLayout(); // FlowLayout wraps the buttons within that width
-        int rowWidth = iconRow.getWidth();
-        assertTrue("icon row should have been laid out with a real width", rowWidth > 0);
+        int tiles = iconRow.getComponentCount();
+        assertEquals(LandmarkType.values().length, tiles);
+        int lines = (tiles + 3) / 4;
+        assertTrue("this test needs more than one line", lines > 1);
+        assertEquals(lines * 38 + (lines - 1) * Styles.CARD_GAP, iconRow.getPreferredSize().height);
 
+        iconRow.setSize(net.runelite.client.ui.PluginPanel.PANEL_WIDTH, iconRow.getPreferredSize().height);
+        iconRow.doLayout();
         int maxBottom = 0;
-        int buttonCount = 0;
         for (Component c : iconRow.getComponents())
         {
-            if (!(c instanceof JButton)) continue;
-            buttonCount++;
             maxBottom = Math.max(maxBottom, c.getY() + c.getHeight());
         }
-        assertEquals("expected 11 type buttons", 11, buttonCount);
-        assertTrue("buttons must have wrapped past one row for this test to be meaningful",
-            maxBottom > 34);
-        assertTrue("icon row preferred height (" + iconRow.getPreferredSize().height
-                + ") must accommodate the lowest button (bottom " + maxBottom + ")",
-            iconRow.getPreferredSize().height >= maxBottom);
+        assertTrue(maxBottom <= iconRow.getHeight());
     }
 
     @Test
-    public void iconRowStaysSingleRowWhenWidthMomentarilyCollapses()
+    public void tileGridHeightIgnoresItsCurrentWidth()
     {
-        // Regression: on first launch the icon row's width transiently collapses toward a
-        // single button while the panel is being realised. The wrap layout used to honour that
-        // narrow width, stacking all five default buttons one-per-row and leaving a tall gap
-        // above the search field that only a Customize toggle could clear. The row only ever
-        // renders in the fixed-width sidebar, so a momentarily narrow width must not inflate the
-        // reported height -- it should stay a single row.
+        // Regression: on first launch the row's width transiently collapses while the panel is
+        // being realised. A height derived from that width left a tall gap under the bar, so
+        // the height must come from the tile count alone.
         NearestLandmarkBar bar = new NearestLandmarkBar(bbox, pathfinder, com.waypointer.service.LandNavigator.over(pathfinder), client, clientThread, spriteManager, config, gson, org.mockito.Mockito.mock(com.waypointer.service.PlayerPosition.class));
 
         Container iconRow = (Container) bar.getComponent(0);
-        iconRow.setSize(34, 10); // one BUTTON_SIZE wide -- the collapsed transient width
+        int before = iconRow.getPreferredSize().height;
+        iconRow.setSize(34, 10);
 
-        int height = iconRow.getPreferredSize().height;
-        assertTrue("icon row must report a single-row height when momentarily narrow, was " + height,
-            height <= 40);
+        assertEquals(before, iconRow.getPreferredSize().height);
     }
 
     // Returns only the landmark buttons in the icon row (all buttons except the trailing overflow).

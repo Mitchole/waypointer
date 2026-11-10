@@ -62,11 +62,18 @@ final class ConfigureLandmarksPanel extends JPanel
         this.onClose = onClose;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBackground(ColorScheme.DARK_GRAY_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        setOpaque(false);
+        // The top inset is the gap under the tiles; see paintComponent.
+        setBorder(BorderFactory.createEmptyBorder(Styles.CARD_GAP + 4, 8, 6, 8));
         setVisible(false);
 
         rebuild();
+    }
+
+    @Override
+    protected void paintComponent(java.awt.Graphics g)
+    {
+        Styles.paintInsetCard(g, this, 0, Styles.CARD_GAP, 0, 0, null);
     }
 
     void setSelection(LandmarkSelection s)
@@ -94,13 +101,11 @@ final class ConfigureLandmarksPanel extends JPanel
     private JPanel buildHeader()
     {
         JPanel header = new JPanel(new java.awt.BorderLayout());
-        header.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        header.setOpaque(false);
         header.setMaximumSize(new Dimension(Integer.MAX_VALUE, ROW_HEIGHT));
         header.setPreferredSize(new Dimension(0, ROW_HEIGHT));
 
-        JLabel title = new JLabel("Landmarks");
-        title.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        title.setFont(FontManager.getRunescapeSmallFont());
+        JLabel title = Styles.caption("Tick to show, drag to reorder");
         header.add(title, java.awt.BorderLayout.WEST);
 
         JLabel close = new JLabel("✕"); // U+2715 multiplication X -- close glyph
@@ -119,8 +124,16 @@ final class ConfigureLandmarksPanel extends JPanel
 
     private JPanel buildRow(LandmarkType type, int index)
     {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        row.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0))
+        {
+            @Override
+            protected void paintComponent(java.awt.Graphics g)
+            {
+                g.setColor(Styles.ROW_LINE);
+                g.fillRect(0, 0, getWidth(), 1);
+            }
+        };
+        row.setOpaque(false);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, ROW_HEIGHT));
         row.setPreferredSize(new Dimension(0, ROW_HEIGHT));
 
@@ -133,7 +146,7 @@ final class ConfigureLandmarksPanel extends JPanel
 
         JCheckBox cb = new JCheckBox();
         cb.setSelected(selection.isSelected(type));
-        cb.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        cb.setOpaque(false);
         cb.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         cb.setFocusPainted(false);
         cb.addActionListener(e -> onToggle.accept(type, cb.isSelected()));

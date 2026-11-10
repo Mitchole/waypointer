@@ -16,6 +16,7 @@ import java.awt.FlowLayout;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
@@ -79,6 +80,7 @@ public class RoutesPanel extends JPanel
 
         routeList.setLayout(new BoxLayout(routeList, BoxLayout.Y_AXIS));
         routeList.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        routeList.setBorder(BorderFactory.createEmptyBorder(0, Styles.SIDE_PAD, 0, Styles.SIDE_PAD - 2));
         listCard.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
         JPanel listNorth = new JPanel();
