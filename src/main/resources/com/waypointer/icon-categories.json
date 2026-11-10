@@ -1644,6 +1644,229 @@
           "name": "HISCORE_DAGANNOTH_REX"
         }
       ]
+    },
+    {
+      "name": "Sailing",
+      "color": "#2e7f8f",
+      "iconCount": 54,
+      "icons": [
+        {
+          "id": 7053,
+          "name": "Sailing icon 0"
+        },
+        {
+          "id": 7054,
+          "name": "Sailing icon 1"
+        },
+        {
+          "id": 7055,
+          "name": "Sailing icon 2"
+        },
+        {
+          "id": 7056,
+          "name": "Sailing icon 3"
+        },
+        {
+          "id": 7057,
+          "name": "Sailing icon 4"
+        },
+        {
+          "id": 7058,
+          "name": "Sailing icon 5"
+        },
+        {
+          "id": 7059,
+          "name": "Sailing icon 6"
+        },
+        {
+          "id": 7060,
+          "name": "Sailing icon 7"
+        },
+        {
+          "id": 7061,
+          "name": "Sailing icon 8"
+        },
+        {
+          "id": 7062,
+          "name": "Sailing icon 9"
+        },
+        {
+          "id": 7068,
+          "name": "Sailing facility 0"
+        },
+        {
+          "id": 7069,
+          "name": "Sailing facility 1"
+        },
+        {
+          "id": 7070,
+          "name": "Sailing facility 2"
+        },
+        {
+          "id": 7071,
+          "name": "Sailing facility 3"
+        },
+        {
+          "id": 7072,
+          "name": "Sailing facility 4"
+        },
+        {
+          "id": 7073,
+          "name": "Sailing facility 5"
+        },
+        {
+          "id": 7074,
+          "name": "Sailing facility 6"
+        },
+        {
+          "id": 7075,
+          "name": "Sailing facility 7"
+        },
+        {
+          "id": 7076,
+          "name": "Sailing facility 8"
+        },
+        {
+          "id": 7077,
+          "name": "Sailing facility 9"
+        },
+        {
+          "id": 7078,
+          "name": "Sailing facility 10"
+        },
+        {
+          "id": 7079,
+          "name": "Sailing facility 11"
+        },
+        {
+          "id": 7080,
+          "name": "Sailing facility 12"
+        },
+        {
+          "id": 7081,
+          "name": "Sailing facility 13"
+        },
+        {
+          "id": 7082,
+          "name": "Sailing facility 14"
+        },
+        {
+          "id": 7083,
+          "name": "Sailing facility 15"
+        },
+        {
+          "id": 7084,
+          "name": "Sailing facility 16"
+        },
+        {
+          "id": 7085,
+          "name": "Sailing facility 17"
+        },
+        {
+          "id": 7086,
+          "name": "Sailing facility 18"
+        },
+        {
+          "id": 7087,
+          "name": "Sailing facility 19"
+        },
+        {
+          "id": 7088,
+          "name": "Sailing facility 20"
+        },
+        {
+          "id": 7089,
+          "name": "Sailing facility 21"
+        },
+        {
+          "id": 7090,
+          "name": "Sailing facility 22"
+        },
+        {
+          "id": 7091,
+          "name": "Sailing facility 23"
+        },
+        {
+          "id": 7115,
+          "name": "Sailing dock 0"
+        },
+        {
+          "id": 7116,
+          "name": "Sailing dock 1"
+        },
+        {
+          "id": 7117,
+          "name": "Sailing dock 2"
+        },
+        {
+          "id": 7118,
+          "name": "Sailing dock 3"
+        },
+        {
+          "id": 7119,
+          "name": "Sailing dock 4"
+        },
+        {
+          "id": 7120,
+          "name": "Sailing dock 5"
+        },
+        {
+          "id": 7121,
+          "name": "Sailing dock 6"
+        },
+        {
+          "id": 7122,
+          "name": "Sailing dock 7"
+        },
+        {
+          "id": 7123,
+          "name": "Sailing dock 8"
+        },
+        {
+          "id": 7124,
+          "name": "Sailing dock 9"
+        },
+        {
+          "id": 7125,
+          "name": "Sailing dock 10"
+        },
+        {
+          "id": 7126,
+          "name": "Sailing dock 11"
+        },
+        {
+          "id": 7127,
+          "name": "Sailing dock 12"
+        },
+        {
+          "id": 7128,
+          "name": "Sailing dock 13"
+        },
+        {
+          "id": 7129,
+          "name": "Sailing dock 14"
+        },
+        {
+          "id": 7288,
+          "name": "MINIMAP_BOAT_RAFT"
+        },
+        {
+          "id": 7289,
+          "name": "MINIMAP_BOAT_SKIFF"
+        },
+        {
+          "id": 7290,
+          "name": "MINIMAP_BOAT_SLOOP"
+        },
+        {
+          "id": 7291,
+          "name": "MINIMAP_BOAT_COLOSSAL"
+        },
+        {
+          "id": 7292,
+          "name": "MINIMAP_BOAT_CLASSIC_LARGE"
+        }
+      ]
     }
   ]
 }
