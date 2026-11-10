@@ -32,7 +32,7 @@ final class RouteStepRow extends JPanel
     /** Text for the distance from the previous stop, or null when there is none to show. */
     static String legText(int leg)
     {
-        return leg < 0 ? null : String.format("%,d tiles", leg);
+        return leg < 0 ? null : String.format(leg == 1 ? "%,d tile" : "%,d tiles", leg);
     }
 
     RouteStepRow(int index, int leg, RouteStep step, Runnable onEdit, Consumer<RouteStep> onDelete,

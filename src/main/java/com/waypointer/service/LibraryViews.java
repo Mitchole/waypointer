@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * {@link WaypointStore#fireChanged()} on every mutation, so the store stays focused on
  * mutation + undo.
  */
-final class LibraryViews
+public final class LibraryViews
 {
     private final Supplier<Library> library;
 
@@ -135,7 +135,8 @@ final class LibraryViews
             .mapToInt(Waypoint::getSortOrder).max().orElse(-1) + 1;
     }
 
-    private static Comparator<Waypoint> comparatorFor(CategorySortMode mode)
+    /** Waypoint order within a category for the given sort mode; null means manual. */
+    public static Comparator<Waypoint> comparatorFor(CategorySortMode mode)
     {
         if (mode == null || mode == CategorySortMode.MANUAL)
         {

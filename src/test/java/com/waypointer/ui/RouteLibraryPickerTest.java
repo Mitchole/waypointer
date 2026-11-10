@@ -68,7 +68,7 @@ public class RouteLibraryPickerTest
         WaypointPickerModel model = new WaypointPickerModel(library(catA, UUID.randomUUID()));
         model.selectNone();
         assertTrue(model.checkedWaypointsInOrder().isEmpty());
-        assertTrue(model.isEmptySelection() || model.getSelectedWaypointIds().isEmpty());
+        assertTrue(model.getSelectedWaypointIds().isEmpty());
 
         RouteStore routes = new RouteStore();
         routes.bootstrap(new RouteLibrary());
@@ -78,5 +78,49 @@ public class RouteLibraryPickerTest
         routes.addWaypointSteps(routeId, model.checkedWaypointsInOrder());
         assertEquals(0, fires[0]);
         assertTrue(routes.getRouteById(routeId).getSteps().isEmpty());
+    }
+
+    private static Waypoint wpAt(String name, UUID cat, int sortOrder, String created)
+    {
+        return new Waypoint(UUID.randomUUID(), name, 100 + sortOrder, cat, null, "",
+            Instant.parse(created), sortOrder, false, null, false);
+    }
+
+    private static List<String> pickedFrom(com.waypointer.model.CategorySortMode mode)
+    {
+        UUID cat = UUID.randomUUID();
+        Category c = new Category(cat, "C", 0, false, null, false);
+        c.setSortMode(mode);
+        Library lib = new Library();
+        lib.getCategories().add(c);
+        // sortOrder, name order and age all disagree with each other.
+        lib.getWaypoints().add(wpAt("Bravo", cat, 0, "2026-01-02T00:00:00Z"));
+        lib.getWaypoints().add(wpAt("Charlie", cat, 1, "2026-01-03T00:00:00Z"));
+        lib.getWaypoints().add(wpAt("alpha", cat, 2, "2026-01-01T00:00:00Z"));
+        WaypointPickerModel model = new WaypointPickerModel(lib);
+        model.selectNone();
+        model.setCategoryChecked(cat, true);
+        return names(model.checkedWaypointsInOrder());
+    }
+
+    @Test
+    public void wholeCategoryAddsInPanelOrderForNameSortedCategory()
+    {
+        assertEquals(java.util.Arrays.asList("alpha", "Bravo", "Charlie"),
+            pickedFrom(com.waypointer.model.CategorySortMode.NAME));
+    }
+
+    @Test
+    public void wholeCategoryAddsInPanelOrderForNewestFirstCategory()
+    {
+        assertEquals(java.util.Arrays.asList("Charlie", "Bravo", "alpha"),
+            pickedFrom(com.waypointer.model.CategorySortMode.DATE_ADDED));
+    }
+
+    @Test
+    public void manualCategoryKeepsSortOrder()
+    {
+        assertEquals(java.util.Arrays.asList("Bravo", "Charlie", "alpha"),
+            pickedFrom(com.waypointer.model.CategorySortMode.MANUAL));
     }
 }

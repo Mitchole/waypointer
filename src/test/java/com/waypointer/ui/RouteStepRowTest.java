@@ -28,6 +28,7 @@ public class RouteStepRowTest
     {
         assertNull(RouteStepRow.legText(-1));
         assertEquals("0 tiles", RouteStepRow.legText(0));
+        assertEquals("1 tile", RouteStepRow.legText(1));
         assertEquals("12 tiles", RouteStepRow.legText(12));
         assertEquals("1,250 tiles", RouteStepRow.legText(1250));
     }

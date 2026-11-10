@@ -3,9 +3,9 @@ package com.waypointer.ui;
 import com.waypointer.model.Category;
 import com.waypointer.model.Library;
 import com.waypointer.model.Waypoint;
+import com.waypointer.service.LibraryViews;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,9 +37,13 @@ final class WaypointPickerModel
             waypointsByCategory.computeIfAbsent(w.getCategoryId(), k -> new ArrayList<>()).add(w);
             checkedWaypoints.add(w.getId());
         }
-        for (List<Waypoint> bucket : waypointsByCategory.values())
+        Map<UUID, Category> categoriesById = new HashMap<>();
+        for (Category c : library.getCategories()) categoriesById.put(c.getId(), c);
+        for (Map.Entry<UUID, List<Waypoint>> e : waypointsByCategory.entrySet())
         {
-            bucket.sort(Comparator.comparingInt(Waypoint::getSortOrder));
+            // Same order the main panel shows for the category's sort mode.
+            Category cat = categoriesById.get(e.getKey());
+            e.getValue().sort(LibraryViews.comparatorFor(cat == null ? null : cat.getSortMode()));
         }
         List<Category> cats = new ArrayList<>(library.getCategories());
         cats.sort(WaypointPickerModel::compareForDisplay);
