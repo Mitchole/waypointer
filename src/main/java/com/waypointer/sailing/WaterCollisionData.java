@@ -34,6 +34,9 @@ public final class WaterCollisionData
 
     public int size() { return base.size(); }
 
+    /** The chunks by {@link #key}. Read only. */
+    Map<Long, Chunk> chunks() { return base; }
+
     public static long key(int x, int y) { return (long) x << 32 ^ y & 0xffffffffL; }
 
     public static final class Chunk

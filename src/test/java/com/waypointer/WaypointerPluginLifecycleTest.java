@@ -2,7 +2,9 @@ package com.waypointer;
 
 import com.waypointer.model.Library;
 import com.waypointer.model.route.RouteLibrary;
+import com.waypointer.sailing.WaterMap;
 import com.waypointer.service.DeathAutoPathfinder;
+import com.waypointer.service.Navigator;
 import com.waypointer.service.RoutePlaybackEngine;
 import com.waypointer.service.RouteStore;
 import com.waypointer.service.RouteStorePersistence;
@@ -16,6 +18,7 @@ import com.waypointer.ui.TabHost;
 import com.waypointer.ui.WaypointerPanel;
 import java.lang.reflect.Field;
 import java.util.HashSet;
+import java.util.concurrent.ScheduledExecutorService;
 import net.runelite.api.Client;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.input.KeyListener;
@@ -27,7 +30,9 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +43,9 @@ public class WaypointerPluginLifecycleTest
     private RouteStore routeStore;
     private EventBus eventBus;
     private KeyManager keyManager;
+    private Navigator navigator;
+    private WaterMap waterMap;
+    private ScheduledExecutorService executor;
 
     @Before
     public void setUp() throws Exception
@@ -72,6 +80,12 @@ public class WaypointerPluginLifecycleTest
         inject("sailingOrchestrator", mock(com.waypointer.sailing.SailingJourneyOrchestrator.class));
         inject("client", mock(Client.class));
         inject("keyManager", keyManager);
+        navigator = mock(Navigator.class);
+        waterMap = mock(WaterMap.class);
+        executor = mock(ScheduledExecutorService.class);
+        inject("navigator", navigator);
+        inject("waterMap", waterMap);
+        inject("executor", executor);
     }
 
     private void inject(String field, Object value) throws Exception
@@ -110,5 +124,26 @@ public class WaypointerPluginLifecycleTest
         plugin.startUp();
         assertEquals("saver must not stack on re-enable", 1, store.listenerCountForTest());
         assertEquals("routeStore saver must not stack on re-enable", 1, routeStore.listenerCountForTest());
+    }
+
+    @Test
+    public void startUpWarmsTheSeaMapOffThreadWhenSailingRoutesAreOn() throws Exception
+    {
+        when(navigator.shortestPathOnly()).thenReturn(false);
+        plugin.startUp();
+        ArgumentCaptor<Runnable> task = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor).execute(task.capture());
+        verify(waterMap, never()).warm();
+        task.getValue().run();
+        verify(waterMap).warm();
+    }
+
+    @Test
+    public void startUpLeavesTheSeaMapAloneForLandOnlyUsers() throws Exception
+    {
+        when(navigator.shortestPathOnly()).thenReturn(true);
+        plugin.startUp();
+        verify(executor, never()).execute(any());
+        verify(waterMap, never()).warm();
     }
 }

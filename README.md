@@ -129,7 +129,8 @@ How `Play` behaves depends on where the waypoint is and where you are:
   cancels the trip. The boat must be moored at a port for this to work.
 - **On land, waypoint on land.** Nothing changes. Shortest Path draws the route as usual.
 
-A waypoint counts as at sea when most of the tiles around it are open water on the surface.
+A waypoint counts as at sea when it is on the open sea, or on a blocked tile such as a wreck
+that is mostly surrounded by it. Inland lakes and rivers do not count.
 
 When sailing is on, the panel shows an **Always use a specific boat** box and a list of your
 moored boats. Leave it unticked and Waypointer uses the boat whose dock is nearest the

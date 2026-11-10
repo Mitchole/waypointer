@@ -49,6 +49,9 @@ public class WaypointerPlugin extends Plugin
     @Inject private com.waypointer.sailing.SailingJourneyOrchestrator sailingOrchestrator;
     @Inject private net.runelite.api.Client client;
     @Inject private net.runelite.client.input.KeyManager keyManager;
+    @Inject private com.waypointer.service.Navigator navigator;
+    @Inject private com.waypointer.sailing.WaterMap waterMap;
+    @Inject private java.util.concurrent.ScheduledExecutorService executor;
 
     private NavigationButton navButton;
     private net.runelite.client.input.KeyListener routeHotkeyListener;
@@ -103,6 +106,10 @@ public class WaypointerPlugin extends Plugin
         tabHost.refreshScrollbarStyling();
 
         overlayManager.add(npcHighlightOverlay);
+
+        // Only users who can sail pay for building the sea map, and they pay it here, off the
+        // game threads.
+        if (!navigator.shortestPathOnly()) executor.execute(waterMap::warm);
 
         log.info("Waypointer started: {} waypoints loaded",
             store.getLibrary().getWaypoints().size());
