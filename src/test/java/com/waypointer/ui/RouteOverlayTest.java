@@ -26,7 +26,7 @@ public class RouteOverlayTest
             RouteStep.waypoint(WorldPointPacker.pack(1, 1, 0), "Bank"),
             RouteStep.manual("Withdraw seeds"),
             RouteStep.manual("Plant"));
-        List<String> lines = RouteOverlay.buildLines(r, 1, 1);
+        List<String> lines = RouteOverlay.buildLines(r, 1, 1, null);
         assertEquals("Step 2 / 3", lines.get(0));
         assertTrue(lines.contains("Withdraw seeds"));
         assertTrue(lines.stream().anyMatch(l -> l.startsWith("Next:")));
@@ -36,7 +36,7 @@ public class RouteOverlayTest
     public void repeatingShowsLapInCounter()
     {
         Route r = route(true, RouteStep.manual("a"), RouteStep.manual("b"));
-        List<String> lines = RouteOverlay.buildLines(r, 0, 3);
+        List<String> lines = RouteOverlay.buildLines(r, 0, 3, null);
         assertEquals("Step 1 / 2  -  Lap 3", lines.get(0));
     }
 
@@ -44,7 +44,7 @@ public class RouteOverlayTest
     public void lastStepHasNoNextLine()
     {
         Route r = route(false, RouteStep.manual("only"));
-        List<String> lines = RouteOverlay.buildLines(r, 0, 1);
+        List<String> lines = RouteOverlay.buildLines(r, 0, 1, null);
         assertTrue(lines.stream().noneMatch(l -> l.startsWith("Next:")));
     }
 
@@ -57,7 +57,7 @@ public class RouteOverlayTest
         s1.setBoxText("Plant in patch 3");
         Route r = route(false, s0, s1);
 
-        List<String> lines = RouteOverlay.buildLines(r, 0, 1);
+        List<String> lines = RouteOverlay.buildLines(r, 0, 1, null);
 
         assertTrue(lines.contains("Withdraw 5 seeds"));
         assertFalse(lines.contains("Bank"));
@@ -68,7 +68,24 @@ public class RouteOverlayTest
     public void fallsBackToLabelWhenNoBoxText()
     {
         Route r = route(false, RouteStep.manual("Withdraw seeds"));
-        List<String> lines = RouteOverlay.buildLines(r, 0, 1);
+        List<String> lines = RouteOverlay.buildLines(r, 0, 1, null);
         assertTrue(lines.contains("Withdraw seeds"));
+    }
+
+    @Test
+    public void bearingLineSitsUnderCurrentStep()
+    {
+        Route r = route(false, RouteStep.waypoint(WorldPointPacker.pack(1, 1, 0), "Dock"),
+            RouteStep.manual("Next thing"));
+        List<String> lines = RouteOverlay.buildLines(r, 0, 1, "14 tiles NE");
+        int at = lines.indexOf("Dock");
+        assertEquals("14 tiles NE", lines.get(at + 1));
+    }
+
+    @Test
+    public void noBearingLineWhenNull()
+    {
+        Route r = route(false, RouteStep.waypoint(WorldPointPacker.pack(1, 1, 0), "Dock"));
+        assertFalse(RouteOverlay.buildLines(r, 0, 1, null).stream().anyMatch(l -> l.contains("tile")));
     }
 }

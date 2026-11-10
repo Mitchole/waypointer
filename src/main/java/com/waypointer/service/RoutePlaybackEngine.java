@@ -14,12 +14,14 @@ import net.runelite.api.GameState;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.eventbus.Subscribe;
 
 /**
  * Runs the active route as a linear state machine. Waypoint steps auto-advance when the player
- * arrives (3-tile radius, same arithmetic as {@link WaypointPathfinder}); manual steps advance via
- * {@link #advance()} (the Next button / hotkey). Path drawing is delegated to the pathfinder.
+ * arrives (radius decided by {@link Navigator#arrived}); manual steps advance via
+ * {@link #advance()} (the Next button / hotkey). Path drawing is delegated to the navigator.
  *
  * <p>{@code @Singleton}, so it outlives plugin lifecycle: it registers with the EventBus in the
  * plugin's startUp and unregisters in shutDown. {@code client} is left null in unit tests, which
@@ -29,9 +31,7 @@ import net.runelite.client.eventbus.Subscribe;
 @Singleton
 public class RoutePlaybackEngine
 {
-    private static final int ARRIVAL_RADIUS_TILES = 3;
-
-    private final WaypointPathfinder pathfinder;
+    private final Navigator navigator;
     private final RouteStore store;
     private final PlayerPosition playerPosition;
     private final Listeners listeners = new Listeners();
@@ -49,11 +49,11 @@ public class RoutePlaybackEngine
     private volatile int lap;
 
     @Inject
-    public RoutePlaybackEngine(WaypointPathfinder pathfinder, RouteStore store,
+    public RoutePlaybackEngine(Navigator navigator, RouteStore store,
         PlayerPosition playerPosition)
     {
         this.playerPosition = playerPosition;
-        this.pathfinder = pathfinder;
+        this.navigator = navigator;
         this.store = store;
     }
 
@@ -105,7 +105,7 @@ public class RoutePlaybackEngine
         active = null;
         currentIndex = 0;
         lap = 1;
-        pathfinder.clearPath();
+        navigator.stop();
         listeners.fire();
     }
 
@@ -151,22 +151,22 @@ public class RoutePlaybackEngine
         if (s == null) return;
         if (s.getType() == StepType.WAYPOINT && s.getPackedWorldPoint() != WorldPointPacker.UNDEFINED)
         {
-            pathfinder.requestPath(s.getPackedWorldPoint(), s.getLabel());
+            navigator.goStep(s.getPackedWorldPoint(), s.getLabel());
         }
         else
         {
-            pathfinder.clearPath();
+            navigator.stop();
         }
     }
 
-    /** Package-private test seam + production tick body. Advances a waypoint step on arrival. */
+    /** Package-private test seam + production tick body. Advances a waypoint step on arrival. Client thread only. */
     void handleTick(WorldPoint playerLoc)
     {
         RouteStep s = getCurrentStep();
         if (s == null || s.getType() != StepType.WAYPOINT) return;
         int target = s.getPackedWorldPoint();
         if (target == WorldPointPacker.UNDEFINED || playerLoc == null) return;
-        if (WorldPointPacker.arrived(target, playerLoc, ARRIVAL_RADIUS_TILES))
+        if (navigator.arrived(target, playerLoc))
         {
             advance();
         }
@@ -190,6 +190,14 @@ public class RoutePlaybackEngine
         WorldPoint loc = playerPosition.current();
         if (loc == null) return;
         handleTick(loc);
+    }
+
+    /** Boarding or leaving a boat changes the router; re-issue the current step. */
+    @Subscribe
+    public void onVarbitChanged(VarbitChanged e)
+    {
+        if (active == null || e.getVarbitId() != VarbitID.SAILING_BOARDED_BOAT) return;
+        enterCurrentStep();
     }
 
     @Subscribe
